@@ -2,15 +2,15 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { NgClass, NgFor } from '@angular/common';
 import { DayOption } from './day-selector.types';
 
-type SelectorItem = {
+interface SelectorItem {
   label: string;
   value: DayOption;
-};
+}
 
 @Component({
   selector: 'app-day-selector',
   standalone: true,
-  imports: [NgFor, NgClass],
+  imports: [NgClass],
   templateUrl: './day-selector.html',
 })
 export class DaySelector {

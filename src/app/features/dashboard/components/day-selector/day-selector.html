@@ -4,24 +4,25 @@
     role="tablist"
     aria-label="Velg dag"
   >
-    <button
-      *ngFor="let option of options; let i = index; let last = last"
-      type="button"
-      role="tab"
-      class="min-w-[100px] border-2 px-6 py-2 text-lg font-medium leading-none transition-colors duration-150"
-      [ngClass]="[
-        i === 0 ? 'rounded-l-[10px] rounded-r-none' : '',
-        last ? 'rounded-r-[10px] rounded-l-none' : '',
-        i !== 0 && !last ? 'rounded-none' : '',
-        isSelected(option.value)
-          ? 'border-[#0B4A8B] bg-[#0B4A8B] text-white'
-          : 'border-[#0B4A8B] bg-white text-black hover:bg-blue-50'
-      ]"
-      [attr.aria-selected]="isSelected(option.value)"
-      [attr.tabindex]="isSelected(option.value) ? 0 : -1"
-      (click)="selectDay(option.value)"
-    >
-      {{ option.label }}
-    </button>
+    @for (option of options; track option.value; let i = $index; let last = $last) {
+      <button
+        type="button"
+        role="tab"
+        class="min-w-[100px] border-2 px-6 py-2 text-lg font-medium leading-none transition-colors duration-150"
+        [ngClass]="[
+          i === 0 ? 'rounded-l-[10px] rounded-r-none' : '',
+          last ? 'rounded-r-[10px] rounded-l-none' : '',
+          i !== 0 && !last ? 'rounded-none' : '',
+          isSelected(option.value)
+            ? 'border-[#0B4A8B] bg-[#0B4A8B] text-white'
+            : 'border-[#0B4A8B] bg-white text-black hover:bg-blue-50'
+        ]"
+        [attr.aria-selected]="isSelected(option.value)"
+        [attr.tabindex]="isSelected(option.value) ? 0 : -1"
+        (click)="selectDay(option.value)"
+      >
+        {{ option.label }}
+      </button>
+    }
   </div>
 </div>
