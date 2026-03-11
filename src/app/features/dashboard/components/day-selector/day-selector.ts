@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NgClass, NgFor } from '@angular/common';
+import { NgClass} from '@angular/common';
 import { DayOption } from './day-selector.types';
 
 interface SelectorItem {
@@ -27,10 +27,7 @@ export class DaySelector {
       items.push({ label: 'I går', value: 'yesterday' });
     }
 
-    items.push(
-      { label: 'I dag', value: 'today' },
-      { label: 'I morgen', value: 'tomorrow' }
-    );
+    items.push({ label: 'I dag', value: 'today' }, { label: 'I morgen', value: 'tomorrow' });
 
     return items;
   }

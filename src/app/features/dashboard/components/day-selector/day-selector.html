@@ -1,9 +1,5 @@
 <div class="flex justify-center">
-  <div
-    class="inline-flex gap-1"
-    role="tablist"
-    aria-label="Velg dag"
-  >
+  <div class="inline-flex gap-1" role="tablist" aria-label="Velg dag">
     @for (option of options; track option.value; let i = $index; let last = $last) {
       <button
         type="button"
@@ -15,7 +11,7 @@
           i !== 0 && !last ? 'rounded-none' : '',
           isSelected(option.value)
             ? 'border-[#0B4A8B] bg-[#0B4A8B] text-white'
-            : 'border-[#0B4A8B] bg-white text-black hover:bg-blue-50'
+            : 'border-[#0B4A8B] bg-white text-black hover:bg-blue-50',
         ]"
         [attr.aria-selected]="isSelected(option.value)"
         [attr.tabindex]="isSelected(option.value) ? 0 : -1"

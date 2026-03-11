@@ -44,9 +44,7 @@ describe('DaySelector', () => {
 
   it('should show yesterday, today and tomorrow by default', () => {
     const buttons = fixture.debugElement.queryAll(By.css('button'));
-    const texts = buttons.map(button =>
-      button.nativeElement.textContent.trim()
-    );
+    const texts = buttons.map((button) => button.nativeElement.textContent.trim());
 
     expect(texts).toEqual(['I går', 'I dag', 'I morgen']);
   });
