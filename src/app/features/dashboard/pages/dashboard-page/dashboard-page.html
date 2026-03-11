@@ -1,1 +1,7 @@
-<p>dashboard-page works!</p>
+<p>Dashboard Page</p>
+
+<app-assignment-map
+  [assignments]="assignments"
+  [compact]="false"
+  (markerClicked)="onMarkerClicked($event)"
+></app-assignment-map>
