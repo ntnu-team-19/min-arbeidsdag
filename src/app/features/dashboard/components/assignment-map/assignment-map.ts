@@ -56,7 +56,7 @@ export class AssignmentMapComponent implements AfterViewInit, OnDestroy {
 
         if (mapElement.offsetHeight === 0 || mapElement.offsetWidth === 0) {
           throw new Error(
-            `Map container has invalid dimensions: ${mapElement.offsetWidth}x${mapElement.offsetHeight}`
+            `Map container has invalid dimensions: ${mapElement.offsetWidth}x${mapElement.offsetHeight}`,
           );
         }
 
@@ -94,9 +94,7 @@ export class AssignmentMapComponent implements AfterViewInit, OnDestroy {
 
     this.assignments.forEach((assignment) => {
       const feature = new Feature({
-        geometry: new Point(
-          fromLonLat([assignment.location.lon, assignment.location.lat])
-        ),
+        geometry: new Point(fromLonLat([assignment.location.lon, assignment.location.lat])),
         assignment,
       });
 
