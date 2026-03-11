@@ -46,8 +46,6 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     address: `${dto.streetAddress}, ${dto.postalCode} ${dto.municipalityName}`,
     phoneNumber: dto.showingContactPhone || 'Ikke oppgitt',
     status: mapDtoStatusToCardStatus(dto.status),
-    date: dto.showingStartDate
-      ? dto.showingStartDate.split('T')[0]
-      : 'Ukjent dato',
+    date: dto.showingStartDate ? dto.showingStartDate.split('T')[0] : 'Ukjent dato',
   };
 }

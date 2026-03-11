@@ -24,7 +24,7 @@ export class AssignmentService {
 
   private getAllFromStorage(): AssignmentDetailsDto[] {
     const raw = localStorage.getItem(STORAGE_KEY);
-     if (!raw) {
+    if (!raw) {
       return [];
     }
     try {
@@ -45,7 +45,7 @@ export class AssignmentService {
     return of(this.getAllFromStorage());
   }
 
-   getAssignmentDetailsById(id: string | number): Observable<AssignmentDetailsDto | undefined> {
+  getAssignmentDetailsById(id: string | number): Observable<AssignmentDetailsDto | undefined> {
     const normalizedId = String(id);
     const assignment = this.getAllFromStorage().find((item) => String(item.id) === normalizedId);
     return of(assignment);
