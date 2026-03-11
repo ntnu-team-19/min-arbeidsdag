@@ -37,6 +37,13 @@
           }
         }
       }
+    },
+    {
+      "label": "Angular tests",
+      "type": "shell",
+      "command": "ng test",
+      "group": "test",
+      "problemMatcher": []
     }
   ]
 }

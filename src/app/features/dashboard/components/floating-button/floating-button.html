@@ -1,0 +1,7 @@
+<button
+  class="fab"
+  (click)="toggle()"
+  [attr.aria-label]="isListView ? 'Åpne kartvisning' : 'Åpne listevisning'"
+>
+  <i class="pi" [ngClass]="isListView ? 'pi-map' : 'pi-list'" style="font-size: 2rem"></i>
+</button>
