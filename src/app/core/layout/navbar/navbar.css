@@ -1,0 +1,12 @@
+:host ::ng-deep .p-listbox-option {
+  border-bottom: 1px solid #C8D1DA;
+  padding: 1.5rem 0.75rem;
+}
+
+:host ::ng-deep .p-listbox-option:last-child {
+  border-bottom: none;
+}
+
+:host ::ng-deep .p-listbox-list-container {
+  overflow: visible;
+}

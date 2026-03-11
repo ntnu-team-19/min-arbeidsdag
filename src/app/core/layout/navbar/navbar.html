@@ -1,0 +1,72 @@
+<nav class="flex items-center justify-between px-3 h-16 bg-[#E6ECF2] border-b border-[#C8D1DA]">
+  <!-- Logo -->
+  <img src="assets/Geomatikk-logo.png" alt="Geomatikk" class="h-[clamp(0.5rem,8vw,2rem)]" />
+
+  <!-- Desktop: Bell, Hamburgermenu and User -->
+  <div class="hidden sm:flex items-center gap-2 ml-auto">
+    <p-button
+      [text]="true"
+      severity="secondary"
+      class="relative"
+    >
+      <i class="pi pi-bell" style="font-size: 1.2rem"></i>
+    </p-button>
+
+    <p-button
+      [text]="true"
+      severity="secondary"
+      (click)="menuOpen = true"
+    >
+      <i class="pi pi-bars" style="font-size: 1.4rem"></i>
+    </p-button>
+
+    <p-button
+      styleClass="!bg-[#E8B93C] !border-[#E8B93C] hover:!bg-[#D4A62E] !text-[#0B2545] !w-[120px]"
+    >
+      <i class="pi pi-user text-lg shrink-0"></i>
+      <span class="flex-1 font-bold truncate text-center">User</span>
+    </p-button>
+  </div>
+
+  <!-- Mobile: Bell and Hamburgermenu -->
+  <div class="sm:hidden flex items-center gap-2 ml-auto">
+    <p-button
+      [text]="true"
+      severity="secondary"
+      class="relative"
+    >
+      <i class="pi pi-bell" style="font-size: 1.2rem"></i>
+    </p-button>
+
+    <p-button
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      (click)="menuOpen = true"
+    >
+      <i class="pi pi-bars text-2xl"></i>
+    </p-button>
+  </div>
+
+  <!-- Sidebar  -->
+  <p-drawer
+    [(visible)]="menuOpen"
+    position="right"
+    [style]="{ width: '16rem', height: '100%' }"
+    header="Meny"
+  >
+    <p-listbox
+      [options]="menuItems"
+      [optionLabel]="'label'"
+      (onChange)="onMenuSelect($event)"
+      [style]="{ width: '100%', border: 'none' }"
+    >
+      <ng-template let-item pTemplate="item">
+        <div class="flex items-center gap-3 w-full">
+          <i [class]="item.icon" style="font-size: 1.2rem"></i>
+          <span class="font-bold">{{ item.label }}</span>
+        </div>
+      </ng-template>
+    </p-listbox>
+  </p-drawer>
+</nav>
