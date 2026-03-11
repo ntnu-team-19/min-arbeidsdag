@@ -1,10 +1,9 @@
 ---
 name: default issue
 about: Issue template
-title: "[ISSUE]"
+title: '[ISSUE]'
 labels: ''
 assignees: ''
-
 ---
 
 ## 📝 Description
