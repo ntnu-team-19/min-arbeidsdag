@@ -32,7 +32,7 @@ export interface Assignment {
   templateUrl: './assignment-map.html',
   styleUrl: './assignment-map.css',
 })
-export class AssignmentMapComponent implements AfterViewInit, OnDestroy {
+export class AssignmentMap implements AfterViewInit, OnDestroy {
   @Input() assignments: Assignment[] = [];
   @Input() compact = false;
   @Output() markerClicked = new EventEmitter<Assignment>();

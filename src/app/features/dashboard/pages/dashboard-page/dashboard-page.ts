@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { AssignmentMapComponent, Assignment } from '../../components/assignment-map/assignment-map';
+import { AssignmentMap, Assignment } from '../../components/assignment-map/assignment-map';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMapComponent],
+  imports: [AssignmentMap],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })

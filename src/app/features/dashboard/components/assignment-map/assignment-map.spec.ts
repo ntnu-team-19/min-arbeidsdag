@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AssignmentMapComponent, Assignment } from './assignment-map';
+import { AssignmentMap, Assignment } from './assignment-map';
 
-describe('AssignmentMapComponent', () => {
-  let component: AssignmentMapComponent;
-  let fixture: ComponentFixture<AssignmentMapComponent>;
+describe('AssignmentMap', () => {
+  let component: AssignmentMap;
+  let fixture: ComponentFixture<AssignmentMap>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AssignmentMapComponent],
+      imports: [AssignmentMap],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AssignmentMapComponent);
+    fixture = TestBed.createComponent(AssignmentMap);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
