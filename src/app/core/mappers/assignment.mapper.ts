@@ -47,7 +47,7 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     phoneNumber: dto.showingContactPhone || 'Ikke oppgitt',
     status: mapDtoStatusToCardStatus(dto.status),
     date: dto.showingStartDate
-      ? new Date(dto.showingStartDate).toISOString().split('T')[0]
+      ? dto.showingStartDate.split('T')[0]
       : 'Ukjent dato',
   };
 }
