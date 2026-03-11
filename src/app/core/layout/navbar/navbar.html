@@ -4,19 +4,11 @@
 
   <!-- Desktop: Bell, Hamburgermenu and User -->
   <div class="hidden sm:flex items-center gap-2 ml-auto">
-    <p-button
-      [text]="true"
-      severity="secondary"
-      class="relative"
-    >
+    <p-button [text]="true" severity="secondary" class="relative">
       <i class="pi pi-bell" style="font-size: 1.2rem"></i>
     </p-button>
 
-    <p-button
-      [text]="true"
-      severity="secondary"
-      (click)="menuOpen = true"
-    >
+    <p-button [text]="true" severity="secondary" (click)="menuOpen = true">
       <i class="pi pi-bars" style="font-size: 1.4rem"></i>
     </p-button>
 
@@ -30,20 +22,11 @@
 
   <!-- Mobile: Bell and Hamburgermenu -->
   <div class="sm:hidden flex items-center gap-2 ml-auto">
-    <p-button
-      [text]="true"
-      severity="secondary"
-      class="relative"
-    >
+    <p-button [text]="true" severity="secondary" class="relative">
       <i class="pi pi-bell" style="font-size: 1.2rem"></i>
     </p-button>
 
-    <p-button
-      [text]="true"
-      [rounded]="true"
-      severity="secondary"
-      (click)="menuOpen = true"
-    >
+    <p-button [text]="true" [rounded]="true" severity="secondary" (click)="menuOpen = true">
       <i class="pi pi-bars text-2xl"></i>
     </p-button>
   </div>

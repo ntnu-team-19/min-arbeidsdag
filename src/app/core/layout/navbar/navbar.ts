@@ -46,8 +46,8 @@ export class Navbar {
     ];
   }
 
-  onMenuSelect(event: any) {
-    const item: MenuItem = event.value;
+  onMenuSelect(event: { value: MenuItem | null }) {
+    const item = event.value;
     if (!item) return;
 
     switch (item.action) {
@@ -58,11 +58,9 @@ export class Navbar {
         this.toggleLanguage();
         break;
       case 'statistics':
-        // Naviger til statistikk
         this.menuOpen = false;
         break;
       case 'user':
-        // Naviger til brukerprofil
         this.menuOpen = false;
         break;
     }
