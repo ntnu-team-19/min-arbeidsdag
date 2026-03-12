@@ -3,28 +3,26 @@
     <app-day-selector [(selectedDay)]="selectedDay" (selectedDayChange)="onDayChange($event)" />
   </div>
 
-@if (isListView) {
-  <div class="flex flex-col gap-4 px-4 pb-24">
-    @for (card of assignmentCards; track card.id) {
-      <app-assignment-card [assignment]="card" />
-    }
-  </div>
-} @else {
-  <app-assignment-map
-    [assignments]="mapAssignments"
-    [compact]="false"
-    (markerClicked)="onMarkerClicked($event)"
-  ></app-assignment-map>
+  @if (isListView) {
+    <div class="flex flex-col gap-4 px-4 pb-24">
+      @for (card of assignmentCards; track card.id) {
+        <app-assignment-card [assignment]="card" />
+      }
+    </div>
+  } @else {
+    <app-assignment-map
+      [assignments]="mapAssignments"
+      [compact]="false"
+      (markerClicked)="onMarkerClicked($event)"
+    ></app-assignment-map>
 
-  <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
-    <h2 class="sheet-title">Assignments</h2>
-    <p class="sheet-text">Temporary bottom sheet content.</p>
+    <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
+      <h2 class="sheet-title">Assignments</h2>
+      <p class="sheet-text">Temporary bottom sheet content.</p>
 
-    <div class="sheet-placeholder">Assignment cards will be added later.</div>
-  </app-map-bottom-sheet>
-}
+      <div class="sheet-placeholder">Assignment cards will be added later.</div>
+    </app-map-bottom-sheet>
+  }
 
-<app-floating-button [isListView]="isListView" (viewChange)="onViewChange($event)" />
-
-  
+  <app-floating-button [isListView]="isListView" (viewChange)="onViewChange($event)" />
 </div>
