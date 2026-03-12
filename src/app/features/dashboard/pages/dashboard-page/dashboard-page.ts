@@ -56,7 +56,8 @@ export class DashboardPage implements OnInit {
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
-    
+  }
+
   onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
     console.log('Bottom sheet snap:', snap);
   }
