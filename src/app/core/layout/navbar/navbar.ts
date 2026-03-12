@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -21,6 +21,23 @@ export class Navbar {
   darkMode = false;
   language = 'no';
 
+  // Toggles 'navbar-hidden' class on host element to hide/show navbar
+  @HostBinding('class.navbar-hidden')
+  isHidden = false;
+
+  private lastScrollY = 0;
+  private scrollThreshold = 10;
+
+  @HostListener('window:scroll')
+  onScroll() {
+    const currentScrollY = window.scrollY;
+    const delta = currentScrollY - this.lastScrollY;
+    if (Math.abs(delta) < this.scrollThreshold) return;
+    this.isHidden = delta > 0 && currentScrollY > 64;
+    this.lastScrollY = currentScrollY;
+  }
+
+  /** Dynamic menu items that react to current language and dark mode state */
   get menuItems(): MenuItem[] {
     return [
       {
@@ -46,6 +63,7 @@ export class Navbar {
     ];
   }
 
+  /** Handles sidebar menu item selection and triggers the corresponding action */
   onMenuSelect(event: { value: MenuItem | null }) {
     const item = event.value;
     if (!item) return;
