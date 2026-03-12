@@ -1,7 +1,14 @@
-<p>Dashboard Page</p>
+<div class="dashboard-page">
+  <app-assignment-map
+    [assignments]="assignments"
+    [compact]="false"
+    (markerClicked)="onMarkerClicked($event)"
+  ></app-assignment-map>
 
-<app-assignment-map
-  [assignments]="assignments"
-  [compact]="false"
-  (markerClicked)="onMarkerClicked($event)"
-></app-assignment-map>
+  <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
+    <h2 class="sheet-title">Assignments</h2>
+    <p class="sheet-text">Temporary bottom sheet content.</p>
+
+    <div class="sheet-placeholder">Assignment cards will be added later.</div>
+  </app-map-bottom-sheet>
+</div>
