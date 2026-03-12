@@ -13,13 +13,13 @@ export class DashboardPage {
     {
       id: 1,
       name: 'Assignment 1',
-      location: { lat: 59.9139, lon: 10.7522 },
+      location: { lat: 63.4298254455268, lon: 10.3862247991623 },
       description: 'Description for Assignment 1',
     },
     {
       id: 2,
       name: 'Assignment 2',
-      location: { lat: 59.95, lon: 10.75 },
+      location: { lat: 63.40236993788918, lon: 10.420739477399872 },
       description: 'Description for Assignment 2',
     },
   ];
