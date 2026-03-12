@@ -1,6 +1,7 @@
-<div class="my-3">
-  <app-day-selector [(selectedDay)]="selectedDay" (selectedDayChange)="onDayChange($event)" />
-</div>
+<div class="dashboard-page">
+  <div class="my-3">
+    <app-day-selector [(selectedDay)]="selectedDay" (selectedDayChange)="onDayChange($event)" />
+  </div>
 
 @if (isListView) {
   <div class="flex flex-col gap-4 px-4 pb-24">
@@ -14,6 +15,16 @@
     [compact]="false"
     (markerClicked)="onMarkerClicked($event)"
   ></app-assignment-map>
+
+  <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
+    <h2 class="sheet-title">Assignments</h2>
+    <p class="sheet-text">Temporary bottom sheet content.</p>
+
+    <div class="sheet-placeholder">Assignment cards will be added later.</div>
+  </app-map-bottom-sheet>
 }
 
 <app-floating-button [isListView]="isListView" (viewChange)="onViewChange($event)" />
+
+  
+</div>

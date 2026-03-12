@@ -9,11 +9,12 @@ import { DayOption } from '../../components/day-selector/day-selector.types';
 import { AssignmentCard } from '../../components/assignment-card/assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
+import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMap, FloatingButton, DaySelector, AssignmentCard],
+  imports: [AssignmentMap, FloatingButton, DaySelector, AssignmentCard, MapBottomSheet],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
@@ -26,13 +27,13 @@ export class DashboardPage implements OnInit {
     {
       id: 1,
       name: 'Assignment 1',
-      location: { lat: 59.9139, lon: 10.7522 },
+      location: { lat: 63.4298254455268, lon: 10.3862247991623 },
       description: 'Description for Assignment 1',
     },
     {
       id: 2,
       name: 'Assignment 2',
-      location: { lat: 59.95, lon: 10.75 },
+      location: { lat: 63.40236993788918, lon: 10.420739477399872 },
       description: 'Description for Assignment 2',
     },
   ];
@@ -55,5 +56,8 @@ export class DashboardPage implements OnInit {
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
+    
+  onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
+    console.log('Bottom sheet snap:', snap);
   }
 }
