@@ -1,0 +1,17 @@
+<div
+  #sheet
+  class="bottom-sheet"
+  [class.animating]="isAnimating"
+  [style.transform]="'translateY(' + currentTranslateY + 'px)'"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerUp($event)"
+>
+  <div class="drag-handle-area" (pointerdown)="onPointerDown($event)">
+    <div class="drag-handle"></div>
+  </div>
+
+  <div class="sheet-content">
+    <ng-content></ng-content>
+  </div>
+</div>

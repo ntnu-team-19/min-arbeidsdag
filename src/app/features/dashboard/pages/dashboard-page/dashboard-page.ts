@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { AssignmentMap, Assignment } from '../../components/assignment-map/assignment-map';
+import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMap],
+  imports: [AssignmentMap, MapBottomSheet],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
@@ -26,5 +27,8 @@ export class DashboardPage {
 
   onMarkerClicked(assignment: Assignment) {
     console.log('Marker clicked:', assignment);
+  }
+  onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
+    console.log('Bottom sheet snap:', snap);
   }
 }
