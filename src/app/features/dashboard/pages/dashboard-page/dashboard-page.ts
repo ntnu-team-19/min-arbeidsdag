@@ -1,15 +1,28 @@
-import { Component } from '@angular/core';
-import { AssignmentMap, Assignment } from '../../components/assignment-map/assignment-map';
+import { Component, OnInit, inject } from '@angular/core';
+import {
+  AssignmentMap,
+  Assignment as MapAssignment,
+} from '../../components/assignment-map/assignment-map';
+import { FloatingButton } from '../../components/floating-button/floating-button';
+import { DaySelector } from '../../components/day-selector/day-selector';
+import { DayOption } from '../../components/day-selector/day-selector.types';
+import { AssignmentCard } from '../../components/assignment-card/assignment-card';
+import { Assignment } from '../../../../core/models/assignment-card.model';
+import { AssignmentService } from '../../../../core/services/assignment.service';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMap],
+  imports: [AssignmentMap, FloatingButton, DaySelector, AssignmentCard],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
-export class DashboardPage {
-  assignments: Assignment[] = [
+export class DashboardPage implements OnInit {
+  selectedDay: DayOption = 'today';
+  isListView = true;
+  assignmentCards: Assignment[] = [];
+
+  mapAssignments: MapAssignment[] = [
     {
       id: 1,
       name: 'Assignment 1',
@@ -24,7 +37,23 @@ export class DashboardPage {
     },
   ];
 
-  onMarkerClicked(assignment: Assignment) {
+  private assignmentService = inject(AssignmentService);
+
+  ngOnInit() {
+    this.assignmentService.getAssignmentCards().subscribe((cards) => {
+      this.assignmentCards = cards;
+    });
+  }
+
+  onDayChange(day: DayOption) {
+    console.log('Valgt dag:', day);
+  }
+
+  onMarkerClicked(assignment: MapAssignment) {
     console.log('Marker clicked:', assignment);
+  }
+
+  onViewChange(listView: boolean) {
+    this.isListView = listView;
   }
 }

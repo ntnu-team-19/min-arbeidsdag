@@ -1,7 +1,19 @@
-<p>Dashboard Page</p>
+<div class="my-3">
+  <app-day-selector [(selectedDay)]="selectedDay" (selectedDayChange)="onDayChange($event)" />
+</div>
 
-<app-assignment-map
-  [assignments]="assignments"
-  [compact]="false"
-  (markerClicked)="onMarkerClicked($event)"
-></app-assignment-map>
+@if (isListView) {
+  <div class="flex flex-col gap-4 px-4 pb-24">
+    @for (card of assignmentCards; track card.id) {
+      <app-assignment-card [assignment]="card" />
+    }
+  </div>
+} @else {
+  <app-assignment-map
+    [assignments]="mapAssignments"
+    [compact]="false"
+    (markerClicked)="onMarkerClicked($event)"
+  ></app-assignment-map>
+}
+
+<app-floating-button [isListView]="isListView" (viewChange)="onViewChange($event)" />

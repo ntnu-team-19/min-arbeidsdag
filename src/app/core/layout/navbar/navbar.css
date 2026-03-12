@@ -1,4 +1,3 @@
-/* Host element handles sticky positioning and scroll hide/show animation */
 :host {
   display: block;
   position: sticky;
@@ -7,21 +6,6 @@
   transition: transform 300ms ease;
 }
 
-/* Slides navbar out of view when hidden via HostBinding */
 :host.navbar-hidden {
   transform: translateY(-100%);
-}
-
-/* Sidebar menu item styling */
-:host ::ng-deep .p-listbox-option {
-  border-bottom: 1px solid #c8d1da;
-  padding: 1.5rem 0.75rem;
-}
-
-:host ::ng-deep .p-listbox-option:last-child {
-  border-bottom: none;
-}
-
-:host ::ng-deep .p-listbox-list-container {
-  overflow: visible;
 }

@@ -35,21 +35,22 @@
   <p-drawer
     [(visible)]="menuOpen"
     position="right"
+    [appendTo]="'body'"
     [style]="{ width: '16rem', height: '100%' }"
     header="Meny"
   >
-    <p-listbox
-      [options]="menuItems"
-      [optionLabel]="'label'"
-      (onChange)="onMenuSelect($event)"
-      [style]="{ width: '100%', border: 'none' }"
-    >
-      <ng-template let-item pTemplate="item">
-        <div class="flex items-center gap-3 w-full">
+    <div class="flex flex-col">
+      @for (item of menuItems; track item.label; let last = $last) {
+        <button
+          (click)="onMenuSelect({ value: item })"
+          class="flex items-center gap-3 w-full py-4 px-2 text-left hover:bg-slate-100 transition-colors"
+          [class.border-b]="!last"
+          [class.border-slate-300]="!last"
+        >
           <i [class]="item.icon" style="font-size: 1.2rem"></i>
           <span class="font-bold">{{ item.label }}</span>
-        </div>
-      </ng-template>
-    </p-listbox>
+        </button>
+      }
+    </div>
   </p-drawer>
 </nav>
