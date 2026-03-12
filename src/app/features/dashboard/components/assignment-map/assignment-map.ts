@@ -3,7 +3,6 @@ import {
   AfterViewInit,
   OnDestroy,
   OnChanges,
-  SimpleChanges,
   Input,
   Output,
   EventEmitter,
@@ -18,6 +17,7 @@ import VectorSource from 'ol/source/Vector';
 import OSM from 'ol/source/OSM';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
+import type { Pixel } from 'ol/pixel';
 import { fromLonLat } from 'ol/proj';
 import Icon from 'ol/style/Icon';
 import Style from 'ol/style/Style';
@@ -60,7 +60,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   mapError = false;
   private cdr = inject(ChangeDetectorRef);
 
-  ngOnChanges(_changes: SimpleChanges): void {
+  ngOnChanges(): void {
     this.updateMarkers();
   }
 
@@ -108,8 +108,9 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     }, 200);
   }
 
-  private readonly onMapClick = (event: any) => {
+  private readonly onMapClick = (event: unknown) => {
     if (!this.map) return;
+    if (!this.isMapClickEvent(event)) return;
 
     this.map.forEachFeatureAtPixel(event.pixel, (feature) => {
       const assignment = feature.get('assignment') as Assignment | undefined;
@@ -167,6 +168,15 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     }
 
     return lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+  }
+
+  private isMapClickEvent(event: unknown): event is { pixel: Pixel } {
+    if (!event || typeof event !== 'object') {
+      return false;
+    }
+
+    const maybePixel = (event as { pixel?: unknown }).pixel;
+    return Array.isArray(maybePixel) && maybePixel.length === 2;
   }
 
   ngOnDestroy() {

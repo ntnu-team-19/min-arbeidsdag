@@ -78,7 +78,10 @@ describe('AssignmentMap', () => {
       fixture.detectChanges();
     }).not.toThrow();
 
-    const markerCount = (component as any).markerSource.getFeatures().length;
+    const markerSource = (component as unknown as Record<string, unknown>)['markerSource'] as {
+      getFeatures: () => unknown[];
+    };
+    const markerCount = markerSource.getFeatures().length;
     expect(markerCount).toBe(1);
   });
 });
