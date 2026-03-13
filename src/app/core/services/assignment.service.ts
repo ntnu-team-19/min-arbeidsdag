@@ -3,7 +3,7 @@ import { Observable, of } from 'rxjs';
 import { AssignmentDetailsDto } from '../models/assignment-details.dto';
 import { Assignment } from '../models/assignment-card.model';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
-import { mapAssignmentDetailsDtoToAssignmentCardModel } from '../mappers/assignment.mapper';
+import { mapAssignmentDetailsDtoToAssignmentCardModel } from '../mappers/assignment-card.mapper';
 
 const STORAGE_KEY = 'assignment-details';
 
