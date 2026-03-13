@@ -5,6 +5,11 @@
 
   @if (isListView) {
     <div class="flex flex-col gap-4 px-4 pb-24">
+      <app-todays-progress-infobox
+        [selectedDate]="selectedProgressDate"
+        [fieldTechId]="selectedFieldTechId"
+      />
+
       @for (card of assignmentCards; track card.id) {
         <app-assignment-card [assignment]="card" />
       }

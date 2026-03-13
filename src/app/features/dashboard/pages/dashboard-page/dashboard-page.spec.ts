@@ -5,6 +5,7 @@ import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { of } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import { AssignmentDetailsDto } from '../../../../core/models/assignment-details.dto';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -29,6 +30,38 @@ const MOCK_CARDS: Assignment[] = [
   },
 ];
 
+const MOCK_ASSIGNMENT_DETAILS: AssignmentDetailsDto[] = [
+  {
+    id: 1315598,
+    fieldTechId: 40231,
+    status: 2,
+    organizationName: 'GEOMATIKK AS',
+    cableShowingTimeIsLocked: false,
+    cableShowingUserIsLocked: false,
+    cableShowingDateIsLocked: false,
+    inquiryId: 5866375,
+    inquiryName: 'Test oppdrag',
+    inquiryDescription: 'Beskrivelse',
+    showingDeadlineDate: null,
+    desiredDateForShowing: '2026-02-20T00:00:00',
+    streetAddress: 'Fagertunvegen 5',
+    postalCode: '7021',
+    showingContactName: 'Test',
+    showingContactPhone: '41414141',
+    municipalityNumber: '5001',
+    municipalityName: 'Trondheim',
+    deliveryDeadline: null,
+    showingStartDate: '2026-02-20T07:00:47',
+    showingEndDate: '2026-02-20T07:31:47',
+    showingAfterCustomerWish: false,
+    calculatedTimeOnsite: 2,
+    editedTimeOnsite: 28.1,
+    calculatedTraveltime: 4,
+    orderedFor: [],
+    commentFromShower: null,
+  },
+];
+
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
@@ -41,6 +74,7 @@ describe('DashboardPage', () => {
           provide: AssignmentService,
           useValue: {
             getAssignmentCards: () => of(MOCK_CARDS),
+            getAllAssignmentDetails: () => of(MOCK_ASSIGNMENT_DETAILS),
           },
         },
       ],
@@ -72,6 +106,14 @@ describe('DashboardPage', () => {
   it('should show day selector', () => {
     const daySelector = fixture.debugElement.query(By.css('app-day-selector'));
     expect(daySelector).toBeTruthy();
+  });
+
+  it('should render todays progress infobox with default selected date', () => {
+    const infobox = fixture.debugElement.query(By.css('app-todays-progress-infobox'));
+
+    expect(infobox).toBeTruthy();
+    expect(infobox.componentInstance.selectedDate).toBe('2026-02-20');
+    expect(infobox.componentInstance.fieldTechId).toBe(40231);
   });
 
   it('should show assignment cards in list view', () => {

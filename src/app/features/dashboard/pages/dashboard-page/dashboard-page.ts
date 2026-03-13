@@ -10,16 +10,32 @@ import { AssignmentCard } from '../../components/assignment-card/assignment-card
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
+import { TodaysProgressInfobox } from '../../components/todays-progress-infobox/todays-progress-infobox';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMap, FloatingButton, DaySelector, AssignmentCard, MapBottomSheet],
+  imports: [
+    AssignmentMap,
+    FloatingButton,
+    DaySelector,
+    AssignmentCard,
+    MapBottomSheet,
+    TodaysProgressInfobox,
+  ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
 export class DashboardPage implements OnInit {
+  private readonly progressDateByDay: Record<DayOption, string> = {
+    yesterday: '2026-02-19',
+    today: '2026-02-20',
+    tomorrow: '2026-02-21',
+  };
+
   selectedDay: DayOption = 'today';
+  selectedProgressDate = this.progressDateByDay.today;
+  selectedFieldTechId = 40231;
   isListView = true;
   assignmentCards: Assignment[] = [];
 
@@ -47,6 +63,8 @@ export class DashboardPage implements OnInit {
   }
 
   onDayChange(day: DayOption) {
+    this.selectedDay = day;
+    this.selectedProgressDate = this.progressDateByDay[day];
     console.log('Valgt dag:', day);
   }
 
