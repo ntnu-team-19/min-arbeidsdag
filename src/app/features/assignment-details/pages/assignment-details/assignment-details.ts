@@ -116,16 +116,19 @@ export class AssignmentDetailsPage implements OnInit {
     if (!this.assignment) return;
 
     const destination = encodeURIComponent(this.assignment.address);
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${destination}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
   }
 
-  onContactedChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
+  onContactedChange(contacted: boolean): void {
     if (!this.assignment) return;
 
     this.assignment = {
       ...this.assignment,
-      contacted: target.checked,
+      contacted,
     };
   }
 

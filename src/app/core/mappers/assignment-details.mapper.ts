@@ -18,6 +18,8 @@ function formatTime(dateString: string | null): string {
   if (!dateString) return '-';
 
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
+
   return date.toLocaleTimeString('nb-NO', {
     hour: '2-digit',
     minute: '2-digit',
@@ -28,6 +30,8 @@ function formatDate(dateString: string | null): string {
   if (!dateString) return '-';
 
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
+
   return date.toLocaleDateString('nb-NO', {
     weekday: 'long',
     day: 'numeric',
@@ -40,6 +44,9 @@ function formatDurationMinutes(startDate: string | null, endDate: string | null)
 
   const start = new Date(startDate).getTime();
   const end = new Date(endDate).getTime();
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return '-';
+
   const diffMinutes = Math.round((end - start) / 1000 / 60);
 
   if (diffMinutes < 60) {

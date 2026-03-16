@@ -320,7 +320,7 @@ describe('AssignmentDetailsPage', () => {
     await createComponent('1315598');
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
-      // ignore log output in test console
+      // ignore log output in test
     });
     const marker = {
       id: 1,
