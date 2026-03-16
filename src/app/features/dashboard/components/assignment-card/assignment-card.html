@@ -1,6 +1,7 @@
-<a
-  class="block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition active:scale-[0.99]"
-  [routerLink]="['/dashboard/assignments', assignment.id]"
+<button
+  type="button"
+  class="block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-md transition active:scale-[0.99]"
+  (click)="onCardClick()"
 >
   <div class="px-4 py-2 text-sm font-semibold text-slate-900" [ngClass]="currentStatus.barClass">
     <span
@@ -56,4 +57,4 @@
       <i class="pi pi-chevron-right text-3xl text-[#1F4E79]"></i>
     </div>
   </div>
-</a>
+</button>

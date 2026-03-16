@@ -1,16 +1,16 @@
-import { Component, Input } from '@angular/core';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 
 @Component({
   selector: 'app-assignment-card',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './assignment-card.html',
 })
 export class AssignmentCard {
   @Input({ required: true }) assignment!: Assignment;
+  @Output() cardClick = new EventEmitter<string>();
 
   private readonly statusConfig: Record<
     Assignment['status'],
@@ -52,7 +52,12 @@ export class AssignmentCard {
       icon: 'pi pi-circle',
     },
   };
+
   get currentStatus() {
     return this.statusConfig[this.assignment.status];
+  }
+
+  onCardClick(): void {
+    this.cardClick.emit(this.assignment.id);
   }
 }
