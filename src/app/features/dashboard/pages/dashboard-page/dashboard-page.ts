@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
-import {
-  AssignmentMap,
-  Assignment as MapAssignment,
-} from '../../components/assignment-map/assignment-map';
+import { Router } from '@angular/router';
+import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
 import { DaySelector } from '../../components/day-selector/day-selector';
 import { DayOption } from '../../components/day-selector/day-selector.types';
@@ -39,6 +37,7 @@ export class DashboardPage implements OnInit {
   ];
 
   private assignmentService = inject(AssignmentService);
+  private router = inject(Router);
 
   ngOnInit() {
     this.assignmentService.getAssignmentCards().subscribe((cards) => {
@@ -60,5 +59,9 @@ export class DashboardPage implements OnInit {
 
   onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
     console.log('Bottom sheet snap:', snap);
+  }
+
+  goToAssignmentDetails(id: string): void {
+    this.router.navigate(['/assignments', id]);
   }
 }

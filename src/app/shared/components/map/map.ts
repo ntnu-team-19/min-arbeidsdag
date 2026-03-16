@@ -33,8 +33,8 @@ export interface Assignment {
   selector: 'app-assignment-map',
   standalone: true,
   imports: [],
-  templateUrl: './assignment-map.html',
-  styleUrl: './assignment-map.css',
+  templateUrl: './map.html',
+  styleUrl: './map.css',
 })
 export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   @Input() assignments: Assignment[] = [];

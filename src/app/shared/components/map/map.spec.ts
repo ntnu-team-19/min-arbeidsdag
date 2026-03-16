@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AssignmentMap, Assignment } from './assignment-map';
+import { AssignmentMap, Assignment } from './map';
 
 describe('AssignmentMap', () => {
   let component: AssignmentMap;
