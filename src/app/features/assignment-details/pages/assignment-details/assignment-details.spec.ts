@@ -236,6 +236,7 @@ describe('AssignmentDetailsPage', () => {
     expect(windowOpenSpy).toHaveBeenCalledWith(
       'https://www.google.com/maps/dir/?api=1&destination=Fagertunvegen%205%2C%207021%20Trondheim',
       '_blank',
+      'noopener,noreferrer',
     );
   });
 
@@ -258,13 +259,7 @@ describe('AssignmentDetailsPage', () => {
       contacted: false,
     };
 
-    const event = {
-      target: {
-        checked: true,
-      },
-    } as unknown as Event;
-
-    component.onContactedChange(event);
+    component.onContactedChange(true);
 
     expect(component.assignment.contacted).toBe(true);
   });
@@ -274,13 +269,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = undefined;
 
-    const event = {
-      target: {
-        checked: true,
-      },
-    } as unknown as Event;
-
-    expect(() => component.onContactedChange(event)).not.toThrow();
+    expect(() => component.onContactedChange(true)).not.toThrow();
     expect(component.assignment).toBeUndefined();
   });
 
