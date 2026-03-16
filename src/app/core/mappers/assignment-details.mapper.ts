@@ -28,7 +28,11 @@ function formatDate(dateString: string | null): string {
   if (!dateString) return '-';
 
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-CA'); // yyyy-mm-dd
+  return date.toLocaleDateString('nb-NO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 }
 
 function formatDurationMinutes(startDate: string | null, endDate: string | null): string {
