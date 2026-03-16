@@ -1,13 +1,10 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { AssignmentDetails } from '../../../../core/models/assignment-details.model';
-import {
-  AssignmentMap,
-  Assignment as MapAssignment,
-} from '../../../../shared/components/map/map';
+import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
@@ -28,7 +25,7 @@ import { FormsModule } from '@angular/forms';
   ],
   templateUrl: './assignment-details.html',
 })
-export class AssignmentDetailsPage {
+export class AssignmentDetailsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly assignmentService = inject(AssignmentService);

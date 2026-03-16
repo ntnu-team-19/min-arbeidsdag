@@ -235,7 +235,7 @@ describe('AssignmentDetailsPage', () => {
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
       'https://www.google.com/maps/dir/?api=1&destination=Fagertunvegen%205%2C%207021%20Trondheim',
-      '_blank'
+      '_blank',
     );
   });
 
@@ -319,7 +319,9 @@ describe('AssignmentDetailsPage', () => {
   it('should log marker click', async () => {
     await createComponent('1315598');
 
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+      // ignore log output in test console
+    });
     const marker = {
       id: 1,
       name: 'Marker',

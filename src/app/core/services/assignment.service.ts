@@ -57,8 +57,8 @@ export class AssignmentService {
   getAssignmentDetailsViewById(id: string | number): Observable<AssignmentDetails | undefined> {
     return this.getAssignmentDetailsById(id).pipe(
       map((assignment) =>
-        assignment ? mapAssignmentDetailsDtoToAssignmentDetails(assignment) : undefined
-      )
+        assignment ? mapAssignmentDetailsDtoToAssignmentDetails(assignment) : undefined,
+      ),
     );
   }
 

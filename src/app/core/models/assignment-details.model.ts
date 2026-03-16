@@ -1,9 +1,4 @@
-export type AssignmentStatus =
-  | 'upcoming'
-  | 'completed'
-  | 'cancelled'
-  | 'confirmed'
-  | 'unconfirmed';
+export type AssignmentStatus = 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'unconfirmed';
 
 export interface AssignmentDetails {
   id: string;

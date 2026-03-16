@@ -1,9 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  AssignmentMap,
-  Assignment as MapAssignment,
-} from '../../../../shared/components/map/map';
+import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
 import { DaySelector } from '../../components/day-selector/day-selector';
 import { DayOption } from '../../components/day-selector/day-selector.types';

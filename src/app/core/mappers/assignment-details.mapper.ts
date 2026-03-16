@@ -71,7 +71,7 @@ function getDayLabel(dateString: string | null): 'today' | 'tomorrow' | 'other' 
 }
 
 export function mapAssignmentDetailsDtoToAssignmentDetails(
-  dto: AssignmentDetailsDto
+  dto: AssignmentDetailsDto,
 ): AssignmentDetails {
   const dayLabel = getDayLabel(dto.showingStartDate);
 

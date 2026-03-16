@@ -1,0 +1,12 @@
+<div class="map-wrapper" [class.compact]="compact">
+  <div id="assignment-map" class="map"></div>
+
+  @if (mapError) {
+    <div class="map-fallback">
+      <div class="map-fallback-content">
+        <p class="map-fallback-title">Unable to load map</p>
+        <p class="map-fallback-message">Please check your internet connection and try again.</p>
+      </div>
+    </div>
+  }
+</div>
