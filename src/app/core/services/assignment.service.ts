@@ -1,9 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AssignmentDetailsDto } from '../models/assignment-details.dto';
 import { Assignment } from '../models/assignment-card.model';
+import { AssignmentDetails } from '../models/assignment-details.model';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
 import { mapAssignmentDetailsDtoToAssignmentCardModel } from '../mappers/assignment-card.mapper';
+import { mapAssignmentDetailsDtoToAssignmentDetails } from '../mappers/assignment-details.mapper';
 
 const STORAGE_KEY = 'assignment-details';
 
@@ -27,6 +30,7 @@ export class AssignmentService {
     if (!raw) {
       return [];
     }
+
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
@@ -35,8 +39,7 @@ export class AssignmentService {
     } catch {
       // fall through to re-seed below
     }
-    // If parsing fails or the data is not an array, treat storage as corrupt:
-    // re-seed with MOCK_ASSIGNMENTS and return them.
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_ASSIGNMENTS));
     return MOCK_ASSIGNMENTS;
   }
@@ -49,6 +52,14 @@ export class AssignmentService {
     const normalizedId = String(id);
     const assignment = this.getAllFromStorage().find((item) => String(item.id) === normalizedId);
     return of(assignment);
+  }
+
+  getAssignmentDetailsViewById(id: string | number): Observable<AssignmentDetails | undefined> {
+    return this.getAssignmentDetailsById(id).pipe(
+      map((assignment) =>
+        assignment ? mapAssignmentDetailsDtoToAssignmentDetails(assignment) : undefined
+      )
+    );
   }
 
   getAssignmentCards(): Observable<Assignment[]> {
