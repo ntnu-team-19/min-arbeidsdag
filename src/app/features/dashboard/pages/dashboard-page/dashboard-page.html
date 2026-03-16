@@ -6,7 +6,10 @@
   @if (isListView) {
     <div class="flex flex-col gap-4 px-4 pb-24">
       @for (card of assignmentCards; track card.id) {
-        <app-assignment-card [assignment]="card" />
+        <app-assignment-card
+          [assignment]="card"
+          (cardClick)="goToAssignmentDetails($event)"
+        />
       }
     </div>
   } @else {
