@@ -29,6 +29,8 @@ const MOCK_CARDS: Assignment[] = [
   },
 ];
 
+const MOCK_TRAVEL_TIMES = [4, 0];
+
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
@@ -41,6 +43,7 @@ describe('DashboardPage', () => {
           provide: AssignmentService,
           useValue: {
             getAssignmentCards: () => of(MOCK_CARDS),
+            getTravelTimes: () => of(MOCK_TRAVEL_TIMES),
           },
         },
       ],
@@ -69,6 +72,10 @@ describe('DashboardPage', () => {
     expect(component.assignmentCards[0].title).toBe('Test oppdrag 1');
   });
 
+  it('should load travel times from service', () => {
+    expect(component.travelTimes).toEqual([4, 0]);
+  });
+
   it('should show day selector', () => {
     const daySelector = fixture.debugElement.query(By.css('app-day-selector'));
     expect(daySelector).toBeTruthy();
@@ -77,6 +84,11 @@ describe('DashboardPage', () => {
   it('should show assignment cards in list view', () => {
     const cards = fixture.debugElement.queryAll(By.css('app-assignment-card'));
     expect(cards.length).toBe(2);
+  });
+
+  it('should show travel time indicators in list view', () => {
+    const indicators = fixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
+    expect(indicators.length).toBe(2);
   });
 
   it('should not show map in list view', () => {

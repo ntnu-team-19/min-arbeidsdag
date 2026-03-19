@@ -74,4 +74,10 @@ export class AssignmentService {
 
     return of(cards);
   }
+
+  getTravelTimes(): Observable<number[]> {
+    const assignments = this.getAllFromStorage();
+    const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
+    return of(travelTimes);
+  }
 }

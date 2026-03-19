@@ -8,11 +8,19 @@ import { AssignmentCard } from '../../components/assignment-card/assignment-card
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
+import { TravelTimeIndicator } from '../../components/travel-time-indicator/travel-time-indicator';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [AssignmentMap, FloatingButton, DaySelector, AssignmentCard, MapBottomSheet],
+  imports: [
+    AssignmentMap,
+    FloatingButton,
+    DaySelector,
+    AssignmentCard,
+    MapBottomSheet,
+    TravelTimeIndicator,
+  ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
@@ -20,6 +28,7 @@ export class DashboardPage implements OnInit {
   selectedDay: DayOption = 'today';
   isListView = true;
   assignmentCards: Assignment[] = [];
+  travelTimes: number[] = [];
 
   mapAssignments: MapAssignment[] = [
     {
@@ -42,6 +51,10 @@ export class DashboardPage implements OnInit {
   ngOnInit() {
     this.assignmentService.getAssignmentCards().subscribe((cards) => {
       this.assignmentCards = cards;
+    });
+
+    this.assignmentService.getTravelTimes().subscribe((times) => {
+      this.travelTimes = times;
     });
   }
 

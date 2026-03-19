@@ -4,8 +4,11 @@
   </div>
 
   @if (isListView) {
-    <div class="flex flex-col gap-4 px-4 pb-24">
-      @for (card of assignmentCards; track card.id) {
+    <div class="flex flex-col gap-2 px-4 pb-24">
+      @for (card of assignmentCards; track card.id; let i = $index) {
+        @if (travelTimes[i] !== undefined) {
+          <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
+        }
         <app-assignment-card [assignment]="card" (cardClick)="goToAssignmentDetails($event)" />
       }
     </div>
