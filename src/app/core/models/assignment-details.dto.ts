@@ -12,6 +12,10 @@ export interface AssignmentDetailsDto {
   showingDeadlineDate: string | null;
   desiredDateForShowing: string | null;
   streetAddress: string;
+  locationPoint: {
+    x: number;
+    y: number;
+  }
   postalCode: string;
   showingContactName: string | null;
   showingContactPhone: string | null;
