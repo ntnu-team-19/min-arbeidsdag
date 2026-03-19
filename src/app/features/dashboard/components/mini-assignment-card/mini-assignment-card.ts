@@ -62,7 +62,7 @@ export class MiniAssignmentCard {
     this.cardClick.emit(this.assignment.id);
   }
 
- onDirectionsClick(event: MouseEvent): void {
+  onDirectionsClick(event: MouseEvent): void {
     event.stopPropagation();
 
     if (!this.assignment) return;

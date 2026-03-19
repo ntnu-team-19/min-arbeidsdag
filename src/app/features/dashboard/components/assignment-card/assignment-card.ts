@@ -56,7 +56,7 @@ export class AssignmentCard {
       barClass: 'bg-[#FFD68A]',
       iconClass: 'text-[#D9A441]',
       icon: 'pi pi-circle',
-    }
+    },
   };
 
   get currentStatus() {

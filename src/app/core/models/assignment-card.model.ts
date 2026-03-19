@@ -1,4 +1,10 @@
-export type AssignmentStatus = 'ongoing' | 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'unconfirmed';
+export type AssignmentStatus =
+  | 'ongoing'
+  | 'upcoming'
+  | 'completed'
+  | 'cancelled'
+  | 'confirmed'
+  | 'unconfirmed';
 
 export interface AssignmentLocationPoint {
   x: number;
