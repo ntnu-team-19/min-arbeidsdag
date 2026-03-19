@@ -1,24 +1,33 @@
-<div class="flex justify-center">
-  <div class="inline-flex gap-1" role="tablist" aria-label="Velg dag">
-    @for (option of options; track option.value; let i = $index; let last = $last) {
-      <button
-        type="button"
-        role="tab"
-        class="min-w-[100px] border-2 px-6 py-2 text-lg font-medium leading-none transition-colors duration-150"
-        [ngClass]="[
-          i === 0 ? 'rounded-l-[10px] rounded-r-none' : '',
-          last ? 'rounded-r-[10px] rounded-l-none' : '',
-          i !== 0 && !last ? 'rounded-none' : '',
-          isSelected(option.value)
-            ? 'border-[#0B4A8B] bg-[#0B4A8B] text-white'
-            : 'border-[#0B4A8B] bg-white text-black hover:bg-blue-50',
-        ]"
-        [attr.aria-selected]="isSelected(option.value)"
-        [attr.tabindex]="isSelected(option.value) ? 0 : -1"
-        (click)="selectDay(option.value)"
-      >
-        {{ option.label }}
-      </button>
-    }
+<div class="px-4 md:px-6">
+  <div class="grid grid-cols-2 gap-2 md:gap-2" role="tablist" aria-label="Velg oversikt for dag">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="selectedDay === 'today'"
+      [attr.tabindex]="selectedDay === 'today' ? 0 : -1"
+      (click)="selectDay('today')"
+      class="flex min-h-[96px] w-full flex-col items-start justify-center rounded-xl border px-4 py-4 text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B4A8B] md:min-h-[96px] md:px-5 md:py-4"
+      [ngClass]="dayCardClasses(selectedDay === 'today')"
+    >
+      <span [ngClass]="dayTitleClasses(selectedDay === 'today')"> Dagens Oversikt </span>
+      <span [ngClass]="dayDateClasses(selectedDay === 'today')">
+        {{ todayDateLabel }}
+      </span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="selectedDay === 'tomorrow'"
+      [attr.tabindex]="selectedDay === 'tomorrow' ? 0 : -1"
+      (click)="selectDay('tomorrow')"
+      class="flex min-h-[96px] w-full flex-col items-end justify-center rounded-xl border px-4 py-4 text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B4A8B] md:min-h-[96px] md:px-5 md:py-4"
+      [ngClass]="dayCardClasses(selectedDay === 'tomorrow')"
+    >
+      <span [ngClass]="dayTitleClasses(selectedDay === 'tomorrow')"> Morgendagens Oversikt </span>
+      <span [ngClass]="dayDateClasses(selectedDay === 'tomorrow')">
+        {{ tomorrowDateLabel }}
+      </span>
+    </button>
   </div>
 </div>

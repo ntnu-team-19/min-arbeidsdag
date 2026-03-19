@@ -1,1 +1,1 @@
-export type DayOption = 'yesterday' | 'today' | 'tomorrow';
+export type DayOption = 'today' | 'tomorrow';
