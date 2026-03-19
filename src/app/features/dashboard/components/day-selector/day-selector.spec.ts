@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DaySelector } from './day-selector';
@@ -10,18 +10,11 @@ import { DayOption } from './day-selector.types';
   standalone: true,
   imports: [DaySelector],
   template: `
-    <app-day-selector
-      [selectedDay]="selectedDay"
-      [showYesterday]="showYesterday"
-      [fullWidth]="fullWidth"
-      (selectedDayChange)="onDayChange($event)"
-    />
+    <app-day-selector [selectedDay]="selectedDay" (selectedDayChange)="onDayChange($event)" />
   `,
 })
 class TestHostComponent {
   selectedDay: DayOption = 'today';
-  showYesterday = true;
-  fullWidth = true;
 
   onDayChange(day: DayOption): void {
     this.selectedDay = day;
@@ -29,58 +22,111 @@ class TestHostComponent {
 }
 
 describe('DaySelector', () => {
-  let fixture: ComponentFixture<TestHostComponent>;
-  let host: TestHostComponent;
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
     }).compileComponents();
+  });
 
-    fixture = TestBed.createComponent(TestHostComponent);
-    host = fixture.componentInstance;
+  function createHost(selectedDay: DayOption = 'today') {
+    const fixture = TestBed.createComponent(TestHostComponent);
+    const host = fixture.componentInstance;
+    host.selectedDay = selectedDay;
     fixture.detectChanges();
+    return { fixture, host };
+  }
+
+  it('should show today and tomorrow cards', () => {
+    const { fixture } = createHost();
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    const texts = buttons.map((button) =>
+      button.nativeElement.textContent.replace(/\s+/g, ' ').trim(),
+    );
+
+    expect(buttons).toHaveLength(2);
+    expect(texts[0]).toContain('Dagens Oversikt torsdag 19. mars');
+    expect(texts[1]).toContain('Morgendagens Oversikt fredag 20. mars');
   });
 
-  it('should show yesterday, today and tomorrow by default', () => {
-    const buttons = fixture.debugElement.queryAll(By.css('button'));
-    const texts = buttons.map((button) => button.nativeElement.textContent.trim());
+  it('should have today selected by default', () => {
+    const { fixture } = createHost();
 
-    expect(texts).toEqual(['I går', 'I dag', 'I morgen']);
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+
+    expect(buttons[0].nativeElement.getAttribute('aria-selected')).toBe('true');
+    expect(buttons[1].nativeElement.getAttribute('aria-selected')).toBe('false');
   });
 
-  it('should mark the selected day with aria-selected=true', () => {
-    const buttons = fixture.debugElement.queryAll(By.css('button'));
-    const todayButton = buttons[1].nativeElement as HTMLButtonElement;
+  it('should mark tomorrow as selected when selectedDay is tomorrow', () => {
+    const { fixture } = createHost('tomorrow');
 
-    expect(todayButton.getAttribute('aria-selected')).toBe('true');
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+
+    expect(buttons[0].nativeElement.getAttribute('aria-selected')).toBe('false');
+    expect(buttons[1].nativeElement.getAttribute('aria-selected')).toBe('true');
   });
 
   it('should update selected day when clicking tomorrow', () => {
-    const buttons = fixture.debugElement.queryAll(By.css('button'));
-    const tomorrowButton = buttons[2];
+    const { fixture, host } = createHost('today');
 
-    tomorrowButton.triggerEventHandler('click');
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    buttons[1].triggerEventHandler('click');
+
     fixture.detectChanges();
 
     expect(host.selectedDay).toBe('tomorrow');
   });
 
-  it('should not emit or change state when clicking already selected day', () => {
-    const buttons = fixture.debugElement.queryAll(By.css('button'));
-    const todayButton = buttons[1];
+  it('should update selected day when clicking today from tomorrow', () => {
+    const { fixture, host } = createHost('tomorrow');
 
-    todayButton.triggerEventHandler('click');
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    buttons[0].triggerEventHandler('click');
+
     fixture.detectChanges();
 
     expect(host.selectedDay).toBe('today');
   });
 
-  it('should have today selected by default', () => {
+  it('should not change state when clicking already selected day', () => {
+    const { fixture, host } = createHost('today');
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    buttons[0].triggerEventHandler('click');
+
+    fixture.detectChanges();
+
+    expect(host.selectedDay).toBe('today');
+  });
+
+  it('should render a date label for both cards', () => {
+    const { fixture } = createHost();
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    const texts = buttons.map((button) =>
+      button.nativeElement.textContent.replace(/\s+/g, ' ').trim(),
+    );
+
+    expect(texts[0]).toMatch(/\d{1,2}\./);
+    expect(texts[1]).toMatch(/\d{1,2}\./);
+  });
+
+  it('should apply selected styling class to today card by default', () => {
+    const { fixture } = createHost('today');
+
     const buttons = fixture.debugElement.queryAll(By.css('button'));
 
-    expect(buttons[0].nativeElement.getAttribute('aria-selected')).toBe('false');
-    expect(buttons[1].nativeElement.getAttribute('aria-selected')).toBe('true');
-    expect(buttons[2].nativeElement.getAttribute('aria-selected')).toBe('false');
+    expect(buttons[0].nativeElement.className).toContain('bg-[#EAF8FE]');
+    expect(buttons[1].nativeElement.className).toContain('bg-white');
+  });
+
+  it('should apply selected styling class to tomorrow card when selected', () => {
+    const { fixture } = createHost('tomorrow');
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+
+    expect(buttons[0].nativeElement.className).toContain('bg-white');
+    expect(buttons[1].nativeElement.className).toContain('bg-[#EAF8FE]');
   });
 });
