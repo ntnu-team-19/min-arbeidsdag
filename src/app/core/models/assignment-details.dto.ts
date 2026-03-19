@@ -15,7 +15,7 @@ export interface AssignmentDetailsDto {
   locationPoint: {
     x: number;
     y: number;
-  }
+  };
   postalCode: string;
   showingContactName: string | null;
   showingContactPhone: string | null;
