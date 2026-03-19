@@ -25,6 +25,10 @@ describe('AssignmentService', () => {
       showingDeadlineDate: '2023-09-11T23:59:59',
       desiredDateForShowing: '2026-02-20T00:00:00',
       streetAddress: 'Fagertunvegen 5',
+      locationPoint: {
+        x: 10.39506,
+        y: 63.43049,
+      },
       postalCode: '7021',
       showingContactName: 'Ola Entreprenør',
       showingContactPhone: '41414141',
@@ -54,6 +58,10 @@ describe('AssignmentService', () => {
       showingDeadlineDate: '2024-05-30T23:59:59',
       desiredDateForShowing: '2026-02-21T00:00:00',
       streetAddress: 'Otto Nielsens Veg 16',
+      locationPoint: {
+        x: 10.43138,
+        y: 63.42262,
+      },
       postalCode: '7052',
       showingContactName: 'second contact',
       showingContactPhone: '132 123 45',
