@@ -6,10 +6,10 @@
   <div class="px-4 py-2 text-sm font-semibold text-slate-900" [ngClass]="currentStatus.barClass">
     <span
       [ngClass]="
-        assignment.status === 'upcoming' || assignment.status === 'confirmed'
-          ? 'text-white'
-          : 'text-black'
-      "
+     assignment.status === 'confirmed' || assignment.status === 'next'
+      ? 'text-white'
+      : 'text-black'
+  "
     >
       {{ currentStatus.label }}
     </span>

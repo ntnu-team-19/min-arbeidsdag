@@ -32,6 +32,11 @@ export class MiniAssignmentCard {
       badgeClass: 'bg-[#547FA9] text-white',
       dotClass: 'border-[#1F4E79] text-[#1F4E79]',
     },
+    next: {
+      label: 'Neste oppdrag',
+      badgeClass: 'bg-[#1F4E79] text-white',
+      dotClass: 'text-[#1F4E79]',
+    },
     completed: {
       label: 'Fullført',
       badgeClass: 'bg-[#54DA8C] text-black',

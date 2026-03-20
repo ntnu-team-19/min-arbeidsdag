@@ -72,7 +72,7 @@ export class AssignmentService {
       .filter((item) => item.desiredDateForShowing?.startsWith(date))
       .map(mapAssignmentDetailsDtoToAssignmentCardModel);
 
-    return of(cards);
+    return of(this.sortByStatus(cards));
   }
 
   getTravelTimes(): Observable<number[]> {
@@ -87,5 +87,18 @@ export class AssignmentService {
     );
     const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
     return of(travelTimes);
+  }
+
+  private readonly statusOrder: Record<string, number> = {
+    ongoing: 0,
+    next: 1,
+    upcoming: 1,
+    completed: 2,
+  };
+
+  private sortByStatus(cards: Assignment[]): Assignment[] {
+    return cards.sort(
+      (a, b) => (this.statusOrder[a.status] ?? 99) - (this.statusOrder[b.status] ?? 99),
+    );
   }
 }
