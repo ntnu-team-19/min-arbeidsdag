@@ -72,12 +72,33 @@ export class AssignmentService {
       .filter((item) => item.desiredDateForShowing?.startsWith(date))
       .map(mapAssignmentDetailsDtoToAssignmentCardModel);
 
-    return of(cards);
+    return of(this.sortByStatus(cards));
   }
 
   getTravelTimes(): Observable<number[]> {
     const assignments = this.getAllFromStorage();
     const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
     return of(travelTimes);
+  }
+
+  getTravelTimesByDesiredDate(date: string): Observable<number[]> {
+    const assignments = this.getAllFromStorage().filter((item) =>
+      item.desiredDateForShowing?.startsWith(date),
+    );
+    const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
+    return of(travelTimes);
+  }
+
+  private readonly statusOrder: Record<string, number> = {
+    ongoing: 0,
+    next: 1,
+    upcoming: 1,
+    completed: 2,
+  };
+
+  private sortByStatus(cards: Assignment[]): Assignment[] {
+    return cards.sort(
+      (a, b) => (this.statusOrder[a.status] ?? 99) - (this.statusOrder[b.status] ?? 99),
+    );
   }
 }

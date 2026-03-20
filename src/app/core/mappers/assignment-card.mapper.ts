@@ -18,6 +18,8 @@ export function mapDtoStatusToCardStatus(status: number): AssignmentStatus {
     case 5:
     case 12:
       return 'completed';
+    case 6:
+      return 'next';
     case 1:
       return 'upcoming';
     default:

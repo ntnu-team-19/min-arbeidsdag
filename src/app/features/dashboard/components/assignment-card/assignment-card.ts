@@ -23,7 +23,7 @@ export class AssignmentCard {
   > = {
     upcoming: {
       label: 'Kommende oppdrag',
-      barClass: 'bg-[#547FA9]',
+      barClass: 'bg-[#B0C4D7]',
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-circle',
     },
@@ -32,6 +32,12 @@ export class AssignmentCard {
       barClass: 'bg-[#FFD68A]',
       iconClass: 'text-[#FFD68A]',
       icon: 'pi pi-circle',
+    },
+    next: {
+      label: 'Neste oppdrag',
+      barClass: 'bg-[#1F4E79]',
+      icon: 'pi pi-arrow-circle-right',
+      iconClass: 'text-[#1F4E79]',
     },
     completed: {
       label: 'Fullført oppdrag',
