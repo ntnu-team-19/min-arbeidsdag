@@ -49,17 +49,12 @@ export class DashboardPage implements OnInit {
   private router = inject(Router);
 
   ngOnInit() {
-    this.assignmentService.getAssignmentCards().subscribe((cards) => {
-      this.assignmentCards = cards;
-    });
-
-    this.assignmentService.getTravelTimes().subscribe((times) => {
-      this.travelTimes = times;
-    });
+    this.loadAssignmentsForSelectedDay();
   }
 
   onDayChange(day: DayOption) {
-    console.log('Valgt dag:', day);
+    this.selectedDay = day;
+    this.loadAssignmentsForSelectedDay();
   }
 
   onMarkerClicked(assignment: MapAssignment) {
@@ -76,5 +71,25 @@ export class DashboardPage implements OnInit {
 
   goToAssignmentDetails(id: string): void {
     this.router.navigate(['/assignments', id]);
+  }
+
+  private getDateForDay(day: DayOption): string {
+    const date = new Date();
+    if (day === 'tomorrow') {
+      date.setDate(date.getDate() + 1);
+    }
+    return date.toISOString().slice(0, 10);
+  }
+
+  private loadAssignmentsForSelectedDay(): void {
+    const date = this.getDateForDay(this.selectedDay);
+
+    this.assignmentService.getAssignmentCardsByDesiredDate(date).subscribe((cards) => {
+      this.assignmentCards = cards;
+    });
+
+    this.assignmentService.getTravelTimesByDesiredDate(date).subscribe((times) => {
+      this.travelTimes = times;
+    });
   }
 }

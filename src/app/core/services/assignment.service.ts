@@ -80,4 +80,12 @@ export class AssignmentService {
     const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
     return of(travelTimes);
   }
+
+  getTravelTimesByDesiredDate(date: string): Observable<number[]> {
+    const assignments = this.getAllFromStorage().filter((item) =>
+      item.desiredDateForShowing?.startsWith(date),
+    );
+    const travelTimes = assignments.map((dto) => Math.round(dto.calculatedTraveltime));
+    return of(travelTimes);
+  }
 }
