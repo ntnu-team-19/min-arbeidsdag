@@ -96,10 +96,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.router.navigate(['/assignments', id]);
   }
 
-  trackByAssignmentId(_: number, assignment: Assignment): string {
-    return assignment.id;
-  }
-
   private updatePageScrollLock(): void {
     if (this.isListView) {
       this.unlockPageScroll();
