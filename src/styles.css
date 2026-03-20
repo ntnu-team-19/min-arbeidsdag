@@ -3,3 +3,7 @@
 @import 'tailwindcss';
 @import 'ol/ol.css';
 @import 'primeicons/primeicons.css';
+
+body {
+  background-color: #F8FAFC;
+}
