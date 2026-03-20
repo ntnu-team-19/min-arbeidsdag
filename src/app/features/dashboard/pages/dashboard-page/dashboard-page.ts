@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
@@ -9,6 +10,7 @@ import { Assignment } from '../../../../core/models/assignment-card.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { TravelTimeIndicator } from '../../components/travel-time-indicator/travel-time-indicator';
+import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-assignment-card';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -20,11 +22,12 @@ import { TravelTimeIndicator } from '../../components/travel-time-indicator/trav
     AssignmentCard,
     MapBottomSheet,
     TravelTimeIndicator,
+    MiniAssignmentCard,
   ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
   selectedDay: DayOption = 'today';
   isListView = true;
   assignmentCards: Assignment[] = [];
@@ -47,9 +50,22 @@ export class DashboardPage implements OnInit {
 
   private assignmentService = inject(AssignmentService);
   private router = inject(Router);
+  private renderer = inject(Renderer2);
+  private document = inject(DOCUMENT);
+
+  get sheetTitle(): string {
+    const count = this.assignmentCards.length;
+    const dayText = this.selectedDay === 'today' ? 'i dag' : 'i morgen';
+    return `${count} Oppdrag ${dayText}`;
+  }
 
   ngOnInit() {
     this.loadAssignmentsForSelectedDay();
+    this.updatePageScrollLock();
+  }
+
+  ngOnDestroy(): void {
+    this.unlockPageScroll();
   }
 
   onDayChange(day: DayOption) {
@@ -63,6 +79,7 @@ export class DashboardPage implements OnInit {
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
+    this.updatePageScrollLock();
   }
 
   onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
@@ -71,6 +88,30 @@ export class DashboardPage implements OnInit {
 
   goToAssignmentDetails(id: string): void {
     this.router.navigate(['/assignments', id]);
+  }
+
+  private updatePageScrollLock(): void {
+    if (this.isListView) {
+      this.unlockPageScroll();
+      return;
+    }
+
+    this.lockPageScroll();
+  }
+
+  private lockPageScroll(): void {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    this.renderer.setStyle(this.document.body, 'overflow', 'hidden');
+    this.renderer.setStyle(this.document.documentElement, 'overflow', 'hidden');
+    this.renderer.setStyle(this.document.body, 'overscroll-behavior', 'none');
+    this.renderer.setStyle(this.document.documentElement, 'overscroll-behavior', 'none');
+  }
+
+  private unlockPageScroll(): void {
+    this.renderer.removeStyle(this.document.body, 'overflow');
+    this.renderer.removeStyle(this.document.documentElement, 'overflow');
+    this.renderer.removeStyle(this.document.body, 'overscroll-behavior');
+    this.renderer.removeStyle(this.document.documentElement, 'overscroll-behavior');
   }
 
   private getDateForDay(day: DayOption): string {

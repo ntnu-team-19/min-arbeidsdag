@@ -1,0 +1,37 @@
+.dashboard-page {
+  min-height: 100%;
+}
+
+.dashboard-page.map-view {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: relative;
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.day-selector-row {
+  z-index: 25;
+}
+
+.dashboard-page.map-view .day-selector-row {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.map-stage {
+  position: relative;
+  min-height: 0; /* required so inner layers can fit without page scroll */
+  overflow: hidden;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+.map-stage app-assignment-map {
+  display: block;
+  height: 100%;
+}

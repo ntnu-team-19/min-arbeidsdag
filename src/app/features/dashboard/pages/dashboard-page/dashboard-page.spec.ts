@@ -71,7 +71,7 @@ describe('DashboardPage', () => {
 
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
-    fixture.autoDetectChanges(true);
+    fixture.detectChanges();
     await fixture.whenStable();
   });
 
@@ -123,6 +123,17 @@ describe('DashboardPage', () => {
   it('should show floating button', () => {
     const fab = fixture.debugElement.query(By.css('app-floating-button'));
     expect(fab).toBeTruthy();
+  });
+
+  it('should have day-selector-row class on day selector container', () => {
+    const daySelectorRow = fixture.debugElement.query(By.css('.day-selector-row'));
+    expect(daySelectorRow).toBeTruthy();
+  });
+
+  it('should have correct sheet title based on selected day and assignment count', () => {
+    expect(component.sheetTitle).toBe('4 Oppdrag i dag');
+    component.selectedDay = 'tomorrow';
+    expect(component.sheetTitle).toBe('4 Oppdrag i morgen');
   });
 
   it('should update selectedDay when day changes', () => {

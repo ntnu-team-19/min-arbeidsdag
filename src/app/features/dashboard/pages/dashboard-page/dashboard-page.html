@@ -1,5 +1,5 @@
-<div class="dashboard-page">
-  <div class="my-3">
+<div class="dashboard-page" [class.map-view]="!isListView">
+  <div class="my-3 day-selector-row">
     <app-day-selector [(selectedDay)]="selectedDay" (selectedDayChange)="onDayChange($event)" />
   </div>
 
@@ -17,18 +17,29 @@
       }
     </div>
   } @else {
-    <app-assignment-map
-      [assignments]="mapAssignments"
-      [compact]="false"
-      (markerClicked)="onMarkerClicked($event)"
-    ></app-assignment-map>
+    <div class="map-stage">
+      <app-assignment-map
+        [assignments]="mapAssignments"
+        [compact]="false"
+        (markerClicked)="onMarkerClicked($event)"
+      ></app-assignment-map>
 
-    <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
-      <h2 class="sheet-title">Assignments</h2>
-      <p class="sheet-text">Temporary bottom sheet content.</p>
+      <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
+        <h2 sheet-header class="px-4 pb-2 text-lg font-bold text-slate-900">{{ sheetTitle }}</h2>
 
-      <div class="sheet-placeholder">Assignment cards will be added later.</div>
-    </app-map-bottom-sheet>
+        <div sheet-body>
+          @for (assignment of assignmentCards; track assignment.id; let i = $index) {
+            @if (travelTimes[i] !== undefined) {
+              <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
+            }
+            <app-mini-assignment-card
+              [assignment]="assignment"
+              (cardClick)="goToAssignmentDetails($event)"
+            />
+          }
+        </div>
+      </app-map-bottom-sheet>
+    </div>
   }
 
   <app-floating-button [isListView]="isListView" (viewChange)="onViewChange($event)" />

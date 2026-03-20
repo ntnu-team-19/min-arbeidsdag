@@ -11,17 +11,24 @@ describe('MapBottomSheet', () => {
   beforeEach(() => {
     component = new MapBottomSheet();
 
-    Object.defineProperty(window, 'innerHeight', {
-      configurable: true,
-      writable: true,
-      value: 1000,
-    });
+    const mockSheetElement = {
+      setPointerCapture,
+      releasePointerCapture,
+      getBoundingClientRect: () => ({
+        height: 1000,
+      }),
+    };
+
+    const mockContentElement = {
+      scrollTop: 0,
+    };
 
     component.sheetRef = {
-      nativeElement: {
-        setPointerCapture,
-        releasePointerCapture,
-      },
+      nativeElement: mockSheetElement,
+    } as unknown as ElementRef<HTMLDivElement>;
+
+    component.contentRef = {
+      nativeElement: mockContentElement,
     } as unknown as ElementRef<HTMLDivElement>;
   });
 
@@ -41,7 +48,7 @@ describe('MapBottomSheet', () => {
     component.ngOnInit();
 
     expect(component.currentSnap).toBe('peek');
-    expect(component.currentTranslateY).toBe(600);
+    expect(component.currentTranslateY).toBe(520);
   });
 
   it('should initialize with collapsed snap when initialSnap is collapsed', () => {
@@ -50,7 +57,7 @@ describe('MapBottomSheet', () => {
     component.ngOnInit();
 
     expect(component.currentSnap).toBe('collapsed');
-    expect(component.currentTranslateY).toBe(950);
+    expect(component.currentTranslateY).toBe(844);
   });
 
   it('should initialize with expanded snap when initialSnap is expanded', () => {
@@ -59,7 +66,7 @@ describe('MapBottomSheet', () => {
     component.ngOnInit();
 
     expect(component.currentSnap).toBe('expanded');
-    expect(component.currentTranslateY).toBe(120);
+    expect(component.currentTranslateY).toBe(100);
   });
 
   it('should enable animation after view init', () => {
@@ -70,6 +77,8 @@ describe('MapBottomSheet', () => {
         return 1;
       });
 
+    component.initialSnap = 'peek';
+    component.ngOnInit();
     component.isAnimating = false;
 
     component.ngAfterViewInit();
@@ -82,15 +91,22 @@ describe('MapBottomSheet', () => {
     component.initialSnap = 'peek';
     component.ngOnInit();
 
-    Object.defineProperty(window, 'innerHeight', {
-      configurable: true,
-      writable: true,
-      value: 800,
+    const newHeight = 800;
+    vi.spyOn(component.sheetRef.nativeElement, 'getBoundingClientRect').mockReturnValue({
+      height: newHeight,
+      width: 0,
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
     });
 
     component.onResize();
 
-    expect(component.currentTranslateY).toBe(480);
+    expect(component.currentTranslateY).toBe(Math.round(newHeight * 0.52));
   });
 
   it('should start dragging on pointer down', () => {
@@ -133,7 +149,7 @@ describe('MapBottomSheet', () => {
       clientY: 300,
     } as PointerEvent);
 
-    expect(component.currentTranslateY).toBe(700);
+    expect(component.currentTranslateY).toBe(620);
   });
 
   it('should clamp movement to expanded snap point minimum', () => {
@@ -148,7 +164,7 @@ describe('MapBottomSheet', () => {
       clientY: -1000,
     } as PointerEvent);
 
-    expect(component.currentTranslateY).toBe(120);
+    expect(component.currentTranslateY).toBe(100);
   });
 
   it('should clamp movement to collapsed snap point maximum', () => {
@@ -163,7 +179,7 @@ describe('MapBottomSheet', () => {
       clientY: 2000,
     } as PointerEvent);
 
-    expect(component.currentTranslateY).toBe(950);
+    expect(component.currentTranslateY).toBe(844);
   });
 
   it('should do nothing on pointer up if not dragging', () => {
@@ -181,7 +197,7 @@ describe('MapBottomSheet', () => {
 
     component.ngOnInit();
     component.isDragging = true;
-    component.currentTranslateY = 620;
+    component.currentTranslateY = 530;
 
     component.onPointerUp({
       pointerId: 1,
@@ -191,7 +207,7 @@ describe('MapBottomSheet', () => {
     expect(component.isAnimating).toBe(true);
     expect(releasePointerCapture).toHaveBeenCalledWith(1);
     expect(component.currentSnap).toBe('peek');
-    expect(component.currentTranslateY).toBe(600);
+    expect(component.currentTranslateY).toBe(520);
     expect(emitSpy).toHaveBeenCalledWith('peek');
   });
 
@@ -207,7 +223,7 @@ describe('MapBottomSheet', () => {
     } as PointerEvent);
 
     expect(component.currentSnap).toBe('expanded');
-    expect(component.currentTranslateY).toBe(120);
+    expect(component.currentTranslateY).toBe(100);
     expect(emitSpy).toHaveBeenCalledWith('expanded');
   });
 
@@ -216,14 +232,27 @@ describe('MapBottomSheet', () => {
 
     component.ngOnInit();
     component.isDragging = true;
-    component.currentTranslateY = 920;
+    component.currentTranslateY = 820;
 
     component.onPointerUp({
       pointerId: 1,
     } as PointerEvent);
 
     expect(component.currentSnap).toBe('collapsed');
-    expect(component.currentTranslateY).toBe(950);
+    expect(component.currentTranslateY).toBe(844);
     expect(emitSpy).toHaveBeenCalledWith('collapsed');
+  });
+
+  it('should reset content scroll when snapping to collapsed', () => {
+    component.ngOnInit();
+    component.contentRef.nativeElement.scrollTop = 100;
+    component.isDragging = true;
+    component.currentTranslateY = 820;
+
+    component.onPointerUp({
+      pointerId: 1,
+    } as PointerEvent);
+
+    expect(component.contentRef.nativeElement.scrollTop).toBe(0);
   });
 });

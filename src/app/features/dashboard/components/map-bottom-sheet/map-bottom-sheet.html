@@ -3,6 +3,7 @@
   class="bottom-sheet"
   [class.animating]="isAnimating"
   [style.transform]="'translateY(' + currentTranslateY + 'px)'"
+  [style.--sheet-offset.px]="currentTranslateY"
   (pointermove)="onPointerMove($event)"
   (pointerup)="onPointerUp($event)"
   (pointercancel)="onPointerUp($event)"
@@ -11,7 +12,11 @@
     <div class="drag-handle"></div>
   </div>
 
-  <div class="sheet-content">
-    <ng-content></ng-content>
+  <div class="sheet-header">
+    <ng-content select="[sheet-header]"></ng-content>
+  </div>
+
+  <div #content class="sheet-content">
+    <ng-content select="[sheet-body]"></ng-content>
   </div>
 </div>
