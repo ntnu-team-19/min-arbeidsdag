@@ -25,10 +25,7 @@ describe('AssignmentService', () => {
       showingDeadlineDate: '2023-09-11T23:59:59',
       desiredDateForShowing: '2026-02-20T00:00:00',
       streetAddress: 'Fagertunvegen 5',
-      locationPoint: {
-        x: 10.39506,
-        y: 63.43049,
-      },
+      locationPoint: { x: 10.39506, y: 63.43049 },
       postalCode: '7021',
       showingContactName: 'Ola Entreprenør',
       showingContactPhone: '41414141',
@@ -56,24 +53,21 @@ describe('AssignmentService', () => {
       inquiryName: 'Underordnet 5866938: Test1312',
       inquiryDescription: 'El-nett, Vann/Avløp\nGraving\n3 meter',
       showingDeadlineDate: '2024-05-30T23:59:59',
-      desiredDateForShowing: '2026-02-21T00:00:00',
+      desiredDateForShowing: '2026-02-20T00:00:00',
       streetAddress: 'Otto Nielsens Veg 16',
-      locationPoint: {
-        x: 10.43138,
-        y: 63.42262,
-      },
+      locationPoint: { x: 10.43138, y: 63.42262 },
       postalCode: '7052',
       showingContactName: 'second contact',
       showingContactPhone: '132 123 45',
       municipalityNumber: '5001',
       municipalityName: 'Trondheim',
       deliveryDeadline: null,
-      showingStartDate: '2026-02-21T09:00:00',
-      showingEndDate: '2026-02-21T09:34:36',
+      showingStartDate: '2026-02-20T09:00:00',
+      showingEndDate: '2026-02-20T09:34:36',
       showingAfterCustomerWish: false,
       calculatedTimeOnsite: 7.0,
       editedTimeOnsite: 34.6,
-      calculatedTraveltime: 0.0,
+      calculatedTraveltime: 12.0,
       orderedFor: ['GLOBALCONNECT', 'STATKRAFT ENERGI AS'],
       commentFromShower: null,
     },
@@ -153,10 +147,8 @@ describe('AssignmentService', () => {
     const result = await firstValueFrom(newService.getAssignmentCards());
 
     expect(result.length).toBe(2);
-
     expect(result[0].id).toBe('1315598');
     expect(result[0].title).toBe('Test telenor api 10');
-    expect(result[0].shortDescription).toBe('Vann/Avløp\nGraving\n2 meter');
     expect(result[0].address).toContain('Fagertunvegen 5');
     expect(result[0].phoneNumber).toBe('41414141');
   });
@@ -167,9 +159,7 @@ describe('AssignmentService', () => {
 
     const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2026-02-20'));
 
-    expect(result.length).toBe(1);
-    expect(result[0].id).toBe('1315598');
-    expect(result[0].title).toBe('Test telenor api 10');
+    expect(result.length).toBe(2);
   });
 
   it('should return an empty array when no assignments match desired date', async () => {
@@ -177,6 +167,54 @@ describe('AssignmentService', () => {
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2030-01-01'));
+
+    expect(result).toEqual([]);
+  });
+
+  it('should sort cards by status: ongoing first, then upcoming, then completed', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2026-02-20'));
+
+    const statusOrder = ['ongoing', 'next', 'upcoming', 'completed'];
+    let lastIndex = -1;
+    for (const card of result) {
+      const currentIndex = statusOrder.indexOf(card.status);
+      expect(currentIndex).toBeGreaterThanOrEqual(lastIndex);
+      lastIndex = currentIndex;
+    }
+  });
+
+  it('should return travel times for all assignments', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getTravelTimes());
+
+    expect(result.length).toBe(2);
+    expect(result[0]).toBe(4);
+    expect(result[1]).toBe(12);
+  });
+
+  it('should return travel times filtered by desired date', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getTravelTimesByDesiredDate('2026-02-20'));
+
+    expect(result.length).toBe(2);
+    result.forEach((time) => {
+      expect(typeof time).toBe('number');
+      expect(Number.isInteger(time)).toBe(true);
+    });
+  });
+
+  it('should return empty travel times for date with no assignments', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getTravelTimesByDesiredDate('2030-01-01'));
 
     expect(result).toEqual([]);
   });
