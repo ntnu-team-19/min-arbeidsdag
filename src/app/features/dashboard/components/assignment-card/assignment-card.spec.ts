@@ -51,98 +51,116 @@ describe('AssignmentCard', () => {
     expect(text).toContain('+47 876 54 321');
   });
 
-  it('should show correct label for upcoming status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'upcoming',
-    });
+  // ── Status labels ──
 
+  it('should show correct label for upcoming status', async () => {
+    await createComponent({ ...mockAssignment, status: 'upcoming' });
     expect(component.currentStatus.label).toBe('Kommende oppdrag');
   });
 
-  it('should show correct label for completed status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'completed',
-    });
+  it('should show correct label for ongoing status', async () => {
+    await createComponent({ ...mockAssignment, status: 'ongoing' });
+    expect(component.currentStatus.label).toBe('Pågående oppdrag');
+  });
 
+  it('should show correct label for next status', async () => {
+    await createComponent({ ...mockAssignment, status: 'next' });
+    expect(component.currentStatus.label).toBe('Neste oppdrag');
+  });
+
+  it('should show correct label for completed status', async () => {
+    await createComponent({ ...mockAssignment, status: 'completed' });
     expect(component.currentStatus.label).toBe('Fullført oppdrag');
   });
 
   it('should show correct label for cancelled status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'cancelled',
-    });
-
+    await createComponent({ ...mockAssignment, status: 'cancelled' });
     expect(component.currentStatus.label).toBe('Avlyst oppdrag');
   });
 
   it('should show correct label for confirmed status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'confirmed',
-    });
-
+    await createComponent({ ...mockAssignment, status: 'confirmed' });
     expect(component.currentStatus.label).toBe('Bekreftet for i morgen');
   });
 
   it('should show correct label for unconfirmed status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'unconfirmed',
-    });
-
+    await createComponent({ ...mockAssignment, status: 'unconfirmed' });
     expect(component.currentStatus.label).toBe('Ikke bekreftet for i morgen');
   });
 
-  it('should render correct status text in template', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'completed',
-    });
+  // ── Status icons ──
 
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Fullført oppdrag');
+  it('should render circle icon for upcoming status', async () => {
+    await createComponent({ ...mockAssignment, status: 'upcoming' });
+    expect(fixture.debugElement.query(By.css('.pi-circle'))).toBeTruthy();
   });
 
-  it('should render correct icon class for completed status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'completed',
-    });
-
-    const iconElement = fixture.debugElement.query(By.css('.pi-check-circle'));
-    expect(iconElement).toBeTruthy();
+  it('should render circle icon for ongoing status', async () => {
+    await createComponent({ ...mockAssignment, status: 'ongoing' });
+    expect(fixture.debugElement.query(By.css('.pi-circle'))).toBeTruthy();
   });
 
-  it('should render correct icon class for cancelled status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'cancelled',
-    });
-
-    const iconElement = fixture.debugElement.query(By.css('.pi-times-circle'));
-    expect(iconElement).toBeTruthy();
+  it('should render arrow-circle-right icon for next status', async () => {
+    await createComponent({ ...mockAssignment, status: 'next' });
+    expect(fixture.debugElement.query(By.css('.pi-arrow-circle-right'))).toBeTruthy();
   });
 
-  it('should render correct icon class for upcoming status', async () => {
-    await createComponent({
-      ...mockAssignment,
-      status: 'upcoming',
-    });
-
-    const iconElement = fixture.debugElement.query(By.css('.pi-circle'));
-    expect(iconElement).toBeTruthy();
+  it('should render check-circle icon for completed status', async () => {
+    await createComponent({ ...mockAssignment, status: 'completed' });
+    expect(fixture.debugElement.query(By.css('.pi-check-circle'))).toBeTruthy();
   });
+
+  it('should render times-circle icon for cancelled status', async () => {
+    await createComponent({ ...mockAssignment, status: 'cancelled' });
+    expect(fixture.debugElement.query(By.css('.pi-times-circle'))).toBeTruthy();
+  });
+
+  // ── Status text color ──
+
+  it('should use white text for next status', async () => {
+    await createComponent({ ...mockAssignment, status: 'next' });
+    const bar = fixture.debugElement.query(By.css('div[class*="bg-"]'));
+    const span = bar.query(By.css('.text-white'));
+    expect(span).toBeTruthy();
+  });
+
+  it('should use white text for confirmed status', async () => {
+    await createComponent({ ...mockAssignment, status: 'confirmed' });
+    const bar = fixture.debugElement.query(By.css('div[class*="bg-"]'));
+    const span = bar.query(By.css('.text-white'));
+    expect(span).toBeTruthy();
+  });
+
+  it('should use black text for upcoming status', async () => {
+    await createComponent({ ...mockAssignment, status: 'upcoming' });
+    const bar = fixture.debugElement.query(By.css('div[class*="bg-"]'));
+    const span = bar.query(By.css('.text-black'));
+    expect(span).toBeTruthy();
+  });
+
+  it('should use black text for ongoing status', async () => {
+    await createComponent({ ...mockAssignment, status: 'ongoing' });
+    const bar = fixture.debugElement.query(By.css('div[class*="bg-"]'));
+    const span = bar.query(By.css('.text-black'));
+    expect(span).toBeTruthy();
+  });
+
+  // ── Fallback text ──
 
   it('should show fallback text when phone number is missing', async () => {
-    await createComponent({
-      ...mockAssignment,
-      phoneNumber: '',
-    });
-
+    await createComponent({ ...mockAssignment, phoneNumber: '' });
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Ikke oppgitt');
+  });
+
+  // ── Click event ──
+
+  it('should emit card id on click', async () => {
+    await createComponent();
+    let emittedId = '';
+    component.cardClick.subscribe((id: string) => (emittedId = id));
+    const button = fixture.debugElement.query(By.css('button'));
+    button.triggerEventHandler('click', null);
+    expect(emittedId).toBe('1');
   });
 });

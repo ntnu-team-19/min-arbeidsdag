@@ -6,7 +6,7 @@
   <div class="px-4 py-2 text-sm font-semibold text-slate-900" [ngClass]="currentStatus.barClass">
     <span
       [ngClass]="
-        assignment.status === 'upcoming' || assignment.status === 'confirmed'
+        assignment.status === 'confirmed' || assignment.status === 'next'
           ? 'text-white'
           : 'text-black'
       "
@@ -25,29 +25,28 @@
         ></span>
       </div>
 
-      <div class="min-w-0">
-        <h3 class="text-xl font-bold text-slate-900">
-          {{ assignment.title }}
-        </h3>
-
-        <p class="mt-1 line-clamp-2 text-sm text-slate-600">
-          {{ assignment.shortDescription || 'Ingen beskrivelse tilgjengelig' }}
-        </p>
-
-        <div class="mt-3 space-y-1 text-sm text-slate-800">
-          <p class="flex items-center gap-2">
-            <i class="pi pi-clock"></i>
-            <span>{{ assignment.time }}</span>
+      <div class="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-6">
+        <div class="min-w-0 sm:w-[300px] sm:min-w-[300px]">
+          <h3 class="text-xl font-bold text-slate-900 sm:truncate">
+            {{ assignment.title }}
+          </h3>
+          <p class="mt-1 line-clamp-2 text-sm text-slate-600">
+            {{ assignment.shortDescription || 'Ingen beskrivelse tilgjengelig' }}
           </p>
+        </div>
 
+        <div class="mt-3 space-y-1 text-sm text-slate-800 sm:mt-0">
           <p class="flex items-center gap-2">
-            <i class="pi pi-map-marker"></i>
-            <span>{{ assignment.address }}</span>
+            <i class="pi pi-clock shrink-0"></i>
+            <span class="truncate">{{ assignment.time }}</span>
           </p>
-
           <p class="flex items-center gap-2">
-            <i class="pi pi-phone"></i>
-            <span>{{ assignment.phoneNumber || 'Ikke oppgitt' }}</span>
+            <i class="pi pi-map-marker shrink-0"></i>
+            <span class="truncate">{{ assignment.address }}</span>
+          </p>
+          <p class="flex items-center gap-2">
+            <i class="pi pi-phone shrink-0"></i>
+            <span class="truncate">{{ assignment.phoneNumber || 'Ikke oppgitt' }}</span>
           </p>
         </div>
       </div>

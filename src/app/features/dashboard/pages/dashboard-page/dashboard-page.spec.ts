@@ -8,28 +8,48 @@ import { Assignment } from '../../../../core/models/assignment-card.model';
 
 const MOCK_CARDS: Assignment[] = [
   {
-    id: '1315598',
-    title: 'Test oppdrag 1',
+    id: '1',
+    title: 'Pågående oppdrag',
     shortDescription: 'Beskrivelse 1',
-    time: '07:00 – 07:31',
-    address: 'Fagertunvegen 5, 7021 Trondheim',
-    phoneNumber: '41414141',
-    status: 'upcoming',
-    date: '2026-02-20',
+    time: '11:30',
+    address: 'Adresse 1, 7052 Trondheim',
+    phoneNumber: '12345678',
+    status: 'ongoing',
+    date: '2026-03-20',
   },
   {
-    id: '1316076',
-    title: 'Test oppdrag 2',
+    id: '2',
+    title: 'Neste oppdrag',
     shortDescription: 'Beskrivelse 2',
-    time: '09:00 – 09:34',
-    address: 'Otto Nielsens Veg 16, 7052 Trondheim',
-    phoneNumber: '132 123 45',
+    time: '12:30',
+    address: 'Adresse 2, 7041 Trondheim',
+    phoneNumber: '87654321',
+    status: 'next',
+    date: '2026-03-20',
+  },
+  {
+    id: '3',
+    title: 'Kommende oppdrag',
+    shortDescription: 'Beskrivelse 3',
+    time: '13:45',
+    address: 'Adresse 3, 7021 Trondheim',
+    phoneNumber: '11111111',
+    status: 'upcoming',
+    date: '2026-03-20',
+  },
+  {
+    id: '4',
+    title: 'Fullført oppdrag',
+    shortDescription: 'Beskrivelse 4',
+    time: '07:00',
+    address: 'Adresse 4, 7050 Trondheim',
+    phoneNumber: '22222222',
     status: 'completed',
-    date: '2026-02-20',
+    date: '2026-03-20',
   },
 ];
 
-const MOCK_TRAVEL_TIMES = [4, 0];
+const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
 
 describe('DashboardPage', () => {
   let component: DashboardPage;
@@ -42,8 +62,8 @@ describe('DashboardPage', () => {
         {
           provide: AssignmentService,
           useValue: {
-            getAssignmentCards: () => of(MOCK_CARDS),
-            getTravelTimes: () => of(MOCK_TRAVEL_TIMES),
+            getAssignmentCardsByDesiredDate: () => of(MOCK_CARDS),
+            getTravelTimesByDesiredDate: () => of(MOCK_TRAVEL_TIMES),
           },
         },
       ],
@@ -67,13 +87,12 @@ describe('DashboardPage', () => {
     expect(component.selectedDay).toBe('today');
   });
 
-  it('should load assignment cards from service', () => {
-    expect(component.assignmentCards.length).toBe(2);
-    expect(component.assignmentCards[0].title).toBe('Test oppdrag 1');
+  it('should load assignment cards on init', () => {
+    expect(component.assignmentCards.length).toBe(4);
   });
 
-  it('should load travel times from service', () => {
-    expect(component.travelTimes).toEqual([4, 0]);
+  it('should load travel times on init', () => {
+    expect(component.travelTimes).toEqual([15, 12, 10, 8]);
   });
 
   it('should show day selector', () => {
@@ -83,12 +102,17 @@ describe('DashboardPage', () => {
 
   it('should show assignment cards in list view', () => {
     const cards = fixture.debugElement.queryAll(By.css('app-assignment-card'));
-    expect(cards.length).toBe(2);
+    expect(cards.length).toBe(4);
   });
 
-  it('should show travel time indicators in list view', () => {
+  it('should show travel time indicators only for non-completed cards', () => {
     const indicators = fixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
-    expect(indicators.length).toBe(2);
+    expect(indicators.length).toBe(3);
+  });
+
+  it('should show separator line between non-completed and completed cards', () => {
+    const separator = fixture.debugElement.query(By.css('hr'));
+    expect(separator).toBeTruthy();
   });
 
   it('should not show map in list view', () => {
@@ -104,5 +128,16 @@ describe('DashboardPage', () => {
   it('should have day-selector-row class on day selector container', () => {
     const daySelectorRow = fixture.debugElement.query(By.css('.day-selector-row'));
     expect(daySelectorRow).toBeTruthy();
+  });
+
+  it('should have correct sheet title based on selected day and assignment count', () => {
+    expect(component.sheetTitle).toBe('4 Oppdrag i dag');
+    component.selectedDay = 'tomorrow';
+    expect(component.sheetTitle).toBe('4 Oppdrag i morgen');
+  });
+  
+  it('should update selectedDay when day changes', () => {
+    component.onDayChange('tomorrow');
+    expect(component.selectedDay).toBe('tomorrow');
   });
 });

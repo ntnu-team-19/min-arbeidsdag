@@ -1,5 +1,6 @@
 export type AssignmentStatus =
   | 'ongoing'
+  | 'next'
   | 'upcoming'
   | 'completed'
   | 'cancelled'

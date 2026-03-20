@@ -60,14 +60,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.assignmentService.getAssignmentCards().subscribe((cards) => {
-      this.assignmentCards = cards;
-    });
-
-    this.assignmentService.getTravelTimes().subscribe((times) => {
-      this.travelTimes = times;
-    });
-
+    this.loadAssignmentsForSelectedDay();
     this.updatePageScrollLock();
   }
 
@@ -76,7 +69,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   onDayChange(day: DayOption) {
-    console.log('Valgt dag:', day);
+    this.selectedDay = day;
+    this.loadAssignmentsForSelectedDay();
   }
 
   onMarkerClicked(assignment: MapAssignment) {
@@ -118,5 +112,25 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.renderer.removeStyle(this.document.documentElement, 'overflow');
     this.renderer.removeStyle(this.document.body, 'overscroll-behavior');
     this.renderer.removeStyle(this.document.documentElement, 'overscroll-behavior');
+  }
+
+  private getDateForDay(day: DayOption): string {
+    const date = new Date();
+    if (day === 'tomorrow') {
+      date.setDate(date.getDate() + 1);
+    }
+    return date.toISOString().slice(0, 10);
+  }
+
+  private loadAssignmentsForSelectedDay(): void {
+    const date = this.getDateForDay(this.selectedDay);
+
+    this.assignmentService.getAssignmentCardsByDesiredDate(date).subscribe((cards) => {
+      this.assignmentCards = cards;
+    });
+
+    this.assignmentService.getTravelTimesByDesiredDate(date).subscribe((times) => {
+      this.travelTimes = times;
+    });
   }
 }
