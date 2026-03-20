@@ -27,6 +27,12 @@ export class AssignmentCard {
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-circle',
     },
+    ongoing: {
+      label: 'Pågående oppdrag',
+      barClass: 'bg-[#FFD68A]',
+      iconClass: 'text-[#FFD68A]',
+      icon: 'pi pi-circle',
+    },
     completed: {
       label: 'Fullført oppdrag',
       barClass: 'bg-[#54DA8C]',
