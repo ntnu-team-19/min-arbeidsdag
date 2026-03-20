@@ -20,6 +20,7 @@ type SnapPoint = 'collapsed' | 'peek' | 'expanded';
 })
 export class MapBottomSheet implements OnInit, AfterViewInit {
   @ViewChild('sheet') sheetRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('content') contentRef!: ElementRef<HTMLDivElement>;
 
   @Input() initialSnap: SnapPoint = 'peek';
   @Output() snapChanged = new EventEmitter<SnapPoint>();
@@ -46,6 +47,9 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.calculateSnapPoints();
+    this.currentTranslateY = this.snapPoints[this.currentSnap];
+
     requestAnimationFrame(() => {
       this.isAnimating = true;
     });
@@ -90,18 +94,27 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
     this.currentSnap = point;
     this.currentTranslateY = this.snapPoints[point];
 
+    if (point === 'collapsed' && this.contentRef?.nativeElement) {
+      this.contentRef.nativeElement.scrollTop = 0;
+    }
+
     if (emit) {
       this.snapChanged.emit(point);
     }
   }
 
   private calculateSnapPoints(): void {
-    const vh = window.innerHeight;
+    const sheetHeight =
+      this.sheetRef?.nativeElement?.getBoundingClientRect().height || window.innerHeight;
+    const collapsedVisibleHeight = 156;
+    const collapsed = Math.max(0, sheetHeight - collapsedVisibleHeight);
+    const expanded = sheetHeight * 0.1;
+    const peekRaw = sheetHeight * 0.52;
 
     this.snapPoints = {
-      expanded: vh * 0.12,
-      peek: vh * 0.6,
-      collapsed: vh * 0.95,
+      expanded,
+      peek: this.clamp(peekRaw, expanded, collapsed),
+      collapsed,
     };
   }
 
