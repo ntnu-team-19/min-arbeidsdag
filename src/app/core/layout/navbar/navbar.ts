@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { ListboxModule } from 'primeng/listbox';
+import { RouterModule } from '@angular/router';
 
 interface MenuItem {
   label: string;
@@ -12,7 +13,7 @@ interface MenuItem {
 
 @Component({
   selector: 'app-navbar',
-  imports: [CommonModule, ButtonModule, DrawerModule, ListboxModule],
+  imports: [CommonModule, ButtonModule, DrawerModule, ListboxModule, RouterModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -91,9 +92,5 @@ export class Navbar {
 
   toggleLanguage() {
     this.language = this.language === 'no' ? 'en' : 'no';
-  }
-
-  onNotifications() {
-    // Håndter varsler
   }
 }

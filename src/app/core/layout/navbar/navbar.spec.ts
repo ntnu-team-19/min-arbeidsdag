@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { RouterModule } from '@angular/router';
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { Navbar } from './navbar';
 
 describe('Navbar', () => {
@@ -9,7 +10,7 @@ describe('Navbar', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Navbar],
+      imports: [Navbar, RouterModule.forRoot([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Navbar);
@@ -33,6 +34,36 @@ describe('Navbar', () => {
     const logo = fixture.debugElement.query(By.css('img[alt="Geomatikk"]'));
     expect(logo).toBeTruthy();
     expect(logo.nativeElement.src).toContain('Geomatikk-logo.png');
+  });
+
+  it('should wrap logo in a link to dashboard', () => {
+    const logoLink = fixture.debugElement.query(By.css('a[href="/"]'));
+    expect(logoLink).toBeTruthy();
+    const logo = logoLink.query(By.css('img[alt="Geomatikk"]'));
+    expect(logo).toBeTruthy();
+  });
+
+  // ── Desktop elements ──
+
+  it('should render hamburger icon in desktop view', () => {
+    const desktopDiv = fixture.debugElement.query(By.css('.hidden.sm\\:flex'));
+    const barsIcon = desktopDiv.query(By.css('.pi-bars'));
+    expect(barsIcon).toBeTruthy();
+  });
+
+  it('should render user icon in desktop view', () => {
+    const desktopDiv = fixture.debugElement.query(By.css('.hidden.sm\\:flex'));
+    const userIcon = desktopDiv.query(By.css('.pi-user'));
+    expect(userIcon).toBeTruthy();
+  });
+
+  // ── Mobile elements ──
+
+  it('should render hamburger icon in mobile view', () => {
+    const mobileDiv = fixture.debugElement.query(By.css('.sm\\:hidden'));
+    expect(mobileDiv).toBeTruthy();
+    const barsIcon = mobileDiv.query(By.css('.pi-bars'));
+    expect(barsIcon).toBeTruthy();
   });
 
   // ── Menu items ──
@@ -65,6 +96,12 @@ describe('Navbar', () => {
 
     component.menuOpen = true;
     component.onMenuSelect({ value: { label: '', icon: '', action: 'statistics' } });
+    expect(component.menuOpen).toBe(false);
+  });
+
+  it('should close menu when selecting user action', () => {
+    component.menuOpen = true;
+    component.onMenuSelect({ value: { label: '', icon: '', action: 'user' } });
     expect(component.menuOpen).toBe(false);
   });
 
