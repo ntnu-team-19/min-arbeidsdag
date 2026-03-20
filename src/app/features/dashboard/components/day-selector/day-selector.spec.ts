@@ -44,9 +44,22 @@ describe('DaySelector', () => {
       button.nativeElement.textContent.replace(/\s+/g, ' ').trim(),
     );
 
+    const formatter = new Intl.DateTimeFormat('nb-NO', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const expectedToday = formatter.format(today);
+    const expectedTomorrow = formatter.format(tomorrow);
+
     expect(buttons).toHaveLength(2);
-    expect(texts[0]).toContain('Dagens Oversikt torsdag 19. mars');
-    expect(texts[1]).toContain('Morgendagens Oversikt fredag 20. mars');
+    expect(texts[0]).toContain(`Dagens Oversikt ${expectedToday}`);
+    expect(texts[1]).toContain(`Morgendagens Oversikt ${expectedTomorrow}`);
   });
 
   it('should have today selected by default', () => {

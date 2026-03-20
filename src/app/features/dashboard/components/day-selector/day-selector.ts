@@ -43,8 +43,8 @@ export class DaySelector {
 
   dayTitleClasses(isSelected: boolean): string {
     return isSelected
-      ? 'text-[2.2rem] font-bold leading-none tracking-[-0.02em] text-black md:text-[2.0rem]'
-      : 'text-[1.5rem] font-normal leading-tight tracking-[-0.01em] text-slate-700 md:text-[1.5rem]';
+      ? 'text-[clamp(1.1rem,4.2vw,1.65rem)] sm:text-[1.75rem] md:text-[2rem] font-bold leading-[1.05] tracking-[-0.015em] text-black'
+      : 'text-[clamp(0.95rem,3.2vw,1.2rem)] sm:text-[1.25rem] md:text-[1.5rem] font-normal leading-[1.2] tracking-[-0.01em] text-slate-700';
   }
 
   dayDateClasses(isSelected: boolean): string {
