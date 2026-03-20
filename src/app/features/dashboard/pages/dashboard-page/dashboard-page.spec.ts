@@ -135,7 +135,7 @@ describe('DashboardPage', () => {
     component.selectedDay = 'tomorrow';
     expect(component.sheetTitle).toBe('4 Oppdrag i morgen');
   });
-  
+
   it('should update selectedDay when day changes', () => {
     component.onDayChange('tomorrow');
     expect(component.selectedDay).toBe('tomorrow');
