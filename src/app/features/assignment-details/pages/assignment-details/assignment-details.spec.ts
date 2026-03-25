@@ -47,6 +47,7 @@ describe('AssignmentDetailsPage', () => {
     routeId: string | null,
     returnedAssignment = mockAssignment,
     routeDay: 'today' | 'tomorrow' | null = null,
+    routeView: 'list' | 'map' | null = null,
   ) {
     assignmentServiceMock = {
       getAssignmentDetailsViewById: vi.fn().mockReturnValue(of(returnedAssignment)),
@@ -73,7 +74,10 @@ describe('AssignmentDetailsPage', () => {
           useValue: {
             snapshot: {
               paramMap: convertToParamMap(routeId ? { id: routeId } : {}),
-              queryParamMap: convertToParamMap(routeDay ? { day: routeDay } : {}),
+              queryParamMap: convertToParamMap({
+                ...(routeDay ? { day: routeDay } : {}),
+                ...(routeView ? { view: routeView } : {}),
+              }),
             },
           },
         },
@@ -122,6 +126,16 @@ describe('AssignmentDetailsPage', () => {
 
     expect(routerMock.navigate).toHaveBeenCalledWith(['/'], {
       queryParams: { day: 'tomorrow' },
+    });
+  });
+
+  it('should preserve view query param in goBack when coming from map view', async () => {
+    await createComponent('1315598', mockAssignment, 'today', 'map');
+
+    component.goBack();
+
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/'], {
+      queryParams: { day: 'today', view: 'map' },
     });
   });
 

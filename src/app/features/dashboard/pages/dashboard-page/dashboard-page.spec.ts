@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule, convertToParamMap } from '@angular/router';
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { of } from 'rxjs';
@@ -53,6 +53,7 @@ const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
+  let router: Router;
   let assignmentServiceMock: {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
     getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
@@ -73,11 +74,20 @@ describe('DashboardPage', () => {
           provide: AssignmentService,
           useValue: assignmentServiceMock,
         },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({}),
+            },
+          },
+        },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
     fixture.detectChanges();
     await fixture.whenStable();
   });
@@ -153,5 +163,17 @@ describe('DashboardPage', () => {
 
     expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1', true);
     expect(assignmentServiceMock.getAssignmentCardsByDesiredDate).toHaveBeenCalledTimes(2);
+  });
+
+  it('should include day and view query params when navigating to assignment details', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.selectedDay = 'tomorrow';
+    component.isListView = false;
+
+    component.goToAssignmentDetails('123');
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/assignments', '123'], {
+      queryParams: { day: 'tomorrow', view: 'map' },
+    });
   });
 });
