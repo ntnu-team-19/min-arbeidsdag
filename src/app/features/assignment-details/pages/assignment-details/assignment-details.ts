@@ -1,6 +1,6 @@
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { AssignmentDetails } from '../../../../core/models/assignment-details.model';
@@ -27,7 +27,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class AssignmentDetailsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly location = inject(Location);
+  private readonly router = inject(Router);
   private readonly assignmentService = inject(AssignmentService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -66,7 +66,26 @@ export class AssignmentDetailsPage implements OnInit {
   }
 
   goBack(): void {
-    this.location.back();
+    const requestedDay = this.route.snapshot.queryParamMap.get('day');
+    const requestedView = this.route.snapshot.queryParamMap.get('view');
+    const assignmentDay = this.assignment?.dayLabel;
+
+    const day =
+      requestedDay === 'today' || requestedDay === 'tomorrow'
+        ? requestedDay
+        : assignmentDay === 'tomorrow'
+          ? 'tomorrow'
+          : 'today';
+
+    const queryParams: { day: 'today' | 'tomorrow'; view?: 'list' | 'map' } = { day };
+
+    if (requestedView === 'list' || requestedView === 'map') {
+      queryParams.view = requestedView;
+    }
+
+    this.router.navigate(['/'], {
+      queryParams,
+    });
   }
 
   get dayLabelText(): string {
@@ -196,10 +215,18 @@ export class AssignmentDetailsPage implements OnInit {
   onContactedChange(contacted: boolean): void {
     if (!this.assignment) return;
 
+    const updatedStatus = contacted ? 'confirmed' : 'unconfirmed';
+
     this.assignment = {
       ...this.assignment,
       contacted,
+      status: this.assignment.dayLabel === 'tomorrow' ? updatedStatus : this.assignment.status,
     };
+
+    this.assignmentService
+      .updateTomorrowConfirmation(this.assignment.id, contacted)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   onMarkerClicked(marker: MapAssignment): void {

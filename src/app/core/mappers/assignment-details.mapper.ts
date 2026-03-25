@@ -79,11 +79,18 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
   dto: AssignmentDetailsDto,
 ): AssignmentDetails {
   const dayLabel = getDayLabel(dto.showingStartDate);
+  const tomorrowConfirmed = dto.tomorrowConfirmed ?? false;
+  const status =
+    dayLabel === 'tomorrow'
+      ? tomorrowConfirmed
+        ? 'confirmed'
+        : 'unconfirmed'
+      : mapStatus(dto.status);
 
   return {
     id: dto.id.toString(),
     title: dto.inquiryName || 'Uten tittel',
-    status: mapStatus(dto.status),
+    status,
 
     date: formatDate(dto.showingStartDate),
     dayLabel,
@@ -105,6 +112,6 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
     orderedFor: dto.orderedFor ?? [],
 
     canMarkContacted: dayLabel === 'tomorrow',
-    contacted: false, // mock default for now
+    contacted: tomorrowConfirmed,
   };
 }

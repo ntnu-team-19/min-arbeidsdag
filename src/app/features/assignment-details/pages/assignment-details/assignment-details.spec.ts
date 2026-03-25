@@ -1,5 +1,4 @@
-import { Location } from '@angular/common';
-import { convertToParamMap, ActivatedRoute } from '@angular/router';
+import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -14,10 +13,11 @@ describe('AssignmentDetailsPage', () => {
 
   let assignmentServiceMock: {
     getAssignmentDetailsViewById: ReturnType<typeof vi.fn>;
+    updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
   };
 
-  let locationMock: {
-    back: ReturnType<typeof vi.fn>;
+  let routerMock: {
+    navigate: ReturnType<typeof vi.fn>;
   };
 
   const mockAssignment: AssignmentDetails = {
@@ -43,13 +43,19 @@ describe('AssignmentDetailsPage', () => {
     contacted: false,
   };
 
-  async function createComponent(routeId: string | null, returnedAssignment = mockAssignment) {
+  async function createComponent(
+    routeId: string | null,
+    returnedAssignment = mockAssignment,
+    routeDay: 'today' | 'tomorrow' | null = null,
+    routeView: 'list' | 'map' | null = null,
+  ) {
     assignmentServiceMock = {
       getAssignmentDetailsViewById: vi.fn().mockReturnValue(of(returnedAssignment)),
+      updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
     };
 
-    locationMock = {
-      back: vi.fn(),
+    routerMock = {
+      navigate: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -60,14 +66,18 @@ describe('AssignmentDetailsPage', () => {
           useValue: assignmentServiceMock,
         },
         {
-          provide: Location,
-          useValue: locationMock,
+          provide: Router,
+          useValue: routerMock,
         },
         {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
               paramMap: convertToParamMap(routeId ? { id: routeId } : {}),
+              queryParamMap: convertToParamMap({
+                ...(routeDay ? { day: routeDay } : {}),
+                ...(routeView ? { view: routeView } : {}),
+              }),
             },
           },
         },
@@ -109,12 +119,37 @@ describe('AssignmentDetailsPage', () => {
     expect(component.mapAssignments).toEqual([]);
   });
 
-  it('should call location.back in goBack', async () => {
-    await createComponent('1315598');
+  it('should navigate to tomorrow overview in goBack when day query param is tomorrow', async () => {
+    await createComponent('1315598', mockAssignment, 'tomorrow');
 
     component.goBack();
 
-    expect(locationMock.back).toHaveBeenCalled();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/'], {
+      queryParams: { day: 'tomorrow' },
+    });
+  });
+
+  it('should preserve view query param in goBack when coming from map view', async () => {
+    await createComponent('1315598', mockAssignment, 'today', 'map');
+
+    component.goBack();
+
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/'], {
+      queryParams: { day: 'today', view: 'map' },
+    });
+  });
+
+  it('should navigate to tomorrow overview in goBack when assignment day is tomorrow', async () => {
+    await createComponent('1315598', {
+      ...mockAssignment,
+      dayLabel: 'tomorrow',
+    });
+
+    component.goBack();
+
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/'], {
+      queryParams: { day: 'tomorrow' },
+    });
   });
 
   it('should return correct dayLabelText for today', async () => {
@@ -246,12 +281,15 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = {
       ...mockAssignment,
+      dayLabel: 'tomorrow',
       contacted: false,
     };
 
     component.onContactedChange(true);
 
     expect(component.assignment.contacted).toBe(true);
+    expect(component.assignment.status).toBe('confirmed');
+    expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1315598', true);
   });
 
   it('should do nothing in onContactedChange when assignment is undefined', async () => {

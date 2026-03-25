@@ -2,6 +2,7 @@ export interface AssignmentDetailsDto {
   id: number;
   fieldTechId: number;
   status: number; // enum from backend
+  tomorrowConfirmed?: boolean;
   organizationName: string;
   cableShowingTimeIsLocked: boolean;
   cableShowingUserIsLocked: boolean;

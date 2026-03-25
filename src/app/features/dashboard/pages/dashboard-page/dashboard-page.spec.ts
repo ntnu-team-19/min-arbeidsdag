@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule, convertToParamMap } from '@angular/router';
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { of } from 'rxjs';
@@ -50,20 +50,36 @@ const MOCK_CARDS: Assignment[] = [
 ];
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
-
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
+  let router: Router;
+  let assignmentServiceMock: {
+    getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
+    getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
+    updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    assignmentServiceMock = {
+      getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
+      getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
+      updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [DashboardPage, RouterModule.forRoot([])],
       providers: [
         {
           provide: AssignmentService,
+          useValue: assignmentServiceMock,
+        },
+        {
+          provide: ActivatedRoute,
           useValue: {
-            getAssignmentCardsByDesiredDate: () => of(MOCK_CARDS),
-            getTravelTimesByDesiredDate: () => of(MOCK_TRAVEL_TIMES),
+            snapshot: {
+              queryParamMap: convertToParamMap({}),
+            },
           },
         },
       ],
@@ -71,6 +87,7 @@ describe('DashboardPage', () => {
 
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
     fixture.detectChanges();
     await fixture.whenStable();
   });
@@ -139,5 +156,24 @@ describe('DashboardPage', () => {
   it('should update selectedDay when day changes', () => {
     component.onDayChange('tomorrow');
     expect(component.selectedDay).toBe('tomorrow');
+  });
+
+  it('should update tomorrow confirmation status and reload assignments', () => {
+    component.onTomorrowConfirmationChange('1', true);
+
+    expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1', true);
+    expect(assignmentServiceMock.getAssignmentCardsByDesiredDate).toHaveBeenCalledTimes(2);
+  });
+
+  it('should include day and view query params when navigating to assignment details', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.selectedDay = 'tomorrow';
+    component.isListView = false;
+
+    component.goToAssignmentDetails('123');
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/assignments', '123'], {
+      queryParams: { day: 'tomorrow', view: 'map' },
+    });
   });
 });
