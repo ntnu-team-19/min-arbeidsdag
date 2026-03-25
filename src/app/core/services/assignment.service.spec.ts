@@ -218,4 +218,25 @@ describe('AssignmentService', () => {
 
     expect(result).toEqual([]);
   });
+
+  it('should update tomorrow confirmation in storage', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        {
+          ...mockStoredAssignments[0],
+          desiredDateForShowing: '2026-02-21T00:00:00',
+          showingStartDate: '2026-02-21T07:00:47',
+          tomorrowConfirmed: false,
+        },
+      ]),
+    );
+
+    const newService = new AssignmentService();
+
+    await firstValueFrom(newService.updateTomorrowConfirmation(1315598, true));
+    const storedAssignments = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+
+    expect(storedAssignments[0].tomorrowConfirmed).toBe(true);
+  });
 });
