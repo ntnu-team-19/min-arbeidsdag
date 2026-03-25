@@ -44,6 +44,10 @@ export class AssignmentService {
     return MOCK_ASSIGNMENTS;
   }
 
+  private saveAllToStorage(assignments: AssignmentDetailsDto[]): void {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+  }
+
   getAllAssignmentDetails(): Observable<AssignmentDetailsDto[]> {
     return of(this.getAllFromStorage());
   }
@@ -89,11 +93,36 @@ export class AssignmentService {
     return of(travelTimes);
   }
 
+  updateTomorrowConfirmation(
+    id: string | number,
+    confirmed: boolean,
+  ): Observable<AssignmentDetailsDto | undefined> {
+    const normalizedId = String(id);
+    const assignments = this.getAllFromStorage();
+    const index = assignments.findIndex((item) => String(item.id) === normalizedId);
+
+    if (index === -1) {
+      return of(undefined);
+    }
+
+    const updatedAssignment = {
+      ...assignments[index],
+      tomorrowConfirmed: confirmed,
+    };
+
+    assignments[index] = updatedAssignment;
+    this.saveAllToStorage(assignments);
+
+    return of(updatedAssignment);
+  }
+
   private readonly statusOrder: Record<string, number> = {
     ongoing: 0,
     next: 1,
     upcoming: 1,
-    completed: 2,
+    unconfirmed: 1,
+    confirmed: 2,
+    completed: 3,
   };
 
   private sortByStatus(cards: Assignment[]): Assignment[] {
