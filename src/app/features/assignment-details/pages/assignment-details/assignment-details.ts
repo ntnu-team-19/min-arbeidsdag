@@ -82,12 +82,16 @@ export class AssignmentDetailsPage implements OnInit {
 
   get statusLabel(): string {
     switch (this.assignment?.status) {
+      case 'ongoing':
+        return 'Pågående oppdrag';
+      case 'next':
+        return 'Neste oppdrag';
       case 'upcoming':
         return 'Kommende oppdrag';
       case 'confirmed':
         return 'Bekreftet';
       case 'completed':
-        return 'Fullført';
+        return 'Fullført oppdrag';
       case 'cancelled':
         return 'Avlyst';
       case 'unconfirmed':
@@ -96,21 +100,87 @@ export class AssignmentDetailsPage implements OnInit {
     }
   }
 
-  get statusDotClass(): string {
+  get statusBannerClass(): string {
     switch (this.assignment?.status) {
+      case 'ongoing':
+        return 'bg-[#FFD68A] text-black';
+      case 'next':
+        return 'bg-[#1F4E79] text-white';
       case 'completed':
-        return 'bg-green-500';
+        return 'bg-[#54DA8C] text-black';
       case 'confirmed':
-        return 'bg-blue-500';
+        return 'bg-[#54DA8C] text-black';
       case 'cancelled':
-        return 'bg-red-500';
+        return 'bg-[#DC8A8A] text-black';
       case 'unconfirmed':
-        return 'bg-yellow-500';
+        return 'bg-[#FFD68A] text-black';
       case 'upcoming':
       default:
-        return 'bg-green-500';
+        return 'bg-[#B0C4D7] text-black';
     }
   }
+
+  get statusIcon(): string {
+    switch (this.assignment?.status) {
+      case 'ongoing':
+        return 'pi pi-circle';
+      case 'next':
+        return 'pi pi-arrow-circle-right';
+      case 'completed':
+        return 'pi pi-check-circle';
+      case 'confirmed':
+        return 'pi pi-check-circle';
+      case 'cancelled':
+        return 'pi pi-times-circle';
+      case 'unconfirmed':
+        return 'pi pi-circle';
+      case 'upcoming':
+      default:
+        return 'pi pi-circle';
+    }
+  }
+
+  get statusIconClass(): string {
+    switch (this.assignment?.status) {
+      case 'ongoing':
+        return 'text-[#FFD68A]';
+      case 'next':
+        return 'text-[#1F4E79]';
+      case 'completed':
+        return 'text-[#54DA8C]';
+      case 'confirmed':
+        return 'text-[#54DA8C]';
+      case 'cancelled':
+        return 'text-[#DC8A8A]';
+      case 'unconfirmed':
+        return 'text-[#D9A441]';
+      case 'upcoming':
+      default:
+        return 'text-[#B0C4D7]';
+    }
+  }
+
+  get statusButtonClass(): string {
+    switch (this.assignment?.status) {
+      case 'ongoing':
+        return 'bg-[#FFD68A] text-black';
+      case 'next':
+        return 'bg-[#1F4E79] text-white';
+      case 'completed':
+        return 'bg-[#54DA8C] text-black';
+      case 'confirmed':
+        return 'bg-[#54DA8C] text-black';
+      case 'cancelled':
+        return 'bg-[#DC8A8A] text-black';
+      case 'unconfirmed':
+        return 'bg-[#FFD68A] text-black';
+      case 'upcoming':
+      default:
+        return 'bg-[#B0C4D7] text-black';
+    }
+  }
+
+  readonly statusTagClass = 'bg-gray-200 text-gray-700';
 
   openDirections(): void {
     if (!this.assignment) return;
@@ -155,5 +225,14 @@ export class AssignmentDetailsPage implements OnInit {
         description: this.assignment.address,
       },
     ];
+  }
+
+  get formattedPhone(): string {
+    if (!this.assignment?.contactPhone) return '';
+    const digits = this.assignment.contactPhone.replace(/\D/g, '');
+    if (digits.length === 8) {
+      return `${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5)}`;
+    }
+    return this.assignment.contactPhone;
   }
 }
