@@ -50,21 +50,28 @@ const MOCK_CARDS: Assignment[] = [
 ];
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
-
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
+  let assignmentServiceMock: {
+    getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
+    getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
+    updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    assignmentServiceMock = {
+      getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
+      getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
+      updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [DashboardPage, RouterModule.forRoot([])],
       providers: [
         {
           provide: AssignmentService,
-          useValue: {
-            getAssignmentCardsByDesiredDate: () => of(MOCK_CARDS),
-            getTravelTimesByDesiredDate: () => of(MOCK_TRAVEL_TIMES),
-          },
+          useValue: assignmentServiceMock,
         },
       ],
     }).compileComponents();
@@ -139,5 +146,12 @@ describe('DashboardPage', () => {
   it('should update selectedDay when day changes', () => {
     component.onDayChange('tomorrow');
     expect(component.selectedDay).toBe('tomorrow');
+  });
+
+  it('should update tomorrow confirmation status and reload assignments', () => {
+    component.onTomorrowConfirmationChange('1', true);
+
+    expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1', true);
+    expect(assignmentServiceMock.getAssignmentCardsByDesiredDate).toHaveBeenCalledTimes(2);
   });
 });
