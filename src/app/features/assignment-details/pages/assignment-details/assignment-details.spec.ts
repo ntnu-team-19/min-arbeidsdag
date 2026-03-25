@@ -197,7 +197,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'completed' };
 
-    expect(component.statusLabel).toBe('Fullført');
+    expect(component.statusLabel).toBe('Fullført oppdrag');
   });
 
   it('should return correct statusLabel for cancelled', async () => {
@@ -216,44 +216,34 @@ describe('AssignmentDetailsPage', () => {
     expect(component.statusLabel).toBe('Ubekreftet');
   });
 
-  it('should return correct statusDotClass for completed', async () => {
+  it('should have constant statusTagClass', async () => {
     await createComponent('1315598');
 
-    component.assignment = { ...mockAssignment, status: 'completed' };
-
-    expect(component.statusDotClass).toBe('bg-green-500');
+    expect(component.statusTagClass).toBe('bg-gray-200 text-gray-700');
   });
 
-  it('should return correct statusDotClass for confirmed', async () => {
+  it('should format 8-digit phone number as XXX XX XXX', async () => {
     await createComponent('1315598');
 
-    component.assignment = { ...mockAssignment, status: 'confirmed' };
+    component.assignment = { ...mockAssignment, contactPhone: '41414141' };
 
-    expect(component.statusDotClass).toBe('bg-blue-500');
+    expect(component.formattedPhone).toBe('414 14 141');
   });
 
-  it('should return correct statusDotClass for cancelled', async () => {
+  it('should return original phone when not 8 digits', async () => {
     await createComponent('1315598');
 
-    component.assignment = { ...mockAssignment, status: 'cancelled' };
+    component.assignment = { ...mockAssignment, contactPhone: '+4741414141' };
 
-    expect(component.statusDotClass).toBe('bg-red-500');
+    expect(component.formattedPhone).toBe('+4741414141');
   });
 
-  it('should return correct statusDotClass for unconfirmed', async () => {
+  it('should return empty string when no phone', async () => {
     await createComponent('1315598');
 
-    component.assignment = { ...mockAssignment, status: 'unconfirmed' };
+    component.assignment = { ...mockAssignment, contactPhone: '' };
 
-    expect(component.statusDotClass).toBe('bg-yellow-500');
-  });
-
-  it('should return default statusDotClass for upcoming', async () => {
-    await createComponent('1315598');
-
-    component.assignment = { ...mockAssignment, status: 'upcoming' };
-
-    expect(component.statusDotClass).toBe('bg-green-500');
+    expect(component.formattedPhone).toBe('');
   });
 
   it('should open directions in new tab when assignment exists', async () => {

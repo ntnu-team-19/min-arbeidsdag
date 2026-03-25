@@ -397,7 +397,7 @@ export const MOCK_ASSIGNMENTS: AssignmentDetailsDto[] = [
   {
     id: 1317004,
     fieldTechId: 40231,
-    status: 1,
+    status: 6,
     tomorrowConfirmed: false,
     organizationName: 'GEOMATIKK AS',
     cableShowingTimeIsLocked: false,

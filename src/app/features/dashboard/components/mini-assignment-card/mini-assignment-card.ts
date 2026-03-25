@@ -28,7 +28,7 @@ export class MiniAssignmentCard {
       dotClass: 'border-[#D9A441] text-[#D9A441]',
     },
     upcoming: {
-      label: 'Neste oppdrag',
+      label: 'Kommende oppdrag',
       badgeClass: 'bg-[#547FA9] text-white',
       dotClass: 'border-[#1F4E79] text-[#1F4E79]',
     },
