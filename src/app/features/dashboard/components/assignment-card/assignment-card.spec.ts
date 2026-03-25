@@ -159,8 +159,31 @@ describe('AssignmentCard', () => {
     await createComponent();
     let emittedId = '';
     component.cardClick.subscribe((id: string) => (emittedId = id));
-    const button = fixture.debugElement.query(By.css('button'));
-    button.triggerEventHandler('click', null);
+    const card = fixture.debugElement.query(By.css('[role="button"]'));
+    card.triggerEventHandler('click', null);
     expect(emittedId).toBe('1');
+  });
+
+  it('should emit confirmation toggle for unconfirmed assignments', async () => {
+    await createComponent({ ...mockAssignment, status: 'unconfirmed' });
+
+    let emittedValue: boolean | undefined;
+    component.confirmationToggle.subscribe((value: boolean) => (emittedValue = value));
+
+    const toggleButton = fixture.debugElement.queryAll(By.css('button'))[0];
+    toggleButton.triggerEventHandler('click', {
+      stopPropagation: vi.fn(),
+    });
+
+    expect(emittedValue).toBe(true);
+  });
+
+  it('should not render confirmation toggle for non-tomorrow statuses', async () => {
+    await createComponent({ ...mockAssignment, status: 'upcoming' });
+
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).not.toContain('Marker som bekreftet');
+    expect(text).not.toContain('Marker som ikke bekreftet');
   });
 });
