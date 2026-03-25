@@ -67,6 +67,7 @@ export class AssignmentDetailsPage implements OnInit {
 
   goBack(): void {
     const requestedDay = this.route.snapshot.queryParamMap.get('day');
+    const requestedView = this.route.snapshot.queryParamMap.get('view');
     const assignmentDay = this.assignment?.dayLabel;
 
     const day =
@@ -76,8 +77,14 @@ export class AssignmentDetailsPage implements OnInit {
           ? 'tomorrow'
           : 'today';
 
+    const queryParams: { day: 'today' | 'tomorrow'; view?: 'list' | 'map' } = { day };
+
+    if (requestedView === 'list' || requestedView === 'map') {
+      queryParams.view = requestedView;
+    }
+
     this.router.navigate(['/'], {
-      queryParams: { day },
+      queryParams,
     });
   }
 

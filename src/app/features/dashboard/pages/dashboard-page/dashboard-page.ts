@@ -48,8 +48,14 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     const dayParam = this.route.snapshot.queryParamMap.get('day');
+    const viewParam = this.route.snapshot.queryParamMap.get('view');
+
     if (dayParam === 'today' || dayParam === 'tomorrow') {
       this.selectedDay = dayParam;
+    }
+
+    if (viewParam === 'list' || viewParam === 'map') {
+      this.isListView = viewParam === 'list';
     }
 
     this.loadAssignmentsForSelectedDay();
@@ -80,7 +86,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   goToAssignmentDetails(id: string): void {
     this.router.navigate(['/assignments', id], {
-      queryParams: { day: this.selectedDay },
+      queryParams: {
+        day: this.selectedDay,
+        view: this.isListView ? 'list' : 'map',
+      },
     });
   }
 
