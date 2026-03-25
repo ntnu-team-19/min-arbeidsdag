@@ -75,7 +75,9 @@ export class AssignmentCard {
   }
 
   get confirmationActionLabel(): string {
-    return this.assignment.status === 'confirmed' ? 'Marker som ikke bekreftet' : 'Marker som bekreftet';
+    return this.assignment.status === 'confirmed'
+      ? 'Marker som ikke bekreftet'
+      : 'Marker som bekreftet';
   }
 
   onCardClick(): void {

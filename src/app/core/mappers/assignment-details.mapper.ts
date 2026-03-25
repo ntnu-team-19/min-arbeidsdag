@@ -83,7 +83,11 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
   const dayLabel = getDayLabel(dto.showingStartDate);
   const tomorrowConfirmed = dto.tomorrowConfirmed ?? false;
   const status =
-    dayLabel === 'tomorrow' ? (tomorrowConfirmed ? 'confirmed' : 'unconfirmed') : mapStatus(dto.status);
+    dayLabel === 'tomorrow'
+      ? tomorrowConfirmed
+        ? 'confirmed'
+        : 'unconfirmed'
+      : mapStatus(dto.status);
 
   return {
     id: dto.id.toString(),
