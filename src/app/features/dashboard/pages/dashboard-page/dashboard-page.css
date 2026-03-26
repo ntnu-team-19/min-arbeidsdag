@@ -16,6 +16,11 @@
   z-index: 25;
 }
 
+.progress-infobox-row {
+  z-index: 20;
+  margin-bottom: 0.75rem;
+}
+
 .dashboard-page.map-view .day-selector-row {
   margin-top: 0;
   margin-bottom: 0;
