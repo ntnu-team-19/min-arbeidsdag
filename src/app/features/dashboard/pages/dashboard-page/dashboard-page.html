@@ -4,6 +4,10 @@
   </div>
 
   @if (isListView) {
+    <div class="px-4 progress-infobox-row">
+      <app-daily-progress-infobox [summary]="dailyProgress" [day]="selectedDay" />
+    </div>
+
     <div class="flex flex-col gap-2 px-4 pb-24">
       @for (card of assignmentCards; track card.id; let i = $index) {
         @if (
