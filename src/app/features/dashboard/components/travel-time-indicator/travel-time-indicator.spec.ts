@@ -62,7 +62,7 @@ describe('TravelTimeIndicator', () => {
 
   it('should render a vertical line', () => {
     fixture.detectChanges();
-    const line = fixture.debugElement.query(By.css('.bg-gray-300'));
+    const line = fixture.debugElement.query(By.css('.bg-\\[color\\:var\\(--travel-line\\)\\]'));
     expect(line).toBeTruthy();
   });
 });
