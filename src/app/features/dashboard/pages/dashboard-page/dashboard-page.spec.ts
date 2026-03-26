@@ -5,6 +5,8 @@ import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { of } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
+import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -51,6 +53,17 @@ const MOCK_CARDS: Assignment[] = [
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
 
+const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
+  completedAssignments: 1,
+  totalAssignments: 4,
+  completedTravelMinutes: 15,
+  totalTravelMinutes: 45,
+  typeBreakdown: [
+    { label: 'Fiber', count: 2 },
+    { label: 'El-nett', count: 1 },
+  ],
+};
+
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
@@ -64,6 +77,7 @@ describe('DashboardPage', () => {
           useValue: {
             getAssignmentCardsByDesiredDate: () => of(MOCK_CARDS),
             getTravelTimesByDesiredDate: () => of(MOCK_TRAVEL_TIMES),
+            getDailyProgressByDesiredDate: () => of(MOCK_DAILY_PROGRESS),
           },
         },
       ],
@@ -98,6 +112,40 @@ describe('DashboardPage', () => {
   it('should show day selector', () => {
     const daySelector = fixture.debugElement.query(By.css('app-day-selector'));
     expect(daySelector).toBeTruthy();
+  });
+
+  it('should show the shared daily progress infobox', () => {
+    const infobox = fixture.debugElement.query(By.css('app-daily-progress-infobox'));
+    expect(infobox).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Dagens fremdrift');
+  });
+
+  it('should not show the daily progress infobox in map view', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+
+    const infobox = mapFixture.debugElement.query(By.css('app-daily-progress-infobox'));
+    expect(infobox).toBeFalsy();
+  });
+
+  it('should pass the selected day to the daily progress infobox', async () => {
+    const todayInfobox = fixture.debugElement.query(By.directive(DailyProgressInfobox));
+    expect(todayInfobox.componentInstance.day).toBe('today');
+
+    const tomorrowFixture = TestBed.createComponent(DashboardPage);
+    const tomorrowComponent = tomorrowFixture.componentInstance;
+    tomorrowComponent.selectedDay = 'tomorrow';
+    tomorrowFixture.detectChanges();
+    await tomorrowFixture.whenStable();
+
+    const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
+    expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
+    expect(tomorrowFixture.nativeElement.textContent).toContain('Morgendagens oversikt');
   });
 
   it('should show assignment cards in list view', () => {
