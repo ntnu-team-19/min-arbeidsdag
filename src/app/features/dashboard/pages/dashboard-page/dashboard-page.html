@@ -9,7 +9,7 @@
         @if (
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
         ) {
-          <hr class="mx-9 my-10 border-t-2 border-gray-300" />
+            <hr class="border-theme-2 mx-9 my-10 border-t-2" />
         } @else if (travelTimes[i] !== undefined && card.status !== 'completed') {
           <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
         }
@@ -29,7 +29,7 @@
       ></app-assignment-map>
 
       <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
-        <h2 sheet-header class="px-4 pb-2 text-lg font-bold text-slate-900">{{ sheetTitle }}</h2>
+        <h2 sheet-header class="text-theme-primary px-4 pb-2 text-lg font-bold">{{ sheetTitle }}</h2>
 
         <div sheet-body>
           @for (assignment of assignmentCards; track assignment.id; let i = $index) {
