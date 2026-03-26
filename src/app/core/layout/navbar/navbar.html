@@ -1,4 +1,4 @@
-<nav class="flex items-center justify-between px-3 h-16 bg-white border-b border-[#C8D1DA]">
+<nav class="surface-1 border-theme-1 flex h-16 items-center justify-between border-b px-3">
   <!-- Logo -->
   <button
     (click)="goToHome()"
@@ -6,24 +6,28 @@
     class="bg-transparent border-none p-0 cursor-pointer"
     style="all: unset; cursor: pointer"
   >
-    <img src="assets/Geomatikk-logo.png" alt="Geomatikk" class="h-[clamp(0.5rem,8vw,2rem)]" />
+    <img
+      src="assets/Geomatikk-logo.png"
+      alt="Geomatikk"
+      class="navbar-logo h-[clamp(0.5rem,8vw,2rem)]"
+    />
   </button>
 
   <!-- Desktop:Hamburgermenu and User -->
   <div class="hidden sm:flex items-center ml-auto -space-x-1">
     <p-button [text]="true" severity="secondary" (click)="menuOpen = true">
-      <i class="pi pi-bars" style="font-size: 1.4rem"></i>
+      <i class="navbar-action-icon pi pi-bars" style="font-size: 1.4rem"></i>
     </p-button>
 
     <p-button [text]="true" severity="secondary">
-      <i class="pi pi-user" style="font-size: 1.4rem"></i>
+      <i class="navbar-action-icon pi pi-user" style="font-size: 1.4rem"></i>
     </p-button>
   </div>
 
   <!-- Mobile: Hamburgermenu -->
   <div class="sm:hidden flex items-center gap-2 ml-auto">
     <p-button [text]="true" [rounded]="true" severity="secondary" (click)="menuOpen = true">
-      <i class="pi pi-bars" style="font-size: 1.4rem"></i>
+      <i class="navbar-action-icon pi pi-bars" style="font-size: 1.4rem"></i>
     </p-button>
   </div>
 
@@ -39,9 +43,9 @@
       @for (item of menuItems; track item.action; let last = $last) {
         <button
           (click)="onMenuSelect({ value: item })"
-          class="flex items-center gap-3 w-full py-4 px-2 text-left hover:bg-slate-100 transition-colors"
+          class="text-theme-primary hover:bg-[color:var(--surface-2)] flex w-full items-center gap-3 px-2 py-4 text-left transition-colors"
           [class.border-b]="!last"
-          [class.border-slate-300]="!last"
+          [class.border-theme-2]="!last"
         >
           <i [class]="item.icon" style="font-size: 1.2rem"></i>
           <span class="font-bold">{{ item.label }}</span>
