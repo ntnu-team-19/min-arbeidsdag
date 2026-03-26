@@ -94,10 +94,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
 
         this.map = new Map({
           target: mapElement,
-          layers: [
-            this.tileLayer,
-            this.markerLayer,
-          ],
+          layers: [this.tileLayer, this.markerLayer],
           view: new View({
             center: fromLonLat([10.3951, 63.4305]),
             zoom: this.compact ? 13 : 12,
@@ -127,7 +124,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     const checkTheme = () => {
       const isDark = this.themeService.isDark();
       const newTheme = isDark ? 'dark' : 'light';
-      
+
       if (newTheme !== this.currentTheme && this.tileLayer) {
         this.currentTheme = newTheme;
         this.updateTileLayer();
@@ -243,7 +240,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     if (this.themeCheckInterval) {
       clearInterval(this.themeCheckInterval);
     }
-    
+
     if (this.map) {
       this.map.un('click', this.onMapClick);
       this.map.dispose();
