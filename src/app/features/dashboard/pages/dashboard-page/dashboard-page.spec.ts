@@ -173,4 +173,6 @@ describe('DashboardPage', () => {
     await tomorrowFixture.whenStable();
 
     const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
-    expect(tomorrowInfobox.componentInstance.day
+    expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
+  });
+});

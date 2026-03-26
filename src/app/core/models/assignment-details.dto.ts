@@ -31,5 +31,4 @@ export interface AssignmentDetailsDto {
   calculatedTraveltime: number;
   orderedFor: string[];
   commentFromShower: string | null;
-  tomorrowConfirmed?: boolean;
 }
