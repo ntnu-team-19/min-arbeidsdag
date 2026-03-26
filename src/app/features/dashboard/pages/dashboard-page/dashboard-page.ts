@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
@@ -39,6 +40,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
+  private destroyRef = inject(DestroyRef);
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
@@ -48,7 +50,8 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Subscribe to query param changes so that navigation to the same route with different params works
-    this.route.queryParamMap.subscribe((params) => {
+    // Use takeUntilDestroyed to automatically unsubscribe when component is destroyed
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const dayParam = params.get('day');
       const viewParam = params.get('view');
 
