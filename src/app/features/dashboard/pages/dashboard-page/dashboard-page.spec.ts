@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, Router, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
+import { ActivatedRoute, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
 import { of, ReplaySubject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -69,7 +69,6 @@ const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
-  let router: Router;
   let queryParamSubject: ReplaySubject<ParamMap>;
   let assignmentServiceMock: {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
@@ -111,7 +110,6 @@ describe('DashboardPage', () => {
 
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router);
 
     fixture.detectChanges();
     await fixture.whenStable();
