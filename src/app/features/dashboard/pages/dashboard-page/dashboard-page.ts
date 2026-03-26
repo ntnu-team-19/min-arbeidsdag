@@ -47,19 +47,22 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const dayParam = this.route.snapshot.queryParamMap.get('day');
-    const viewParam = this.route.snapshot.queryParamMap.get('view');
+    // Subscribe to query param changes so that navigation to the same route with different params works
+    this.route.queryParamMap.subscribe((params) => {
+      const dayParam = params.get('day');
+      const viewParam = params.get('view');
 
-    if (dayParam === 'today' || dayParam === 'tomorrow') {
-      this.selectedDay = dayParam;
-    }
+      if (dayParam === 'today' || dayParam === 'tomorrow') {
+        this.selectedDay = dayParam;
+      }
 
-    if (viewParam === 'list' || viewParam === 'map') {
-      this.isListView = viewParam === 'list';
-    }
+      if (viewParam === 'list' || viewParam === 'map') {
+        this.isListView = viewParam === 'list';
+      }
 
-    this.loadAssignmentsForSelectedDay();
-    this.updatePageScrollLock();
+      this.loadAssignmentsForSelectedDay();
+      this.updatePageScrollLock();
+    });
   }
 
   ngOnDestroy(): void {
@@ -68,6 +71,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   onDayChange(day: DayOption) {
     this.selectedDay = day;
+    this.updateQueryParams();
     this.loadAssignmentsForSelectedDay();
   }
 
@@ -77,6 +81,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
+    this.updateQueryParams();
     this.updatePageScrollLock();
   }
 
@@ -96,6 +101,17 @@ export class DashboardPage implements OnInit, OnDestroy {
   onTomorrowConfirmationChange(id: string, confirmed: boolean): void {
     this.assignmentService.updateTomorrowConfirmation(id, confirmed).subscribe(() => {
       this.loadAssignmentsForSelectedDay();
+    });
+  }
+
+  private updateQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        day: this.selectedDay,
+        view: this.isListView ? 'list' : 'map',
+      },
+      queryParamsHandling: 'merge',
     });
   }
 
