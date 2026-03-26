@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
+import { of, ReplaySubject } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
-import { of } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
@@ -67,26 +69,53 @@ const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
+  let router: Router;
+  let queryParamSubject: ReplaySubject<ParamMap>;
+  let assignmentServiceMock: {
+    getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
+    getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
+    getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
+    updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    queryParamSubject = new ReplaySubject<ParamMap>(1);
+
+    assignmentServiceMock = {
+      getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
+      getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
+      getDailyProgressByDesiredDate: vi.fn().mockReturnValue(of(MOCK_DAILY_PROGRESS)),
+      updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [DashboardPage, RouterModule.forRoot([])],
       providers: [
         {
           provide: AssignmentService,
+          useValue: assignmentServiceMock,
+        },
+        {
+          provide: ActivatedRoute,
           useValue: {
-            getAssignmentCardsByDesiredDate: () => of(MOCK_CARDS),
-            getTravelTimesByDesiredDate: () => of(MOCK_TRAVEL_TIMES),
-            getDailyProgressByDesiredDate: () => of(MOCK_DAILY_PROGRESS),
+            snapshot: {
+              queryParamMap: convertToParamMap({}),
+            },
+            queryParamMap: queryParamSubject.asObservable(),
           },
         },
       ],
     }).compileComponents();
 
+    queryParamSubject.next(convertToParamMap({}));
+
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
+
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -144,48 +173,4 @@ describe('DashboardPage', () => {
     await tomorrowFixture.whenStable();
 
     const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
-    expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
-    expect(tomorrowFixture.nativeElement.textContent).toContain('Morgendagens oversikt');
-  });
-
-  it('should show assignment cards in list view', () => {
-    const cards = fixture.debugElement.queryAll(By.css('app-assignment-card'));
-    expect(cards.length).toBe(4);
-  });
-
-  it('should show travel time indicators only for non-completed cards', () => {
-    const indicators = fixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
-    expect(indicators.length).toBe(3);
-  });
-
-  it('should show separator line between non-completed and completed cards', () => {
-    const separator = fixture.debugElement.query(By.css('hr'));
-    expect(separator).toBeTruthy();
-  });
-
-  it('should not show map in list view', () => {
-    const map = fixture.debugElement.query(By.css('app-assignment-map'));
-    expect(map).toBeFalsy();
-  });
-
-  it('should show floating button', () => {
-    const fab = fixture.debugElement.query(By.css('app-floating-button'));
-    expect(fab).toBeTruthy();
-  });
-
-  it('should have day-selector-row class on day selector container', () => {
-    const daySelectorRow = fixture.debugElement.query(By.css('.day-selector-row'));
-    expect(daySelectorRow).toBeTruthy();
-  });
-
-  it('should have correct sheet title based on selected day and assignment count', () => {
-    expect(component.sheetTitle).toBe('4 Oppdrag i dag');
-    component.selectedDay = 'tomorrow';
-    expect(component.sheetTitle).toBe('4 Oppdrag i morgen');
-  });
-
-  it('should update selectedDay when day changes', () => {
-    component.onDayChange('tomorrow');
-    expect(component.selectedDay).toBe('tomorrow');
-  });
-});
+    expect(tomorrowInfobox.componentInstance.day

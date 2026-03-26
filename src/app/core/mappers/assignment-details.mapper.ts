@@ -3,14 +3,19 @@ import { AssignmentDetails, AssignmentStatus } from '../models/assignment-detail
 
 function mapStatus(status: number): AssignmentStatus {
   switch (status) {
+    case 2:
+      return 'ongoing';
+    case 3:
+    case 4:
+    case 5:
+    case 12:
+      return 'completed';
+    case 6:
+      return 'next';
     case 1:
       return 'upcoming';
-    case 2:
-      return 'confirmed';
-    case 3:
-      return 'completed';
     default:
-      return 'unconfirmed';
+      return 'upcoming';
   }
 }
 
@@ -39,28 +44,21 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-function formatDurationMinutes(startDate: string | null, endDate: string | null): string {
-  if (!startDate || !endDate) return '-';
+function formatDurationFromMinutes(minutes: number): string {
+  if (!minutes || minutes <= 0) return '-';
 
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
-
-  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return '-';
-
-  const diffMinutes = Math.round((end - start) / 1000 / 60);
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes} min`;
+  if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
   }
 
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
+  const hours = Math.floor(minutes / 60);
+  const remaining = Math.round(minutes % 60);
 
-  if (minutes === 0) {
+  if (remaining === 0) {
     return `${hours} t`;
   }
 
-  return `${hours} t ${minutes} min`;
+  return `${hours} t ${remaining} min`;
 }
 
 function getDayLabel(dateString: string | null): 'today' | 'tomorrow' | 'other' {
@@ -81,19 +79,25 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
   dto: AssignmentDetailsDto,
 ): AssignmentDetails {
   const dayLabel = getDayLabel(dto.showingStartDate);
+  const tomorrowConfirmed = dto.tomorrowConfirmed ?? false;
+  const status =
+    dayLabel === 'tomorrow'
+      ? tomorrowConfirmed
+        ? 'confirmed'
+        : 'unconfirmed'
+      : mapStatus(dto.status);
 
   return {
     id: dto.id.toString(),
     title: dto.inquiryName || 'Uten tittel',
-    status: mapStatus(dto.status),
+    status,
 
     date: formatDate(dto.showingStartDate),
     dayLabel,
 
     startTime: formatTime(dto.showingStartDate),
     endTime: dto.showingEndDate ? formatTime(dto.showingEndDate) : null,
-    estimatedDuration: formatDurationMinutes(dto.showingStartDate, dto.showingEndDate),
-
+    estimatedDuration: formatDurationFromMinutes(dto.editedTimeOnsite),
     address: `${dto.streetAddress}, ${dto.postalCode} ${dto.municipalityName}`,
     streetAddress: dto.streetAddress,
     postalCode: dto.postalCode,
@@ -108,6 +112,6 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
     orderedFor: dto.orderedFor ?? [],
 
     canMarkContacted: dayLabel === 'tomorrow',
-    contacted: false, // mock default for now
+    contacted: tomorrowConfirmed,
   };
 }

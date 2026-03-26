@@ -17,7 +17,11 @@
         } @else if (travelTimes[i] !== undefined && card.status !== 'completed') {
           <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
         }
-        <app-assignment-card [assignment]="card" (cardClick)="goToAssignmentDetails($event)" />
+        <app-assignment-card
+          [assignment]="card"
+          (cardClick)="goToAssignmentDetails($event)"
+          (confirmationToggle)="onTomorrowConfirmationChange(card.id, $event)"
+        />
       }
     </div>
   } @else {

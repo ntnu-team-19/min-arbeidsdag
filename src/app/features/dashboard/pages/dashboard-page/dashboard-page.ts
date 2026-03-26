@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
 import { DaySelector } from '../../components/day-selector/day-selector';
@@ -39,26 +40,14 @@ export class DashboardPage implements OnInit, OnDestroy {
   assignmentCards: Assignment[] = [];
   travelTimes: number[] = [];
   dailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
-
-  mapAssignments: MapAssignment[] = [
-    {
-      id: 1,
-      name: 'Assignment 1',
-      location: { lat: 63.4298254455268, lon: 10.3862247991623 },
-      description: 'Description for Assignment 1',
-    },
-    {
-      id: 2,
-      name: 'Assignment 2',
-      location: { lat: 63.40236993788918, lon: 10.420739477399872 },
-      description: 'Description for Assignment 2',
-    },
-  ];
+  mapAssignments: MapAssignment[] = [];
 
   private assignmentService = inject(AssignmentService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
+  private destroyRef = inject(DestroyRef);
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
@@ -67,8 +56,21 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.loadAssignmentsForSelectedDay();
-    this.updatePageScrollLock();
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const dayParam = params.get('day');
+      const viewParam = params.get('view');
+
+      if (dayParam === 'today' || dayParam === 'tomorrow') {
+        this.selectedDay = dayParam;
+      }
+
+      if (viewParam === 'list' || viewParam === 'map') {
+        this.isListView = viewParam === 'list';
+      }
+
+      this.loadAssignmentsForSelectedDay();
+      this.updatePageScrollLock();
+    });
   }
 
   ngOnDestroy(): void {
@@ -77,6 +79,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   onDayChange(day: DayOption) {
     this.selectedDay = day;
+    this.updateQueryParams();
     this.loadAssignmentsForSelectedDay();
   }
 
@@ -86,6 +89,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
+    this.updateQueryParams();
     this.updatePageScrollLock();
   }
 
@@ -94,7 +98,29 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   goToAssignmentDetails(id: string): void {
-    this.router.navigate(['/assignments', id]);
+    this.router.navigate(['/assignments', id], {
+      queryParams: {
+        day: this.selectedDay,
+        view: this.isListView ? 'list' : 'map',
+      },
+    });
+  }
+
+  onTomorrowConfirmationChange(id: string, confirmed: boolean): void {
+    this.assignmentService.updateTomorrowConfirmation(id, confirmed).subscribe(() => {
+      this.loadAssignmentsForSelectedDay();
+    });
+  }
+
+  private updateQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        day: this.selectedDay,
+        view: this.isListView ? 'list' : 'map',
+      },
+      queryParamsHandling: 'merge',
+    });
   }
 
   private updatePageScrollLock(): void {
@@ -134,6 +160,17 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.assignmentService.getAssignmentCardsByDesiredDate(date).subscribe((cards) => {
       this.assignmentCards = cards;
+      this.mapAssignments = cards
+        .filter((card) => card.locationPoint)
+        .map((card) => ({
+          id: Number(card.id),
+          name: card.title,
+          location: {
+            lat: card.locationPoint!.y,
+            lon: card.locationPoint!.x,
+          },
+          description: card.address,
+        }));
     });
 
     this.assignmentService.getTravelTimesByDesiredDate(date).subscribe((times) => {

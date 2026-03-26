@@ -1,10 +1,16 @@
-<button
-  type="button"
-  class="block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-md transition active:scale-[0.99]"
+<div
+  tabindex="0"
+  role="button"
+  class="block w-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-md transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900/60 active:scale-[0.99]"
   (click)="onCardClick()"
+  (keydown)="onCardKeydown($event)"
 >
-  <div class="px-4 py-2 text-sm font-semibold text-slate-900" [ngClass]="currentStatus.barClass">
+  <div
+    class="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-slate-900"
+    [ngClass]="currentStatus.barClass"
+  >
     <span
+      class="min-w-0 flex-1 truncate"
       [ngClass]="
         assignment.status === 'confirmed' || assignment.status === 'next'
           ? 'text-white'
@@ -13,6 +19,17 @@
     >
       {{ currentStatus.label }}
     </span>
+    <div class="ml-auto shrink-0">
+      @if (canToggleConfirmation) {
+        <button
+          type="button"
+          class="inline-flex items-center rounded-full border border-slate-900/15 bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-900 backdrop-blur-sm transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900/60"
+          (click)="onConfirmationToggle($event)"
+        >
+          {{ confirmationActionLabel }}
+        </button>
+      }
+    </div>
   </div>
 
   <div class="flex items-center justify-between gap-4 p-4">
@@ -51,9 +68,8 @@
         </div>
       </div>
     </div>
-
-    <div class="shrink-0">
+    <div class="flex justify-end">
       <i class="pi pi-chevron-right text-3xl text-[#1F4E79]"></i>
     </div>
   </div>
-</button>
+</div>

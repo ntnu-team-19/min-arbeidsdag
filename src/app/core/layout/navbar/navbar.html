@@ -1,8 +1,13 @@
 <nav class="flex items-center justify-between px-3 h-16 bg-white border-b border-[#C8D1DA]">
   <!-- Logo -->
-  <a routerLink="/">
+  <button
+    (click)="goToHome()"
+    type="button"
+    class="bg-transparent border-none p-0 cursor-pointer"
+    style="all: unset; cursor: pointer"
+  >
     <img src="assets/Geomatikk-logo.png" alt="Geomatikk" class="h-[clamp(0.5rem,8vw,2rem)]" />
-  </a>
+  </button>
 
   <!-- Desktop:Hamburgermenu and User -->
   <div class="hidden sm:flex items-center ml-auto -space-x-1">

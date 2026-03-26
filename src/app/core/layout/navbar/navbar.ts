@@ -1,9 +1,9 @@
-import { Component, HostBinding, HostListener } from '@angular/core';
+import { Component, HostBinding, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { ListboxModule } from 'primeng/listbox';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 interface MenuItem {
   label: string;
@@ -21,6 +21,8 @@ export class Navbar {
   menuOpen = false;
   darkMode = false;
   language = 'no';
+
+  private router = inject(Router);
 
   // Toggles 'navbar-hidden' class on host element to hide/show navbar
   @HostBinding('class.navbar-hidden')
@@ -92,5 +94,14 @@ export class Navbar {
 
   toggleLanguage() {
     this.language = this.language === 'no' ? 'en' : 'no';
+  }
+
+  goToHome() {
+    this.router.navigate(['/'], {
+      queryParams: {
+        day: 'today',
+        view: 'list',
+      },
+    });
   }
 }

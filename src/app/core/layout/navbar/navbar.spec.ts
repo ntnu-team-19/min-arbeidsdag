@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { Navbar } from './navbar';
 
@@ -36,11 +36,23 @@ describe('Navbar', () => {
     expect(logo.nativeElement.src).toContain('Geomatikk-logo.png');
   });
 
-  it('should wrap logo in a link to dashboard', () => {
-    const logoLink = fixture.debugElement.query(By.css('a[href="/"]'));
-    expect(logoLink).toBeTruthy();
-    const logo = logoLink.query(By.css('img[alt="Geomatikk"]'));
+  it('should wrap logo in a button with click handler', () => {
+    const logoButton = fixture.debugElement.query(By.css('button'));
+    expect(logoButton).toBeTruthy();
+    const logo = logoButton.query(By.css('img[alt="Geomatikk"]'));
     expect(logo).toBeTruthy();
+  });
+
+  it('should navigate to home (today list view) when logo is clicked', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.goToHome();
+    expect(navigateSpy).toHaveBeenCalledWith(['/'], {
+      queryParams: {
+        day: 'today',
+        view: 'list',
+      },
+    });
   });
 
   // ── Desktop elements ──

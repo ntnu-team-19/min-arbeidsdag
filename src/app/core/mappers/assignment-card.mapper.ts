@@ -1,6 +1,18 @@
 import { AssignmentDetailsDto } from '../models/assignment-details.dto';
 import { AssignmentStatus, Assignment } from '../models/assignment-card.model';
 
+function isTomorrow(dateString: string | null): boolean {
+  if (!dateString) return false;
+
+  const target = new Date(dateString);
+  if (Number.isNaN(target.getTime())) return false;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return target.toDateString() === tomorrow.toDateString();
+}
+
 export function mapDtoStatusToCardStatus(status: number): AssignmentStatus {
   // Based on your current domain note:
   // 1: ordered
@@ -45,6 +57,12 @@ export function formatTimeFromIso(dateString: string | null): string {
 export function mapAssignmentDetailsDtoToAssignmentCardModel(
   dto: AssignmentDetailsDto,
 ): Assignment {
+  const status = isTomorrow(dto.showingStartDate)
+    ? dto.tomorrowConfirmed
+      ? 'confirmed'
+      : 'unconfirmed'
+    : mapDtoStatusToCardStatus(dto.status);
+
   return {
     id: String(dto.id),
     title: dto.inquiryName || 'Oppdrag uten tittel',
@@ -53,7 +71,7 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     duration: dto.editedTimeOnsite,
     address: `${dto.streetAddress}, ${dto.postalCode} ${dto.municipalityName}`,
     phoneNumber: dto.showingContactPhone || 'Ikke oppgitt',
-    status: mapDtoStatusToCardStatus(dto.status),
+    status,
     date: dto.showingStartDate ? dto.showingStartDate.split('T')[0] : 'Ukjent dato',
     locationPoint: dto.locationPoint ?? null,
   };
