@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, Router, RouterModule, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
-import { of } from 'rxjs';
+import { of, ReplaySubject } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -54,6 +55,7 @@ describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
   let router: Router;
+  let queryParamSubject: ReplaySubject<ParamMap>;
   let assignmentServiceMock: {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
     getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
@@ -61,6 +63,9 @@ describe('DashboardPage', () => {
   };
 
   beforeEach(async () => {
+    // ReplaySubject with buffer size 1 so the latest params are replayed to new subscribers
+    queryParamSubject = new ReplaySubject<ParamMap>(1);
+
     assignmentServiceMock = {
       getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
       getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
@@ -80,16 +85,22 @@ describe('DashboardPage', () => {
             snapshot: {
               queryParamMap: convertToParamMap({}),
             },
+            queryParamMap: queryParamSubject.asObservable(),
           },
         },
       ],
     }).compileComponents();
 
+    // Emit params before creating component so it's replayed on subscription
+    queryParamSubject.next(convertToParamMap({}));
+
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
+
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -175,5 +186,31 @@ describe('DashboardPage', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/assignments', '123'], {
       queryParams: { day: 'tomorrow', view: 'map' },
     });
+  });
+
+  it('should update query params when day changes', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.onDayChange('tomorrow');
+    expect(navigateSpy).toHaveBeenCalledWith([], {
+      relativeTo: TestBed.inject(ActivatedRoute),
+      queryParams: { day: 'tomorrow', view: 'list' },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('should update query params when view changes', () => {
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.onViewChange(false);
+    expect(navigateSpy).toHaveBeenCalledWith([], {
+      relativeTo: TestBed.inject(ActivatedRoute),
+      queryParams: { day: 'today', view: 'map' },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('should reflect query param changes in component state', () => {
+    queryParamSubject.next(convertToParamMap({ day: 'tomorrow', view: 'map' }));
+    expect(component.selectedDay).toBe('tomorrow');
+    expect(component.isListView).toBe(false);
   });
 });
