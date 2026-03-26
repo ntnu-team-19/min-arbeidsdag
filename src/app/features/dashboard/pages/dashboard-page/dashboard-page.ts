@@ -7,10 +7,15 @@ import { DaySelector } from '../../components/day-selector/day-selector';
 import { DayOption } from '../../components/day-selector/day-selector.types';
 import { AssignmentCard } from '../../components/assignment-card/assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import {
+  DailyProgressSummary,
+  EMPTY_DAILY_PROGRESS_SUMMARY,
+} from '../../../../core/models/daily-progress.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { TravelTimeIndicator } from '../../components/travel-time-indicator/travel-time-indicator';
 import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-assignment-card';
+import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -23,6 +28,7 @@ import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-a
     MapBottomSheet,
     TravelTimeIndicator,
     MiniAssignmentCard,
+    DailyProgressInfobox,
   ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
@@ -32,6 +38,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   isListView = true;
   assignmentCards: Assignment[] = [];
   travelTimes: number[] = [];
+  dailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
 
   mapAssignments: MapAssignment[] = [
     {
@@ -131,6 +138,10 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.assignmentService.getTravelTimesByDesiredDate(date).subscribe((times) => {
       this.travelTimes = times;
+    });
+
+    this.assignmentService.getDailyProgressByDesiredDate(date).subscribe((progress) => {
+      this.dailyProgress = progress;
     });
   }
 }
