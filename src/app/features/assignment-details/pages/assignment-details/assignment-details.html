@@ -1,9 +1,9 @@
 <div class="min-h-screen">
   @if (isLoading) {
-      <div class="text-theme-secondary p-6 text-center">{{ 'assignment.loading' | translate }}</div>
-    } @else if (notFound) {
-      <div class="p-6 text-center">
-        <p class="text-theme-secondary mb-4">{{ 'assignment.notFound' | translate }}</p>
+    <div class="text-theme-secondary p-6 text-center">{{ 'assignment.loading' | translate }}</div>
+  } @else if (notFound) {
+    <div class="p-6 text-center">
+      <p class="text-theme-secondary mb-4">{{ 'assignment.notFound' | translate }}</p>
       <button
         pButton
         type="button"
@@ -177,7 +177,7 @@
                   (ngModelChange)="onContactedChange($event)"
                 ></p-checkbox>
                 <label for="contacted" class="text-theme-primary text-lg">
-                  {{'assignment.assignmentConfirmed' | translate}}
+                  {{ 'assignment.assignmentConfirmed' | translate }}
                 </label>
               </div>
             </div>
