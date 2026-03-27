@@ -4,6 +4,13 @@ import { MapBottomSheet } from './map-bottom-sheet';
 
 describe('MapBottomSheet', () => {
   let component: MapBottomSheet;
+  let mockContentElement: {
+    scrollTop: number;
+    clientHeight: number;
+    scrollHeight: number;
+    scrollTo: ReturnType<typeof vi.fn>;
+    getBoundingClientRect: () => { top: number; height: number };
+  };
 
   const setPointerCapture = vi.fn();
   const releasePointerCapture = vi.fn();
@@ -19,8 +26,15 @@ describe('MapBottomSheet', () => {
       }),
     };
 
-    const mockContentElement = {
+    mockContentElement = {
       scrollTop: 0,
+      clientHeight: 400,
+      scrollHeight: 1200,
+      scrollTo: vi.fn(),
+      getBoundingClientRect: () => ({
+        top: 100,
+        height: 400,
+      }),
     };
 
     component.sheetRef = {
@@ -36,6 +50,7 @@ describe('MapBottomSheet', () => {
     vi.restoreAllMocks();
     setPointerCapture.mockReset();
     releasePointerCapture.mockReset();
+    mockContentElement.scrollTo.mockReset();
   });
 
   it('should create', () => {
@@ -254,5 +269,73 @@ describe('MapBottomSheet', () => {
     } as PointerEvent);
 
     expect(component.contentRef.nativeElement.scrollTop).toBe(0);
+  });
+
+  it('should allow programmatic snapping to peek', () => {
+    const emitSpy = vi.spyOn(component.snapChanged, 'emit');
+
+    component.ngOnInit();
+    component.currentSnap = 'collapsed';
+    component.currentTranslateY = 844;
+
+    component.snapTo('peek');
+
+    expect(component.currentSnap).toBe('peek');
+    expect(component.currentTranslateY).toBe(520);
+    expect(emitSpy).toHaveBeenCalledWith('peek');
+  });
+
+  it('should scroll only the sheet content to a target element', () => {
+    component.ngOnInit();
+
+    const targetElement = {
+      getBoundingClientRect: () => ({
+        top: 340,
+        height: 120,
+      }),
+    } as HTMLElement;
+
+    component.scrollToElement(targetElement);
+
+    expect(component.contentRef.nativeElement.scrollTo).toHaveBeenCalledWith({
+      top: 240,
+      behavior: 'smooth',
+    });
+  });
+
+  it('should clamp scroll-to-element to the top of the list', () => {
+    component.ngOnInit();
+
+    const targetElement = {
+      getBoundingClientRect: () => ({
+        top: 80,
+        height: 120,
+      }),
+    } as HTMLElement;
+
+    component.scrollToElement(targetElement);
+
+    expect(component.contentRef.nativeElement.scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      behavior: 'smooth',
+    });
+  });
+
+  it('should clamp scroll-to-element to the bottom of the list', () => {
+    component.ngOnInit();
+
+    const targetElement = {
+      getBoundingClientRect: () => ({
+        top: 1140,
+        height: 120,
+      }),
+    } as HTMLElement;
+
+    component.scrollToElement(targetElement);
+
+    expect(component.contentRef.nativeElement.scrollTo).toHaveBeenCalledWith({
+      top: 800,
+      behavior: 'smooth',
+    });
   });
 });
