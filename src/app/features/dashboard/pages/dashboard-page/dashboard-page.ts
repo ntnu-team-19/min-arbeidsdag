@@ -48,7 +48,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     const count = this.assignmentCards.length;
     const dayKey = this.selectedDay === 'today' ? 'sheet.today' : 'sheet.tomorrow';
     const dayText = this.translate.instant(dayKey);
-    const countText = count === 1 ? this.translate.instant('sheet.assignmentCountText') : this.translate.instant('sheet.assignmentCountTextPlural');
+    const countText =
+      count === 1
+        ? this.translate.instant('sheet.assignmentCountText')
+        : this.translate.instant('sheet.assignmentCountTextPlural');
     return `${count} ${countText} ${dayText}`;
   }
 

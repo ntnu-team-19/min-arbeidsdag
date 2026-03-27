@@ -1,18 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterModule, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { TranslateService, provideTranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { Navbar } from './navbar';
 
 describe('Navbar', () => {
   let fixture: ComponentFixture<Navbar>;
   let component: Navbar;
+  let translate: TranslateService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Navbar, RouterModule.forRoot([])],
+      providers: [
+        provideHttpClient(),
+        provideTranslateService({ fallbackLang: 'no' }),
+        ...provideTranslateHttpLoader(),
+      ],
     }).compileComponents();
 
+    translate = TestBed.inject(TranslateService);
     fixture = TestBed.createComponent(Navbar);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -24,7 +34,7 @@ describe('Navbar', () => {
     expect(component).toBeTruthy();
     expect(component.menuOpen).toBe(false);
     expect(component.darkMode).toBe(false);
-    expect(component.language).toBe('no');
+    expect(component.currentLang).toBe('no');
     expect(component.isHidden).toBe(false);
   });
 
@@ -87,11 +97,11 @@ describe('Navbar', () => {
   });
 
   it('should reflect current language and darkMode state in menu items', () => {
-    component.language = 'en';
+    translate.use('en');
     component.darkMode = true;
     const labels = component.menuItems.map((item) => item.label);
-    expect(labels).toContain('Norsk');
-    expect(labels).toContain('Lys modus');
+    expect(labels).toContain('navbar.language');
+    expect(labels).toContain('navbar.lightMode');
   });
 
   // ── onMenuSelect ──
@@ -139,9 +149,9 @@ describe('Navbar', () => {
 
   it('should toggle language between "no" and "en"', () => {
     component.toggleLanguage();
-    expect(component.language).toBe('en');
+    expect(component.currentLang).toBe('en');
     component.toggleLanguage();
-    expect(component.language).toBe('no');
+    expect(component.currentLang).toBe('no');
   });
 
   // ── Scroll hide/show ──

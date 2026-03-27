@@ -63,7 +63,9 @@
           </p>
           <p class="flex items-center gap-2">
             <i class="pi pi-phone shrink-0"></i>
-            <span class="truncate">{{ assignment.phoneNumber || ('assignment.notSpecified' | translate) }}</span>
+            <span class="truncate">{{
+              assignment.phoneNumber || ('assignment.notSpecified' | translate)
+            }}</span>
           </p>
         </div>
       </div>
