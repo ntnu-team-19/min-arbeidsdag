@@ -1,16 +1,19 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { DayOption } from './day-selector.types';
 
 @Component({
   selector: 'app-day-selector',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, TranslatePipe],
   templateUrl: './day-selector.html',
 })
 export class DaySelector {
   @Input() selectedDay: DayOption = 'today';
   @Output() selectedDayChange = new EventEmitter<DayOption>();
+
+  private translate = inject(TranslateService);
 
   selectDay(day: DayOption): void {
     if (day === this.selectedDay) return;
@@ -28,7 +31,9 @@ export class DaySelector {
   }
 
   private formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('nb-NO', {
+    const lang = this.translate.currentLang ?? this.translate.defaultLang;
+    const locale = lang === 'en' ? 'en-GB' : 'nb-NO';
+    return new Intl.DateTimeFormat(locale, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
