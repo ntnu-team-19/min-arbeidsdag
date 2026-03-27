@@ -4,7 +4,7 @@
   (click)="onCardClick()"
 >
   <div class="rounded-t-2xl px-4 py-1.5 text-xs font-semibold" [ngClass]="currentStatus.badgeClass">
-    {{ currentStatus.label }}
+    {{ currentStatus.label | translate }}
   </div>
 
   <div class="flex items-center justify-between gap-3 p-4">
@@ -47,7 +47,7 @@
       class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
       (click)="onDirectionsClick($event)"
     >
-      Vis veibeskrivelse
+      {{ 'miniCard.showDirections' | translate }}
     </button>
   </div>
 </button>
