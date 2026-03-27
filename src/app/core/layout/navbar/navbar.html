@@ -33,7 +33,7 @@
     position="right"
     [appendTo]="'body'"
     [style]="{ width: '16rem', height: '100%' }"
-    header="Meny"
+    [header]="'navbar.menu' | translate"
   >
     <div class="flex flex-col">
       @for (item of menuItems; track item.action; let last = $last) {
@@ -44,7 +44,7 @@
           [class.border-slate-300]="!last"
         >
           <i [class]="item.icon" style="font-size: 1.2rem"></i>
-          <span class="font-bold">{{ item.label }}</span>
+          <span class="font-bold">{{ item.label | translate }}</span>
         </button>
       }
     </div>
