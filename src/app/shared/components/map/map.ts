@@ -25,10 +25,17 @@ import Style from 'ol/style/Style';
 import { ThemeService } from '../../../core/services/theme.service';
 
 export interface Assignment {
-  id: number;
+  id: string | number;
   name: string;
   location?: { lat?: number | null; lon?: number | null } | null;
   description?: string;
+}
+
+interface FocusAssignmentOptions {
+  zoom?: number;
+  duration?: number;
+  targetXRatio?: number;
+  targetYRatio?: number;
 }
 
 @Component({
@@ -164,6 +171,47 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     this.tileLayer.setSource(newSource);
   }
 
+  focusAssignment(assignment: Assignment, options: FocusAssignmentOptions = {}): void {
+    if (!this.map || !this.hasValidCoordinates(assignment)) {
+      return;
+    }
+
+    const location = assignment.location as { lat: number; lon: number };
+    const size = this.map.getSize();
+    if (!size) {
+      return;
+    }
+
+    const view = this.map.getView();
+    const currentCenter = view.getCenter();
+    const currentZoom = view.getZoom();
+    const nextZoom = Math.max(currentZoom ?? 0, options.zoom ?? (this.compact ? 14 : 16));
+
+    if (!currentCenter || currentZoom == null) {
+      return;
+    }
+
+    const targetXRatio = this.clamp(options.targetXRatio ?? 0.5, 0, 1);
+    const targetYRatio = this.clamp(options.targetYRatio ?? 0.5, 0, 1);
+    const coordinate = fromLonLat([location.lon, location.lat]);
+
+    view.setZoom(nextZoom);
+    view.centerOn(coordinate, size, [size[0] * targetXRatio, size[1] * targetYRatio]);
+    const targetCenter = view.getCenter();
+    view.setCenter(currentCenter);
+    view.setZoom(currentZoom);
+
+    if (!targetCenter) {
+      return;
+    }
+
+    view.animate({
+      center: targetCenter,
+      zoom: nextZoom,
+      duration: options.duration ?? 350,
+    });
+  }
+
   private readonly onMapClick = (event: unknown) => {
     if (!this.map) return;
     if (!this.isMapClickEvent(event)) return;
@@ -233,6 +281,10 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
 
     const maybePixel = (event as { pixel?: unknown }).pixel;
     return Array.isArray(maybePixel) && maybePixel.length === 2;
+  }
+
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
   }
 
   ngOnDestroy() {
