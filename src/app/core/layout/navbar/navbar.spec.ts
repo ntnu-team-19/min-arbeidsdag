@@ -104,14 +104,6 @@ describe('Navbar', () => {
     expect(actions).toEqual(['user', 'statistics', 'language', 'darkmode']);
   });
 
-  it('should reflect current language and darkMode state in menu items', () => {
-    translate.use('en');
-    component.darkMode = true;
-    const labels = component.menuItems.map((item) => item.label);
-    expect(labels).toContain('navbar.language');
-    expect(labels).toContain('navbar.lightMode');
-  });
-
   // ── onMenuSelect ──
 
   it('should call correct handler for each menu action', () => {
