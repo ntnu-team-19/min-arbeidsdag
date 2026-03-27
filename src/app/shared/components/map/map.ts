@@ -9,6 +9,8 @@ import {
   inject,
   ChangeDetectorRef,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -41,7 +43,7 @@ interface FocusAssignmentOptions {
 @Component({
   selector: 'app-assignment-map',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })

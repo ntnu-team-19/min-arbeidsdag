@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
 import { ListboxModule } from 'primeng/listbox';
 import { RouterModule, Router } from '@angular/router';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { ThemeService } from '../../services/theme.service';
 
 interface MenuItem {
@@ -14,15 +15,17 @@ interface MenuItem {
 
 @Component({
   selector: 'app-navbar',
-  imports: [CommonModule, ButtonModule, DrawerModule, ListboxModule, RouterModule],
+  imports: [CommonModule, ButtonModule, DrawerModule, ListboxModule, RouterModule, TranslatePipe],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
 export class Navbar {
   menuOpen = false;
+  darkMode = false;
   language = 'no';
 
   private router = inject(Router);
+  private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
 
   // Toggles 'navbar-hidden' class on host element to hide/show navbar
@@ -41,26 +44,30 @@ export class Navbar {
     this.lastScrollY = currentScrollY;
   }
 
+  get currentLang() {
+    return this.translate.currentLang ?? this.translate.defaultLang;
+  }
+
   /** Dynamic menu items that react to current language and dark mode state */
   get menuItems(): MenuItem[] {
     return [
       {
-        label: 'User',
+        label: 'navbar.user',
         icon: 'pi pi-user',
         action: 'user',
       },
       {
-        label: 'Statistikk',
+        label: 'navbar.statistics',
         icon: 'pi pi-chart-bar',
         action: 'statistics',
       },
       {
-        label: this.language === 'no' ? 'English' : 'Norsk',
+        label: 'navbar.language',
         icon: 'pi pi-language',
         action: 'language',
       },
       {
-        label: this.themeService.isDark() ? 'Lys modus' : 'Mørk modus',
+        label: this.themeService.isDark() ? 'navbar.lightMode' : 'navbar.darkMode',
         icon: this.themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon',
         action: 'darkmode',
       },
@@ -93,7 +100,8 @@ export class Navbar {
   }
 
   toggleLanguage() {
-    this.language = this.language === 'no' ? 'en' : 'no';
+    const next = this.currentLang === 'no' ? 'en' : 'no';
+    this.translate.use(next);
   }
 
   goToHome() {

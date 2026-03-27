@@ -1,14 +1,13 @@
 <div class="min-h-screen">
   @if (isLoading) {
-    <div class="text-theme-secondary p-6 text-center">Laster oppdrag...</div>
+    <div class="text-theme-secondary p-6 text-center">{{ 'assignment.loading' | translate }}</div>
   } @else if (notFound) {
     <div class="p-6 text-center">
-      <p class="text-theme-secondary mb-4">Fant ikke oppdraget.</p>
-
+      <p class="text-theme-secondary mb-4">{{ 'assignment.notFound' | translate }}</p>
       <button
         pButton
         type="button"
-        label="Tilbake"
+        [label]="'assignment.back' | translate"
         icon="pi pi-arrow-left"
         class="p-button-primary"
         (click)="goBack()"
@@ -22,7 +21,7 @@
         <button
           pButton
           type="button"
-          label="Tilbake"
+          [label]="'assignment.back' | translate"
           icon="pi pi-arrow-left"
           severity="secondary"
           class="theme-secondary-button rounded-lg"
@@ -52,12 +51,12 @@
             <button
               pButton
               type="button"
-              label="Vis veibeskrivelse"
+              [label]="'assignment.showDirections' | translate"
               icon="pi pi-directions"
               severity="secondary"
               class="theme-secondary-button mt-3 rounded-full"
               (click)="openDirections()"
-              aria-label="Vis veibeskrivelse"
+              [attr.aria-label]="'assignment.showDirections' | translate"
             ></button>
           </div>
 
@@ -68,7 +67,7 @@
               icon="pi pi-expand"
               severity="secondary"
               [rounded]="true"
-              aria-label="Utvid kart"
+              [attr.aria-label]="'assignment.expandMap' | translate"
             ></button>
           </div>
         </div>
@@ -76,7 +75,7 @@
         <!-- Status banner -->
         <div class="border-theme-2 border-b px-4 py-2" [ngClass]="statusBannerClass">
           <div class="text-sm font-medium">
-            {{ statusLabel }}
+            {{ statusLabel | translate }}
           </div>
         </div>
 
@@ -100,11 +99,10 @@
               • {{ assignment.estimatedDuration }}
             </p>
           </div>
-
           <span
             class="shrink-0 rounded-full bg-gray-200 px-3 py-1 text-xl font-medium text-black dark:bg-slate-700 dark:text-white"
           >
-            {{ dayLabelText }}
+            {{ dayLabelText | translate }}
           </span>
         </div>
 
@@ -119,7 +117,9 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <h2 class="text-theme-muted text-sm font-medium">Beskrivelse</h2>
+              <h2 class="text-theme-muted text-sm font-medium">
+                {{ 'assignment.description' | translate }}
+              </h2>
               <p class="text-theme-primary mt-1 min-h-[44px] flex items-center text-lg">
                 {{ assignment.description }}
               </p>
@@ -135,7 +135,9 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <h2 class="text-theme-muted text-sm font-medium">Kontaktdetaljer</h2>
+              <h2 class="text-theme-muted text-sm font-medium">
+                {{ 'assignment.contactDetails' | translate }}
+              </h2>
               <div class="mt-1 flex items-center justify-between gap-3">
                 <p class="text-theme-primary min-w-0 text-lg">{{ assignment.contactName }}</p>
 
@@ -149,7 +151,7 @@
                     <span>{{ formattedPhone }}</span>
                   </a>
                 } @else {
-                  <p class="text-theme-muted text-sm">Ingen telefonnummer tilgjengelig</p>
+                  <p class="text-theme-muted text-sm">{{ 'assignment.noPhone' | translate }}</p>
                 }
               </div>
             </div>
@@ -164,8 +166,9 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <h2 class="text-theme-muted text-sm font-medium">Forberedelse</h2>
-
+              <h2 class="text-theme-muted text-sm font-medium">
+                {{ 'assignment.preparation' | translate }}
+              </h2>
               <div class="mt-1 min-h-[44px] flex items-center gap-3">
                 <p-checkbox
                   inputId="contacted"
@@ -173,9 +176,8 @@
                   [ngModel]="assignment.contacted"
                   (ngModelChange)="onContactedChange($event)"
                 ></p-checkbox>
-
                 <label for="contacted" class="text-theme-primary text-lg">
-                  Oppdrag bekreftet
+                  {{ 'assignment.assignmentConfirmed' | translate }}
                 </label>
               </div>
             </div>
@@ -190,14 +192,15 @@
             </div>
 
             <div class="min-w-0 flex-1">
-              <h2 class="text-theme-muted text-sm font-medium">Kommentar</h2>
-
+              <h2 class="text-theme-muted text-sm font-medium">
+                {{ 'assignment.comment' | translate }}
+              </h2>
               <textarea
                 pInputTextarea
                 rows="4"
                 class="theme-textarea mt-1 w-full rounded-xl border p-3 text-base outline-none"
                 [ngModel]="assignment.comment"
-                placeholder="Legg til kommentar..."
+                [placeholder]="'assignment.addComment' | translate"
               ></textarea>
             </div>
           </section>

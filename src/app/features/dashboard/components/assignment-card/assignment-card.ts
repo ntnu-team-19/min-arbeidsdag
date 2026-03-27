@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 
 @Component({
   selector: 'app-assignment-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './assignment-card.html',
 })
 export class AssignmentCard {
@@ -23,43 +24,43 @@ export class AssignmentCard {
     }
   > = {
     upcoming: {
-      label: 'Kommende oppdrag',
+      label: 'status.upcoming',
       barClass: 'bg-[#B0C4D7]',
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-circle',
     },
     ongoing: {
-      label: 'Pågående oppdrag',
+      label: 'status.ongoing',
       barClass: 'bg-[#FFD68A]',
       iconClass: 'text-[#FFD68A]',
       icon: 'pi pi-circle',
     },
     next: {
-      label: 'Neste oppdrag',
+      label: 'status.next',
       barClass: 'bg-[#1F4E79]',
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-arrow-circle-right',
     },
     completed: {
-      label: 'Fullført oppdrag',
+      label: 'status.completed',
       barClass: 'bg-[#54DA8C]',
       iconClass: 'text-[#54DA8C]',
       icon: 'pi pi-check-circle',
     },
     cancelled: {
-      label: 'Avlyst oppdrag',
+      label: 'status.cancelled',
       barClass: 'bg-[#DC8A8A]',
       iconClass: 'text-[#DC8A8A]',
       icon: 'pi pi-times-circle',
     },
     confirmed: {
-      label: 'Bekreftet for i morgen',
+      label: 'status.confirmed',
       barClass: 'bg-[#1F4E79]',
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-check-circle',
     },
     unconfirmed: {
-      label: 'Ikke bekreftet for i morgen',
+      label: 'status.unconfirmed',
       barClass: 'bg-[#FFD68A]',
       iconClass: 'text-[#D9A441]',
       icon: 'pi pi-circle',
@@ -76,8 +77,8 @@ export class AssignmentCard {
 
   get confirmationActionLabel(): string {
     return this.assignment.status === 'confirmed'
-      ? 'Marker som ikke bekreftet'
-      : 'Marker som bekreftet';
+      ? 'assignment.markUnconfirmed'
+      : 'assignment.markConfirmed';
   }
 
   onCardClick(): void {

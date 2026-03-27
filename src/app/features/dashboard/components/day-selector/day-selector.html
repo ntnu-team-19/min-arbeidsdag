@@ -1,5 +1,9 @@
 <div class="px-4 md:px-6">
-  <div class="grid grid-cols-2 gap-2 md:gap-2" role="tablist" aria-label="Velg oversikt for dag">
+  <div
+    class="grid grid-cols-2 gap-2 md:gap-2"
+    role="tablist"
+    [attr.aria-label]="'daySelector.selectDay' | translate"
+  >
     <button
       type="button"
       role="tab"
@@ -9,7 +13,9 @@
       class="flex min-h-[96px] w-full flex-col items-start justify-center rounded-xl border px-4 py-4 text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B4A8B] md:min-h-[96px] md:px-5 md:py-4"
       [ngClass]="dayCardClasses(selectedDay === 'today')"
     >
-      <span [ngClass]="dayTitleClasses(selectedDay === 'today')"> Dagens Oversikt </span>
+      <span [ngClass]="dayTitleClasses(selectedDay === 'today')">{{
+        'daySelector.todayOverview' | translate
+      }}</span>
       <span [ngClass]="dayDateClasses(selectedDay === 'today')">
         {{ todayDateLabel }}
       </span>
@@ -24,7 +30,9 @@
       class="flex min-h-[96px] w-full flex-col items-end justify-center rounded-xl border px-4 py-4 text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B4A8B] md:min-h-[96px] md:px-5 md:py-4"
       [ngClass]="dayCardClasses(selectedDay === 'tomorrow')"
     >
-      <span [ngClass]="dayTitleClasses(selectedDay === 'tomorrow')"> Morgendagens Oversikt </span>
+      <span [ngClass]="dayTitleClasses(selectedDay === 'tomorrow')">{{
+        'daySelector.tomorrowOverview' | translate
+      }}</span>
       <span [ngClass]="dayDateClasses(selectedDay === 'tomorrow')">
         {{ tomorrowDateLabel }}
       </span>

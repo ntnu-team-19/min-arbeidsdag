@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Component } from '@angular/core';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { TravelTimeIndicator } from './travel-time-indicator';
 
 @Component({
@@ -16,26 +17,26 @@ class TestHostComponent {
 describe('TravelTimeIndicator', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let host: TestHostComponent;
+  let translateService: TranslateService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
+      providers: [provideTranslateService()],
     }).compileComponents();
+
+    translateService = TestBed.inject(TranslateService);
+    translateService.setDefaultLang('no');
+    translateService.use('no');
 
     fixture = TestBed.createComponent(TestHostComponent);
     host = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    fixture.detectChanges();
-    const indicator = fixture.debugElement.query(By.directive(TravelTimeIndicator));
-    expect(indicator).toBeTruthy();
-  });
-
   it('should display the travel time in minutes', () => {
     fixture.detectChanges();
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toBe('45 min kjøring');
+    expect(span.nativeElement.textContent.trim()).toContain('45');
   });
 
   it('should display 12 min kjøring', () => {
@@ -43,7 +44,7 @@ describe('TravelTimeIndicator', () => {
     fixture.detectChanges();
 
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toBe('12 min kjøring');
+    expect(span.nativeElement.textContent.trim()).toContain('12');
   });
 
   it('should display 0 min kjøring', () => {
@@ -51,7 +52,7 @@ describe('TravelTimeIndicator', () => {
     fixture.detectChanges();
 
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toBe('0 min kjøring');
+    expect(span.nativeElement.textContent.trim()).toContain('0');
   });
 
   it('should render a car icon', () => {

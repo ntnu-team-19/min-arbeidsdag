@@ -10,6 +10,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-assignment-details',
@@ -22,6 +23,7 @@ import { FormsModule } from '@angular/forms';
     CheckboxModule,
     TextareaModule,
     TagModule,
+    TranslatePipe,
   ],
   templateUrl: './assignment-details.html',
 })
@@ -91,31 +93,31 @@ export class AssignmentDetailsPage implements OnInit {
   get dayLabelText(): string {
     switch (this.assignment?.dayLabel) {
       case 'today':
-        return 'I dag';
+        return 'assignment.today';
       case 'tomorrow':
-        return 'I morgen';
+        return 'assignment.tomorrow';
       default:
-        return 'Oppdrag';
+        return 'assignment.label';
     }
   }
 
   get statusLabel(): string {
     switch (this.assignment?.status) {
       case 'ongoing':
-        return 'Pågående oppdrag';
+        return 'status.ongoing';
       case 'next':
-        return 'Neste oppdrag';
+        return 'status.next';
       case 'upcoming':
-        return 'Kommende oppdrag';
+        return 'status.upcoming';
       case 'confirmed':
-        return 'Bekreftet';
+        return 'status.confirmedShort';
       case 'completed':
-        return 'Fullført oppdrag';
+        return 'status.completed';
       case 'cancelled':
-        return 'Avlyst';
+        return 'status.cancelledShort';
       case 'unconfirmed':
       default:
-        return 'Ubekreftet';
+        return 'status.unconfirmedDetails';
     }
   }
 

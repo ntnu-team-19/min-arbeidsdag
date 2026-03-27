@@ -2,7 +2,7 @@ import { convertToParamMap, ActivatedRoute, Router } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-
+import { provideTranslateService } from '@ngx-translate/core';
 import { AssignmentDetailsPage } from './assignment-details';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { AssignmentDetails } from '../../../../core/models/assignment-details.model';
@@ -81,6 +81,7 @@ describe('AssignmentDetailsPage', () => {
             },
           },
         },
+        provideTranslateService(),
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -157,7 +158,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, dayLabel: 'today' };
 
-    expect(component.dayLabelText).toBe('I dag');
+    expect(component.dayLabelText).toBe('assignment.today');
   });
 
   it('should return correct dayLabelText for tomorrow', async () => {
@@ -165,7 +166,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, dayLabel: 'tomorrow' };
 
-    expect(component.dayLabelText).toBe('I morgen');
+    expect(component.dayLabelText).toBe('assignment.tomorrow');
   });
 
   it('should return default dayLabelText for other', async () => {
@@ -173,7 +174,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, dayLabel: 'other' };
 
-    expect(component.dayLabelText).toBe('Oppdrag');
+    expect(component.dayLabelText).toBe('assignment.label');
   });
 
   it('should return correct statusLabel for upcoming', async () => {
@@ -181,7 +182,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'upcoming' };
 
-    expect(component.statusLabel).toBe('Kommende oppdrag');
+    expect(component.statusLabel).toBe('status.upcoming');
   });
 
   it('should return correct statusLabel for confirmed', async () => {
@@ -189,7 +190,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'confirmed' };
 
-    expect(component.statusLabel).toBe('Bekreftet');
+    expect(component.statusLabel).toBe('status.confirmedShort');
   });
 
   it('should return correct statusLabel for completed', async () => {
@@ -197,7 +198,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'completed' };
 
-    expect(component.statusLabel).toBe('Fullført oppdrag');
+    expect(component.statusLabel).toBe('status.completed');
   });
 
   it('should return correct statusLabel for cancelled', async () => {
@@ -205,7 +206,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'cancelled' };
 
-    expect(component.statusLabel).toBe('Avlyst');
+    expect(component.statusLabel).toBe('status.cancelledShort');
   });
 
   it('should return default statusLabel for unconfirmed', async () => {
@@ -213,7 +214,7 @@ describe('AssignmentDetailsPage', () => {
 
     component.assignment = { ...mockAssignment, status: 'unconfirmed' };
 
-    expect(component.statusLabel).toBe('Ubekreftet');
+    expect(component.statusLabel).toBe('status.unconfirmedDetails');
   });
 
   it('should have constant statusTagClass', async () => {
