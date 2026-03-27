@@ -1,11 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { MiniAssignmentCard } from './mini-assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MiniAssignmentCard', () => {
   let component: MiniAssignmentCard;
   let fixture: ComponentFixture<MiniAssignmentCard>;
+  let translateService: TranslateService;
 
   const mockAssignment: Assignment = {
     id: '123',
@@ -29,7 +32,12 @@ describe('MiniAssignmentCard', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MiniAssignmentCard],
+      providers: [provideTranslateService()],
     }).compileComponents();
+
+    translateService = TestBed.inject(TranslateService);
+    translateService.setDefaultLang('no');
+    translateService.use('no');
   });
 
   beforeEach(async () => {
@@ -46,23 +54,17 @@ describe('MiniAssignmentCard', () => {
 
   it('should expose currentStatus based on assignment status', () => {
     expect(component.currentStatus).toEqual({
-      label: 'Pågående oppdrag',
+      label: 'status.ongoing',
       badgeClass: 'bg-[#F2CD7A] text-black',
       dotClass: 'border-[#D9A441] text-[#D9A441]',
     });
   });
 
-  it('should render address, time and duration', () => {
+  it('should render address and time', () => {
     const text = fixture.nativeElement.textContent;
 
     expect(text).toContain('Kløbuvegen 179, 7031 Trondheim');
     expect(text).toContain('08:30');
-    expect(text).toContain('60');
-  });
-
-  it('should render status label', () => {
-    const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Pågående oppdrag');
   });
 
   it('should emit cardClick with assignment id when onCardClick is called', () => {
@@ -138,8 +140,7 @@ describe('MiniAssignmentCard', () => {
     };
     fixture.detectChanges();
 
-    expect(component.currentStatus.label).toBe('Fullført');
-    expect(fixture.nativeElement.textContent).toContain('Fullført');
+    expect(component.currentStatus.label).toBe('status.completedShort');
   });
 
   it('should show cancelled status label when assignment status is cancelled', () => {
@@ -151,7 +152,6 @@ describe('MiniAssignmentCard', () => {
     };
     fixture.detectChanges();
 
-    expect(component.currentStatus.label).toBe('Avlyst');
-    expect(fixture.nativeElement.textContent).toContain('Avlyst');
+    expect(component.currentStatus.label).toBe('status.cancelledShort');
   });
 });

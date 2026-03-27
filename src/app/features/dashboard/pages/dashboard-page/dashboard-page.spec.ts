@@ -3,6 +3,7 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { of, ReplaySubject } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -88,8 +89,23 @@ describe('DashboardPage', () => {
             queryParamMap: queryParamSubject.asObservable(),
           },
         },
+        provideTranslateService(),
       ],
     }).compileComponents();
+
+    // Set up translations
+    const translateService = TestBed.inject(TranslateService);
+    translateService.setDefaultLang('no');
+    translateService.setTranslation('no', {
+      sheet: {
+        assignments: 'Oppdrag',
+        today: 'i dag',
+        tomorrow: 'i morgen',
+        assignmentCountText: 'Oppdrag',
+        assignmentCountTextPlural: 'Oppdrag',
+      },
+    });
+    translateService.use('no');
 
     // Emit params before creating component so it's replayed on subscription
     queryParamSubject.next(convertToParamMap({}));
