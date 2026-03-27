@@ -143,13 +143,11 @@ describe('Navbar', () => {
 
   // ── toggleDarkMode ──
 
-  it('should toggle darkMode and update document class', () => {
+  it('should toggle theme and update document class', () => {
     component.toggleDarkMode();
-    expect(component.darkMode).toBe(true);
     expect(document.documentElement.classList.contains('dark')).toBe(true);
 
     component.toggleDarkMode();
-    expect(component.darkMode).toBe(false);
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 

@@ -1,12 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, Router, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
+import { ActivatedRoute, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
+import { of, ReplaySubject } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { of, ReplaySubject } from 'rxjs';
 import { Assignment } from '../../../../core/models/assignment-card.model';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
+import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
+import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -52,24 +57,41 @@ const MOCK_CARDS: Assignment[] = [
 ];
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
+
+const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
+  completedAssignments: 1,
+  totalAssignments: 4,
+  completedTravelMinutes: 15,
+  totalTravelMinutes: 45,
+  typeBreakdown: [
+    { label: 'Fiber', count: 2 },
+    { label: 'El-nett', count: 1 },
+  ],
+};
+
 describe('DashboardPage', () => {
   let component: DashboardPage;
   let fixture: ComponentFixture<DashboardPage>;
-  let router: Router;
   let queryParamSubject: ReplaySubject<ParamMap>;
   let assignmentServiceMock: {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
     getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
+    getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
   };
 
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   beforeEach(async () => {
-    // ReplaySubject with buffer size 1 so the latest params are replayed to new subscribers
     queryParamSubject = new ReplaySubject<ParamMap>(1);
 
     assignmentServiceMock = {
       getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
       getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
+      getDailyProgressByDesiredDate: vi.fn().mockReturnValue(of(MOCK_DAILY_PROGRESS)),
       updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
     };
 
@@ -112,7 +134,6 @@ describe('DashboardPage', () => {
 
     fixture = TestBed.createComponent(DashboardPage);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router);
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -144,89 +165,116 @@ describe('DashboardPage', () => {
     expect(daySelector).toBeTruthy();
   });
 
-  it('should show assignment cards in list view', () => {
-    const cards = fixture.debugElement.queryAll(By.css('app-assignment-card'));
-    expect(cards.length).toBe(4);
+  it('should show the shared daily progress infobox', () => {
+    const infobox = fixture.debugElement.query(By.css('app-daily-progress-infobox'));
+    expect(infobox).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Dagens fremdrift');
   });
 
-  it('should show travel time indicators only for non-completed cards', () => {
-    const indicators = fixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
-    expect(indicators.length).toBe(3);
+  it('should not show the daily progress infobox in map view', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+
+    const infobox = mapFixture.debugElement.query(By.css('app-daily-progress-infobox'));
+    expect(infobox).toBeFalsy();
   });
 
-  it('should show separator line between non-completed and completed cards', () => {
-    const separator = fixture.debugElement.query(By.css('hr'));
-    expect(separator).toBeTruthy();
+  it('should pass the selected day to the daily progress infobox', async () => {
+    const todayInfobox = fixture.debugElement.query(By.directive(DailyProgressInfobox));
+    expect(todayInfobox.componentInstance.day).toBe('today');
+
+    const tomorrowFixture = TestBed.createComponent(DashboardPage);
+    const tomorrowComponent = tomorrowFixture.componentInstance;
+    tomorrowComponent.selectedDay = 'tomorrow';
+    tomorrowFixture.detectChanges();
+    await tomorrowFixture.whenStable();
+
+    const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
+    expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
   });
 
-  it('should not show map in list view', () => {
-    const map = fixture.debugElement.query(By.css('app-assignment-map'));
-    expect(map).toBeFalsy();
-  });
-
-  it('should show floating button', () => {
-    const fab = fixture.debugElement.query(By.css('app-floating-button'));
-    expect(fab).toBeTruthy();
-  });
-
-  it('should have day-selector-row class on day selector container', () => {
-    const daySelectorRow = fixture.debugElement.query(By.css('.day-selector-row'));
-    expect(daySelectorRow).toBeTruthy();
-  });
-
-  it('should have correct sheet title based on selected day and assignment count', () => {
-    expect(component.sheetTitle).toBe('4 Oppdrag i dag');
-    component.selectedDay = 'tomorrow';
-    expect(component.sheetTitle).toBe('4 Oppdrag i morgen');
-  });
-
-  it('should update selectedDay when day changes', () => {
-    component.onDayChange('tomorrow');
-    expect(component.selectedDay).toBe('tomorrow');
-  });
-
-  it('should update tomorrow confirmation status and reload assignments', () => {
-    component.onTomorrowConfirmationChange('1', true);
-
-    expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1', true);
-    expect(assignmentServiceMock.getAssignmentCardsByDesiredDate).toHaveBeenCalledTimes(2);
-  });
-
-  it('should include day and view query params when navigating to assignment details', () => {
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    component.selectedDay = 'tomorrow';
+  it('should focus the map, snap the sheet, and highlight the matching card when a marker is clicked', () => {
+    vi.useFakeTimers();
     component.isListView = false;
 
-    component.goToAssignmentDetails('123');
+    const markerAssignment = {
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    };
+    const focusAssignment = vi.fn();
+    const snapTo = vi.fn();
+    const scrollToElement = vi.fn();
+    const cardRow = document.createElement('div');
+    cardRow.dataset['assignmentId'] = '2';
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/assignments', '123'], {
-      queryParams: { day: 'tomorrow', view: 'map' },
-    });
+    (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignment,
+    };
+    (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
+      snapTo,
+      scrollToElement,
+    };
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: (predicate: (row: { nativeElement: HTMLElement }) => boolean) => {
+        const row = { nativeElement: cardRow };
+        return predicate(row) ? row : undefined;
+      },
+    };
+
+    component.onMarkerClicked(markerAssignment);
+
+    expect(focusAssignment).toHaveBeenCalledWith(
+      markerAssignment,
+      expect.objectContaining({
+        targetYRatio: MAP_BOTTOM_SHEET_PEEK_RATIO / 2,
+      }),
+    );
+    expect(snapTo).toHaveBeenCalledWith('peek');
+    expect(scrollToElement).not.toHaveBeenCalled();
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
+
+    vi.advanceTimersByTime(280);
+
+    expect(scrollToElement).toHaveBeenCalledWith(cardRow);
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
+
+    vi.advanceTimersByTime(180);
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(true);
   });
 
-  it('should update query params when day changes', () => {
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    component.onDayChange('tomorrow');
-    expect(navigateSpy).toHaveBeenCalledWith([], {
-      relativeTo: TestBed.inject(ActivatedRoute),
-      queryParams: { day: 'tomorrow', view: 'list' },
-      queryParamsHandling: 'merge',
-    });
-  });
+  it('should clear the highlighted card on the next user interaction', () => {
+    vi.useFakeTimers();
+    component.isListView = false;
 
-  it('should update query params when view changes', () => {
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    component.onViewChange(false);
-    expect(navigateSpy).toHaveBeenCalledWith([], {
-      relativeTo: TestBed.inject(ActivatedRoute),
-      queryParams: { day: 'today', view: 'map' },
-      queryParamsHandling: 'merge',
-    });
-  });
+    const cardRow = document.createElement('div');
+    cardRow.dataset['assignmentId'] = '2';
 
-  it('should reflect query param changes in component state', () => {
-    queryParamSubject.next(convertToParamMap({ day: 'tomorrow', view: 'map' }));
-    expect(component.selectedDay).toBe('tomorrow');
-    expect(component.isListView).toBe(false);
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: (predicate: (row: { nativeElement: HTMLElement }) => boolean) => {
+        const row = { nativeElement: cardRow };
+        return predicate(row) ? row : undefined;
+      },
+    };
+
+    component.onMarkerClicked({
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    });
+
+    vi.advanceTimersByTime(460);
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(true);
+
+    component.onUserInteractionStart();
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
   });
 });

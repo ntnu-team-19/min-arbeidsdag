@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Navbar } from './core/layout/navbar/navbar';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +9,11 @@ import { Navbar } from './core/layout/navbar/navbar';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
+export class App implements OnInit {
+  private readonly themeService = inject(ThemeService);
   protected readonly title = signal('min-arbeidsdag');
+
+  ngOnInit(): void {
+    this.themeService.init();
+  }
 }

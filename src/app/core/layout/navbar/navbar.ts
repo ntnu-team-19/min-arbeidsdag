@@ -5,6 +5,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { ListboxModule } from 'primeng/listbox';
 import { RouterModule, Router } from '@angular/router';
 import { TranslateService, TranslatePipe } from '@ngx-translate/core';
+import { ThemeService } from '../../services/theme.service';
 
 interface MenuItem {
   label: string;
@@ -21,9 +22,11 @@ interface MenuItem {
 export class Navbar {
   menuOpen = false;
   darkMode = false;
+  language = 'no';
 
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private themeService = inject(ThemeService);
 
   // Toggles 'navbar-hidden' class on host element to hide/show navbar
   @HostBinding('class.navbar-hidden')
@@ -64,8 +67,8 @@ export class Navbar {
         action: 'language',
       },
       {
-        label: this.darkMode ? 'navbar.lightMode' : 'navbar.darkMode',
-        icon: this.darkMode ? 'pi pi-sun' : 'pi pi-moon',
+        label: this.themeService.isDark() ? 'navbar.lightMode' : 'navbar.darkMode',
+        icon: this.themeService.isDark() ? 'pi pi-sun' : 'pi pi-moon',
         action: 'darkmode',
       },
     ];
@@ -93,8 +96,7 @@ export class Navbar {
   }
 
   toggleDarkMode() {
-    this.darkMode = !this.darkMode;
-    document.documentElement.classList.toggle('dark', this.darkMode);
+    this.themeService.toggleTheme();
   }
 
   toggleLanguage() {

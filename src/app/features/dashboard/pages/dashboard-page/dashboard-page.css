@@ -16,6 +16,11 @@
   z-index: 25;
 }
 
+.progress-infobox-row {
+  z-index: 20;
+  margin-bottom: 0.75rem;
+}
+
 .dashboard-page.map-view .day-selector-row {
   margin-top: 0;
   margin-bottom: 0;
@@ -34,4 +39,40 @@
 .map-stage app-assignment-map {
   display: block;
   height: 100%;
+}
+
+.mini-assignment-card-row {
+  border-radius: 1.5rem;
+  padding: 0.375rem 0.25rem;
+  scroll-margin-top: 1rem;
+  scroll-margin-bottom: 12rem;
+}
+
+.mini-assignment-card-row.marker-focused {
+  box-shadow:
+    0 0 0 3px rgba(84, 127, 169, 0.34),
+    0 16px 32px rgba(31, 78, 121, 0.14);
+  transform: translateY(-2px) scale(1.01);
+  animation: marker-card-focus-in 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes marker-card-focus-in {
+  0% {
+    box-shadow: 0 0 0 0 rgba(84, 127, 169, 0);
+    transform: translateY(0) scale(1);
+  }
+
+  65% {
+    box-shadow:
+      0 0 0 5px rgba(84, 127, 169, 0.22),
+      0 20px 36px rgba(31, 78, 121, 0.18);
+    transform: translateY(-3px) scale(1.015);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(84, 127, 169, 0.34),
+      0 16px 32px rgba(31, 78, 121, 0.14);
+    transform: translateY(-2px) scale(1.01);
+  }
 }

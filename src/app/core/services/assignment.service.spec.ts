@@ -9,6 +9,7 @@ const STORAGE_KEY = 'assignment-details';
 
 describe('AssignmentService', () => {
   let service: AssignmentService;
+  let storage: Storage;
 
   const mockStoredAssignments: AssignmentDetailsDto[] = [
     {
@@ -74,7 +75,9 @@ describe('AssignmentService', () => {
   ];
 
   beforeEach(() => {
-    localStorage.clear();
+    storage = createStorageMock();
+    vi.stubGlobal('localStorage', storage);
+    storage.clear();
 
     TestBed.configureTestingModule({
       providers: [AssignmentService],
@@ -84,7 +87,8 @@ describe('AssignmentService', () => {
   });
 
   afterEach(() => {
-    localStorage.clear();
+    storage.clear();
+    vi.unstubAllGlobals();
   });
 
   it('should create', () => {
@@ -92,18 +96,18 @@ describe('AssignmentService', () => {
   });
 
   it('should seed localStorage with mock assignments when storage is empty', () => {
-    localStorage.clear();
+    storage.clear();
 
     const seededService = new AssignmentService();
     expect(seededService).toBeTruthy();
 
-    const storedValue = localStorage.getItem(STORAGE_KEY);
+    const storedValue = storage.getItem(STORAGE_KEY);
     expect(storedValue).toBeTruthy();
     expect(JSON.parse(storedValue!)).toEqual(MOCK_ASSIGNMENTS);
   });
 
   it('should not overwrite existing localStorage data', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
 
     const newService = new AssignmentService();
 
@@ -113,7 +117,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return all assignment details from storage', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAllAssignmentDetails());
@@ -123,7 +127,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return assignment details by id', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentDetailsById(1315598));
@@ -132,7 +136,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return undefined when assignment id does not exist', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentDetailsById(999999));
@@ -141,7 +145,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return mapped assignment cards', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCards());
@@ -154,7 +158,7 @@ describe('AssignmentService', () => {
   });
 
   it('should filter assignment cards by desired date', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2026-02-20'));
@@ -163,7 +167,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return an empty array when no assignments match desired date', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2030-01-01'));
@@ -172,7 +176,7 @@ describe('AssignmentService', () => {
   });
 
   it('should sort cards by status: ongoing first, then upcoming, then completed', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCardsByDesiredDate('2026-02-20'));
@@ -187,7 +191,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return travel times for all assignments', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getTravelTimes());
@@ -198,7 +202,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return travel times filtered by desired date', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getTravelTimesByDesiredDate('2026-02-20'));
@@ -211,7 +215,7 @@ describe('AssignmentService', () => {
   });
 
   it('should return empty travel times for date with no assignments', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getTravelTimesByDesiredDate('2030-01-01'));
@@ -219,24 +223,84 @@ describe('AssignmentService', () => {
     expect(result).toEqual([]);
   });
 
-  it('should update tomorrow confirmation in storage', async () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([
-        {
-          ...mockStoredAssignments[0],
-          desiredDateForShowing: '2026-02-21T00:00:00',
-          showingStartDate: '2026-02-21T07:00:47',
-          tomorrowConfirmed: false,
-        },
-      ]),
-    );
+  it('should return daily progress summary with sorted type breakdown counts', async () => {
+    const progressAssignments: AssignmentDetailsDto[] = [
+      {
+        ...mockStoredAssignments[0],
+        status: 3,
+        inquiryDescription: 'Fiber\nGraving',
+        calculatedTraveltime: 4.4,
+      },
+      {
+        ...mockStoredAssignments[1],
+        status: 2,
+        inquiryDescription: 'El-nett, Vann/Avløp\nGraving\n3 meter',
+        calculatedTraveltime: 10.2,
+      },
+      {
+        ...mockStoredAssignments[0],
+        id: 1317000,
+        status: 1,
+        inquiryDescription: 'Fiber\nKontroll',
+        calculatedTraveltime: 5.6,
+      },
+    ];
 
+    storage.setItem(STORAGE_KEY, JSON.stringify(progressAssignments));
     const newService = new AssignmentService();
 
-    await firstValueFrom(newService.updateTomorrowConfirmation(1315598, true));
-    const storedAssignments = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+    const result = await firstValueFrom(newService.getDailyProgressByDesiredDate('2026-02-20'));
 
-    expect(storedAssignments[0].tomorrowConfirmed).toBe(true);
+    expect(result).toEqual({
+      completedAssignments: 1,
+      totalAssignments: 3,
+      completedTravelMinutes: 4,
+      totalTravelMinutes: 20,
+      typeBreakdown: [
+        { label: 'Fiber', count: 2 },
+        { label: 'El-nett', count: 1 },
+        { label: 'Vann/Avløp', count: 1 },
+      ],
+    });
+  });
+
+  it('should return an empty daily progress summary when no assignments match the date', async () => {
+    storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getDailyProgressByDesiredDate('2030-01-01'));
+
+    expect(result).toEqual({
+      completedAssignments: 0,
+      totalAssignments: 0,
+      completedTravelMinutes: 0,
+      totalTravelMinutes: 0,
+      typeBreakdown: [],
+    });
   });
 });
+
+function createStorageMock(): Storage {
+  let store: Record<string, string> = {};
+
+  return {
+    get length() {
+      return Object.keys(store).length;
+    },
+    clear() {
+      store = {};
+    },
+    getItem(key: string): string | null {
+      return store[key] ?? null;
+    },
+    key(index: number): string | null {
+      return Object.keys(store)[index] ?? null;
+    },
+    removeItem(key: string): void {
+      delete store[key];
+    },
+    setItem(key: string, value: string): void {
+      store[key] = String(value);
+    },
+  };
+}

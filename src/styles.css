@@ -4,6 +4,153 @@
 @import 'ol/ol.css';
 @import 'primeicons/primeicons.css';
 
+/* Semantic design tokens */
+:root {
+  --bg-app: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-overlay: #ffffff;
+  --text-1: #0f172a;
+  --text-2: #334155;
+  --text-muted: #64748b;
+  --text-muted-strong: #475569;
+  --border-1: #c8d1da;
+  --border-2: #e2e8f0;
+  --focus-ring: #0b4a8b;
+  --travel-line: #d1d5db;
+  --fab-fg: #0b2545;
+  --map-fallback-bg: #f3f4f6;
+  --day-selected-bg: #eaf8fe;
+  --day-selected-border: #547fa9;
+  --accent-muted: #1f4e79;
+}
+
+.dark {
+  --bg-app: #0b1220;
+  --surface-1: #232d42;
+  --surface-2: #1f2937;
+  --surface-overlay: #232d42;
+  --text-1: #f8fafc;
+  --text-2: #d1d5db;
+  --text-muted: #b9c5d6;
+  --text-muted-strong: #dbe6f5;
+  --border-1: #334155;
+  --border-2: #475569;
+  --focus-ring: #60a5fa;
+  --travel-line: #475569;
+  --fab-fg: #dbeafe;
+  --map-fallback-bg: #1f2937;
+  --day-selected-bg: #1d3348;
+  --day-selected-border: #60a5fa;
+  --accent-muted: #93c5fd;
+}
+
+html,
 body {
-  background-color: #f8fafc;
+  background-color: var(--bg-app);
+  color: var(--text-1);
+}
+
+.surface-1 {
+  background-color: var(--surface-1);
+}
+
+.surface-2 {
+  background-color: var(--surface-2);
+}
+
+.surface-overlay {
+  background-color: var(--surface-overlay);
+}
+
+.text-theme-primary {
+  color: var(--text-1);
+}
+
+.text-theme-secondary {
+  color: var(--text-2);
+}
+
+.text-theme-muted {
+  color: var(--text-muted);
+}
+
+.text-theme-muted-strong {
+  color: var(--text-muted-strong);
+}
+
+.border-theme-1 {
+  border-color: var(--border-1);
+}
+
+.border-theme-2 {
+  border-color: var(--border-2);
+}
+
+/* PrimeNG drawer colors in dark mode */
+.dark .p-drawer {
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+.dark .p-drawer .p-drawer-header {
+  background-color: var(--surface-1);
+  color: var(--text-1);
+  border-bottom: 1px solid var(--border-2);
+}
+
+.dark .p-drawer .p-drawer-content {
+  background-color: var(--surface-1);
+  color: var(--text-1);
+}
+
+/* Assignment details control overrides for dark mode readability */
+.theme-secondary-button.p-button {
+  background-color: var(--surface-2);
+  border-color: var(--border-2);
+  color: var(--text-1);
+}
+
+.theme-secondary-button.p-button:hover {
+  filter: brightness(1.05);
+}
+
+.theme-textarea {
+  background-color: var(--surface-2);
+  border-color: var(--border-2);
+  color: var(--text-1);
+}
+
+.theme-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.theme-textarea.p-inputtext {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-2) !important;
+  color: var(--text-1) !important;
+}
+
+.dark .theme-textarea {
+  background-color: var(--surface-2) !important;
+  border-color: var(--border-2) !important;
+  color: var(--text-1) !important;
+}
+
+.dark .p-checkbox .p-checkbox-box {
+  background-color: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+.dark .p-checkbox .p-checkbox-box.p-highlight {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.dark .navbar-action-icon {
+  color: #dbeafe;
+}
+
+.dark .navbar-logo {
+  filter: brightness(0) invert(1);
 }

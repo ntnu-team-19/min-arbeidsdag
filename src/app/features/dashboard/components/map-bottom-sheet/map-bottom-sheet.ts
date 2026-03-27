@@ -10,7 +10,11 @@ import {
   AfterViewInit,
 } from '@angular/core';
 
-type SnapPoint = 'collapsed' | 'peek' | 'expanded';
+export type SnapPoint = 'collapsed' | 'peek' | 'expanded';
+
+export const MAP_BOTTOM_SHEET_EXPANDED_RATIO = 0.1;
+export const MAP_BOTTOM_SHEET_PEEK_RATIO = 0.52;
+export const MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT = 156;
 
 @Component({
   selector: 'app-map-bottom-sheet',
@@ -90,7 +94,7 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
     this.snapTo(nearest);
   }
 
-  private snapTo(point: SnapPoint, emit = true): void {
+  snapTo(point: SnapPoint, emit = true): void {
     this.currentSnap = point;
     this.currentTranslateY = this.snapPoints[point];
 
@@ -103,13 +107,30 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
     }
   }
 
+  scrollToElement(element: HTMLElement, behavior: ScrollBehavior = 'smooth'): void {
+    const contentElement = this.contentRef?.nativeElement;
+    if (!contentElement) {
+      return;
+    }
+
+    const contentRect = contentElement.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const elementTop = elementRect.top - contentRect.top + contentElement.scrollTop;
+    const maxScrollTop = Math.max(0, contentElement.scrollHeight - contentElement.clientHeight);
+    const targetTop = this.clamp(elementTop, 0, maxScrollTop);
+
+    contentElement.scrollTo({
+      top: targetTop,
+      behavior,
+    });
+  }
+
   private calculateSnapPoints(): void {
     const sheetHeight =
       this.sheetRef?.nativeElement?.getBoundingClientRect().height || window.innerHeight;
-    const collapsedVisibleHeight = 156;
-    const collapsed = Math.max(0, sheetHeight - collapsedVisibleHeight);
-    const expanded = sheetHeight * 0.1;
-    const peekRaw = sheetHeight * 0.52;
+    const collapsed = Math.max(0, sheetHeight - MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT);
+    const expanded = sheetHeight * MAP_BOTTOM_SHEET_EXPANDED_RATIO;
+    const peekRaw = sheetHeight * MAP_BOTTOM_SHEET_PEEK_RATIO;
 
     this.snapPoints = {
       expanded,

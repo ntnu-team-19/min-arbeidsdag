@@ -42,19 +42,19 @@ export class DaySelector {
 
   dayCardClasses(isSelected: boolean): string {
     return isSelected
-      ? 'border-slate-500 bg-[#EAF8FE] shadow-[0_2px_8px_rgba(15,23,42,0.08)]'
-      : 'border-slate-200 bg-white shadow-none hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]';
+      ? 'border-[color:var(--day-selected-border)] bg-[color:var(--day-selected-bg)] shadow-[0_2px_8px_rgba(15,23,42,0.08)]'
+      : 'border-theme-2 surface-1 shadow-none hover:border-[color:var(--border-1)] hover:shadow-[0_2px_8px_rgba(15,23,42,0.05)]';
   }
 
   dayTitleClasses(isSelected: boolean): string {
     return isSelected
-      ? 'text-[clamp(1.1rem,4.2vw,1.65rem)] sm:text-[1.75rem] md:text-[2rem] font-bold leading-[1.05] tracking-[-0.015em] text-black'
-      : 'text-[clamp(0.95rem,3.2vw,1.2rem)] sm:text-[1.25rem] md:text-[1.5rem] font-normal leading-[1.2] tracking-[-0.01em] text-slate-700';
+      ? 'text-[clamp(1.1rem,4.2vw,1.65rem)] sm:text-[1.75rem] md:text-[2rem] font-bold leading-[1.05] tracking-[-0.015em] text-theme-primary'
+      : 'text-[clamp(0.95rem,3.2vw,1.2rem)] sm:text-[1.25rem] md:text-[1.5rem] font-normal leading-[1.2] tracking-[-0.01em] text-theme-secondary';
   }
 
   dayDateClasses(isSelected: boolean): string {
     return isSelected
-      ? 'mt-2 text-sm font-normal text-slate-700 lowercase'
-      : 'mt-2 text-sm font-normal text-slate-700 lowercase';
+      ? 'text-theme-secondary mt-2 text-sm font-normal lowercase'
+      : 'text-theme-secondary mt-2 text-sm font-normal lowercase';
   }
 }

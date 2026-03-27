@@ -1,0 +1,100 @@
+<section class="daily-progress-infobox" [attr.aria-label]="title">
+  <h2 class="daily-progress-infobox__title">{{ title }}</h2>
+
+  <div class="daily-progress-infobox__content">
+    <div class="daily-progress-infobox__section daily-progress-infobox__section--assignments">
+      <div class="assignment-copy__header">
+        <p class="assignment-copy__headline">{{ assignmentHeadline }}</p>
+
+        @if (showTypeToggle) {
+          <button
+            type="button"
+            class="type-toggle"
+            [attr.aria-expanded]="areTypesVisible"
+            [attr.aria-controls]="typeSummaryId"
+            (click)="toggleTypeBreakdown()"
+          >
+            {{ typeToggleLabel }}
+          </button>
+        }
+      </div>
+
+      <div
+        [id]="typeSummaryId"
+        class="type-summary-panel"
+        [class.type-summary-panel--collapsed]="!areTypesVisible"
+      >
+        @if (hasTypeBreakdown) {
+          <ul class="type-summary" aria-label="Oppdragstyper">
+            @for (item of typeBreakdownItems; track item.label) {
+              <li class="type-summary__item">
+                <span class="type-summary__label">{{ item.label }}</span>
+                <span class="type-summary__count">{{ item.count }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="assignment-copy__empty">{{ typeFallbackText }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="daily-progress-infobox__section daily-progress-infobox__section--status">
+      <div class="completion-panel">
+        <p class="completion-panel__label">{{ assignmentProgressLabel }}</p>
+
+        <div class="completion-panel__body">
+          <div
+            class="pie-chart"
+            [class.pie-chart--planned]="isPlannedDay"
+            role="progressbar"
+            [attr.aria-label]="viewDay === 'tomorrow' ? 'Planlagte oppdrag' : 'Fullførte oppdrag'"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="totalAssignments"
+            [attr.aria-valuenow]="assignmentProgressValue"
+            [style.background]="assignmentPieBackground"
+          >
+            <div class="pie-chart__inner">
+              @if (assignmentPieText) {
+                <span class="pie-chart__value">{{ assignmentPieText }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="completion-copy">
+            @if (viewDay === 'tomorrow') {
+              <p class="completion-copy__value">{{ assignmentProgressText }}</p>
+            }
+            @if (assignmentMetricText) {
+              <p class="completion-copy__metric">{{ assignmentMetricText }}</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="daily-progress-infobox__section daily-progress-infobox__section--travel">
+      <p class="travel-copy__headline">{{ travelHeadline }}</p>
+
+      <div class="travel-progress">
+        <i class="pi pi-car travel-progress__icon" aria-hidden="true"></i>
+        <div
+          class="progress-track progress-track--secondary"
+          [class.progress-track--planned]="isPlannedDay"
+          role="progressbar"
+          [attr.aria-label]="viewDay === 'tomorrow' ? 'Planlagt kjøretid' : 'Kjøretid brukt'"
+          [attr.aria-valuemin]="0"
+          [attr.aria-valuemax]="100"
+          [attr.aria-valuenow]="travelBarPercentage"
+        >
+          <span class="progress-track__fill" [style.width.%]="travelBarPercentage"></span>
+        </div>
+        @if (travelProgressLabel) {
+          <span class="travel-progress__value">{{ travelProgressLabel }}</span>
+        }
+      </div>
+
+      <p class="travel-copy__footnote">{{ travelFootnote }}</p>
+    </div>
+  </div>
+</section>
