@@ -1,0 +1,71 @@
+{
+  "navbar": {
+    "menu": "Meny",
+    "user": "Bruker",
+    "statistics": "Statistikk",
+    "language": "English",
+    "darkMode": "Mørk modus",
+    "lightMode": "Lys modus"
+  },
+  "status": {
+    "ongoing": "Pågående oppdrag",
+    "next": "Neste oppdrag",
+    "upcoming": "Kommende oppdrag",
+    "confirmed": "Bekreftet for i morgen",
+    "confirmedShort": "Bekreftet",
+    "completed": "Fullført oppdrag",
+    "completedShort": "Fullført",
+    "cancelled": "Avlyst oppdrag",
+    "cancelledShort": "Avlyst",
+    "unconfirmed": "Ikke bekreftet for i morgen",
+    "unconfirmedShort": "Ikke bekreftet",
+    "unconfirmedDetails": "Ubekreftet"
+  },
+  "assignment": {
+    "loading": "Laster oppdrag...",
+    "notFound": "Fant ikke oppdraget.",
+    "back": "Tilbake",
+    "showDirections": "Vis veibeskrivelse",
+    "expandMap": "Utvid kart",
+    "description": "Beskrivelse",
+    "contactDetails": "Kontaktdetaljer",
+    "noPhone": "Ingen telefonnummer tilgjengelig",
+    "preparation": "Forberedelse",
+    "assignmentConfirmed": "Oppdrag bekreftet",
+    "comment": "Kommentar",
+    "addComment": "Legg til kommentar...",
+    "noDescription": "Ingen beskrivelse tilgjengelig",
+    "notSpecified": "Ikke oppgitt",
+    "today": "I dag",
+    "tomorrow": "I morgen",
+    "label": "Oppdrag",
+    "markConfirmed": "Marker som bekreftet",
+    "markUnconfirmed": "Marker som ikke bekreftet"
+  },
+  "daySelector": {
+    "todayOverview": "Dagens Oversikt",
+    "tomorrowOverview": "Morgendagens Oversikt",
+    "selectDay": "Velg oversikt for dag"
+  },
+  "floatingButton": {
+    "openMap": "Åpne kartvisning",
+    "openList": "Åpne listevisning"
+  },
+  "sheet": {
+    "assignments": "Oppdrag",
+    "today": "i dag",
+    "tomorrow": "i morgen",
+    "assignmentCountText": "Oppdrag",
+    "assignmentCountTextPlural": "Oppdrag"
+  },
+  "travelTime": {
+    "minDriving": "min kjøring"
+  },
+  "map": {
+    "loadError": "Klarte ikke å laste kartet",
+    "loadErrorMessage": "Sjekk internettilkoblingen din og prøv igjen."
+  },
+  "miniCard": {
+    "showDirections": "Vis veibeskrivelse"
+  }
+}
