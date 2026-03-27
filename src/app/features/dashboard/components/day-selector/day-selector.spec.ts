@@ -2,7 +2,12 @@ import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { provideTranslateService, TranslateLoader, TranslateNoOpLoader, TranslateService } from '@ngx-translate/core';
+import {
+  provideTranslateService,
+  TranslateLoader,
+  TranslateNoOpLoader,
+  TranslateService,
+} from '@ngx-translate/core';
 
 import { DaySelector } from './day-selector';
 import { DayOption } from './day-selector.types';

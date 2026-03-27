@@ -2,7 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterModule, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { TranslateService, TranslateLoader, TranslateNoOpLoader, provideTranslateService } from '@ngx-translate/core';
+import {
+  TranslateService,
+  TranslateLoader,
+  TranslateNoOpLoader,
+  provideTranslateService,
+} from '@ngx-translate/core';
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { Navbar } from './navbar';
 
@@ -170,7 +175,6 @@ describe('Navbar', () => {
     // The test verifies that toggleLanguage can be called without errors
     expect(component.currentLang).toBeTruthy();
   });
-
 
   it('should hide navbar on scroll down and show on scroll up', () => {
     vi.spyOn(window, 'scrollY', 'get').mockReturnValue(100);
