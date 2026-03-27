@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AssignmentDetailsDto } from '../models/assignment-details.dto';
-import { Assignment } from '../models/assignment-card.model';
+import { Assignment, AssignmentStatus } from '../models/assignment-card.model';
 import { AssignmentDetails } from '../models/assignment-details.model';
 import { AssignmentTypeBreakdownItem, DailyProgressSummary } from '../models/daily-progress.model';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
@@ -76,11 +76,11 @@ export class AssignmentService {
   }
 
   getAssignmentCardsByDesiredDate(date: string): Observable<Assignment[]> {
-    const cards = this.getAssignmentsByDesiredDate(date).map(
+    const cards = this.getSortedAssignmentsByDesiredDate(date).map(
       mapAssignmentDetailsDtoToAssignmentCardModel,
     );
 
-    return of(this.sortByStatus(cards));
+    return of(cards);
   }
 
   getTravelTimes(): Observable<number[]> {
@@ -90,7 +90,7 @@ export class AssignmentService {
   }
 
   getTravelTimesByDesiredDate(date: string): Observable<number[]> {
-    const assignments = this.getAssignmentsByDesiredDate(date);
+    const assignments = this.getSortedAssignmentsByDesiredDate(date);
     const travelTimes = assignments.map((dto) => this.toTravelMinutes(dto.calculatedTraveltime));
     return of(travelTimes);
   }
@@ -139,19 +139,57 @@ export class AssignmentService {
     return of(updatedAssignment);
   }
 
-  private readonly statusOrder: Record<string, number> = {
+  private readonly statusOrder: Record<AssignmentStatus, number> = {
     ongoing: 0,
     next: 1,
     upcoming: 1,
     unconfirmed: 1,
     confirmed: 2,
     completed: 3,
+    cancelled: 4,
   };
 
-  private sortByStatus(cards: Assignment[]): Assignment[] {
-    return cards.sort(
-      (a, b) => (this.statusOrder[a.status] ?? 99) - (this.statusOrder[b.status] ?? 99),
-    );
+  private getSortedAssignmentsByDesiredDate(date: string): AssignmentDetailsDto[] {
+    return this.getSortedAssignments(this.getAssignmentsByDesiredDate(date));
+  }
+
+  private getSortedAssignments(assignments: AssignmentDetailsDto[]): AssignmentDetailsDto[] {
+    return [...assignments].sort((a, b) => {
+      const statusDiff = this.compareStatus(a, b);
+      if (statusDiff !== 0) {
+        return statusDiff;
+      }
+
+      const startTimeDiff = this.compareStartTime(a.showingStartDate, b.showingStartDate);
+      if (startTimeDiff !== 0) {
+        return startTimeDiff;
+      }
+
+      return a.id - b.id;
+    });
+  }
+
+  private compareStatus(a: AssignmentDetailsDto, b: AssignmentDetailsDto): number {
+    const aStatus = mapAssignmentDetailsDtoToAssignmentCardModel(a).status;
+    const bStatus = mapAssignmentDetailsDtoToAssignmentCardModel(b).status;
+
+    return (this.statusOrder[aStatus] ?? 99) - (this.statusOrder[bStatus] ?? 99);
+  }
+
+  private compareStartTime(a: string | null, b: string | null): number {
+    const aTime = this.toTimestamp(a);
+    const bTime = this.toTimestamp(b);
+
+    return aTime - bTime;
+  }
+
+  private toTimestamp(dateString: string | null): number {
+    if (!dateString) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    const timestamp = new Date(dateString).getTime();
+    return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
   }
 
   private getAssignmentsByDesiredDate(date: string): AssignmentDetailsDto[] {
