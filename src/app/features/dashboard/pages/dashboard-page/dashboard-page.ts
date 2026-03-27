@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { AssignmentMap, Assignment as MapAssignment } from '../../../../shared/components/map/map';
 import { FloatingButton } from '../../components/floating-button/floating-button';
 import { DaySelector } from '../../components/day-selector/day-selector';
@@ -41,11 +42,14 @@ export class DashboardPage implements OnInit, OnDestroy {
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
   private destroyRef = inject(DestroyRef);
+  private translate = inject(TranslateService);
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
-    const dayText = this.selectedDay === 'today' ? 'i dag' : 'i morgen';
-    return `${count} Oppdrag ${dayText}`;
+    const dayKey = this.selectedDay === 'today' ? 'sheet.today' : 'sheet.tomorrow';
+    const dayText = this.translate.instant(dayKey);
+    const countText = count === 1 ? this.translate.instant('sheet.assignmentCountText') : this.translate.instant('sheet.assignmentCountTextPlural');
+    return `${count} ${countText} ${dayText}`;
   }
 
   ngOnInit() {
