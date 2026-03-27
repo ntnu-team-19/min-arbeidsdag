@@ -2,13 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
 import { of, ReplaySubject } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
+import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -76,6 +77,11 @@ describe('DashboardPage', () => {
     getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
   };
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   beforeEach(async () => {
     queryParamSubject = new ReplaySubject<ParamMap>(1);
@@ -172,5 +178,85 @@ describe('DashboardPage', () => {
 
     const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
     expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
+  });
+
+  it('should focus the map, snap the sheet, and highlight the matching card when a marker is clicked', () => {
+    vi.useFakeTimers();
+    component.isListView = false;
+
+    const markerAssignment = {
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    };
+    const focusAssignment = vi.fn();
+    const snapTo = vi.fn();
+    const scrollToElement = vi.fn();
+    const cardRow = document.createElement('div');
+    cardRow.dataset['assignmentId'] = '2';
+
+    (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignment,
+    };
+    (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
+      snapTo,
+      scrollToElement,
+    };
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: (predicate: (row: { nativeElement: HTMLElement }) => boolean) => {
+        const row = { nativeElement: cardRow };
+        return predicate(row) ? row : undefined;
+      },
+    };
+
+    component.onMarkerClicked(markerAssignment);
+
+    expect(focusAssignment).toHaveBeenCalledWith(
+      markerAssignment,
+      expect.objectContaining({
+        targetYRatio: MAP_BOTTOM_SHEET_PEEK_RATIO / 2,
+      }),
+    );
+    expect(snapTo).toHaveBeenCalledWith('peek');
+    expect(scrollToElement).not.toHaveBeenCalled();
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
+
+    vi.advanceTimersByTime(280);
+
+    expect(scrollToElement).toHaveBeenCalledWith(cardRow);
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
+
+    vi.advanceTimersByTime(180);
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(true);
+  });
+
+  it('should clear the highlighted card on the next user interaction', () => {
+    vi.useFakeTimers();
+    component.isListView = false;
+
+    const cardRow = document.createElement('div');
+    cardRow.dataset['assignmentId'] = '2';
+
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: (predicate: (row: { nativeElement: HTMLElement }) => boolean) => {
+        const row = { nativeElement: cardRow };
+        return predicate(row) ? row : undefined;
+      },
+    };
+
+    component.onMarkerClicked({
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    });
+
+    vi.advanceTimersByTime(460);
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(true);
+
+    component.onUserInteractionStart();
+
+    expect(cardRow.classList.contains('marker-focused')).toBe(false);
   });
 });
