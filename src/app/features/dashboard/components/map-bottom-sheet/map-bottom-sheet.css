@@ -6,7 +6,7 @@
   z-index: 20;
 
   height: 100%;
-  background: white;
+  background: var(--surface-2);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.18);
@@ -19,7 +19,7 @@
 .sheet-header {
   flex: 0 0 auto;
   padding-top: 4px;
-  background: white;
+  background: var(--surface-2);
   z-index: 1;
 }
 
@@ -43,7 +43,7 @@
   padding: 12px 0 12px;
   cursor: grab;
   touch-action: none;
-  background: white;
+  background: var(--surface-2);
 }
 
 .drag-handle-area:active {
@@ -54,5 +54,5 @@
   width: 48px;
   height: 6px;
   border-radius: 999px;
-  background: #d4d4d8;
+  background: var(--border-1);
 }

@@ -23,7 +23,6 @@ describe('Navbar', () => {
   it('should create with correct defaults', () => {
     expect(component).toBeTruthy();
     expect(component.menuOpen).toBe(false);
-    expect(component.darkMode).toBe(false);
     expect(component.language).toBe('no');
     expect(component.isHidden).toBe(false);
   });
@@ -86,9 +85,9 @@ describe('Navbar', () => {
     expect(actions).toEqual(['user', 'statistics', 'language', 'darkmode']);
   });
 
-  it('should reflect current language and darkMode state in menu items', () => {
+  it('should reflect current language and theme state in menu items', () => {
     component.language = 'en';
-    component.darkMode = true;
+    component.toggleDarkMode();
     const labels = component.menuItems.map((item) => item.label);
     expect(labels).toContain('Norsk');
     expect(labels).toContain('Lys modus');
@@ -125,13 +124,11 @@ describe('Navbar', () => {
 
   // ── toggleDarkMode ──
 
-  it('should toggle darkMode and update document class', () => {
+  it('should toggle theme and update document class', () => {
     component.toggleDarkMode();
-    expect(component.darkMode).toBe(true);
     expect(document.documentElement.classList.contains('dark')).toBe(true);
 
     component.toggleDarkMode();
-    expect(component.darkMode).toBe(false);
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 

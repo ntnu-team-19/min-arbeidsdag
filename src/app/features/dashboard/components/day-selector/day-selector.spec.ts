@@ -130,8 +130,8 @@ describe('DaySelector', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('button'));
 
-    expect(buttons[0].nativeElement.className).toContain('bg-[#EAF8FE]');
-    expect(buttons[1].nativeElement.className).toContain('bg-white');
+    expect(buttons[0].nativeElement.className).toContain('bg-[color:var(--day-selected-bg)]');
+    expect(buttons[1].nativeElement.className).toContain('surface-1');
   });
 
   it('should apply selected styling class to tomorrow card when selected', () => {
@@ -139,7 +139,7 @@ describe('DaySelector', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('button'));
 
-    expect(buttons[0].nativeElement.className).toContain('bg-white');
-    expect(buttons[1].nativeElement.className).toContain('bg-[#EAF8FE]');
+    expect(buttons[0].nativeElement.className).toContain('surface-1');
+    expect(buttons[1].nativeElement.className).toContain('bg-[color:var(--day-selected-bg)]');
   });
 });
