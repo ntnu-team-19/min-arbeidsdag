@@ -42,10 +42,16 @@
             @if (travelTimes[i] !== undefined) {
               <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
             }
-            <app-mini-assignment-card
-              [assignment]="assignment"
-              (cardClick)="goToAssignmentDetails($event)"
-            />
+            <div
+              #miniAssignmentCardRow
+              class="mini-assignment-card-row"
+              [attr.data-assignment-id]="assignment.id"
+            >
+              <app-mini-assignment-card
+                [assignment]="assignment"
+                (cardClick)="goToAssignmentDetails($event)"
+              />
+            </div>
           }
         </div>
       </app-map-bottom-sheet>
