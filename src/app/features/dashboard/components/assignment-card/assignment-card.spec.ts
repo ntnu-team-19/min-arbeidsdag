@@ -1,12 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import {
+  provideTranslateService,
+  TranslateNoOpLoader,
+  TranslateLoader,
+  TranslateService,
+} from '@ngx-translate/core';
 import { AssignmentCard } from './assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('AssignmentCard', () => {
   let component: AssignmentCard;
   let fixture: ComponentFixture<AssignmentCard>;
+  let translateService: TranslateService;
 
   const mockAssignment: Assignment = {
     id: '1',
@@ -23,13 +31,42 @@ describe('AssignmentCard', () => {
   async function createComponent(assignment: Assignment = mockAssignment) {
     await TestBed.configureTestingModule({
       imports: [AssignmentCard],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        provideTranslateService({
+          fallbackLang: 'no',
+          loader: { provide: TranslateLoader, useClass: TranslateNoOpLoader },
+        }),
+      ],
     }).compileComponents();
+
+    translateService = TestBed.inject(TranslateService);
+    translateService.setDefaultLang('no');
+    translateService.setTranslation('no', {
+      status: {
+        upcoming: 'Kommende oppdrag',
+        ongoing: 'Pågående oppdrag',
+        next: 'Neste oppdrag',
+        completed: 'Fullført oppdrag',
+        cancelled: 'Avlyst oppdrag',
+        confirmed: 'Bekreftet for i morgen',
+        unconfirmed: 'Ikke bekreftet for i morgen',
+      },
+      assignment: {
+        notSpecified: 'Ikke oppgitt',
+        today: 'I dag',
+        tomorrow: 'I morgen',
+        markConfirmed: 'Marker som bekreftet',
+        markUnconfirmed: 'Marker som ikke bekreftet',
+      },
+    });
+    translateService.use('no');
 
     fixture = TestBed.createComponent(AssignmentCard);
     component = fixture.componentInstance;
     component.assignment = assignment;
     fixture.detectChanges();
+    await fixture.whenStable();
   }
 
   it('should create', async () => {
@@ -55,37 +92,37 @@ describe('AssignmentCard', () => {
 
   it('should show correct label for upcoming status', async () => {
     await createComponent({ ...mockAssignment, status: 'upcoming' });
-    expect(component.currentStatus.label).toBe('Kommende oppdrag');
+    expect(component.currentStatus.label).toBe('status.upcoming');
   });
 
   it('should show correct label for ongoing status', async () => {
     await createComponent({ ...mockAssignment, status: 'ongoing' });
-    expect(component.currentStatus.label).toBe('Pågående oppdrag');
+    expect(component.currentStatus.label).toBe('status.ongoing');
   });
 
   it('should show correct label for next status', async () => {
     await createComponent({ ...mockAssignment, status: 'next' });
-    expect(component.currentStatus.label).toBe('Neste oppdrag');
+    expect(component.currentStatus.label).toBe('status.next');
   });
 
   it('should show correct label for completed status', async () => {
     await createComponent({ ...mockAssignment, status: 'completed' });
-    expect(component.currentStatus.label).toBe('Fullført oppdrag');
+    expect(component.currentStatus.label).toBe('status.completed');
   });
 
   it('should show correct label for cancelled status', async () => {
     await createComponent({ ...mockAssignment, status: 'cancelled' });
-    expect(component.currentStatus.label).toBe('Avlyst oppdrag');
+    expect(component.currentStatus.label).toBe('status.cancelled');
   });
 
   it('should show correct label for confirmed status', async () => {
     await createComponent({ ...mockAssignment, status: 'confirmed' });
-    expect(component.currentStatus.label).toBe('Bekreftet for i morgen');
+    expect(component.currentStatus.label).toBe('status.confirmed');
   });
 
   it('should show correct label for unconfirmed status', async () => {
     await createComponent({ ...mockAssignment, status: 'unconfirmed' });
-    expect(component.currentStatus.label).toBe('Ikke bekreftet for i morgen');
+    expect(component.currentStatus.label).toBe('status.unconfirmed');
   });
 
   // ── Status icons ──

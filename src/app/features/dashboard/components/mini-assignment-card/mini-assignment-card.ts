@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 
 @Component({
   selector: 'app-mini-assignment-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './mini-assignment-card.html',
 })
 export class MiniAssignmentCard {
@@ -23,37 +24,37 @@ export class MiniAssignmentCard {
     }
   > = {
     ongoing: {
-      label: 'Pågående oppdrag',
+      label: 'status.ongoing',
       badgeClass: 'bg-[#F2CD7A] text-black',
       dotClass: 'border-[#D9A441] text-[#D9A441]',
     },
     upcoming: {
-      label: 'Kommende oppdrag',
+      label: 'status.upcoming',
       badgeClass: 'bg-[#547FA9] text-white',
       dotClass: 'border-[#1F4E79] text-[#1F4E79]',
     },
     next: {
-      label: 'Neste oppdrag',
+      label: 'status.next',
       badgeClass: 'bg-[#1F4E79] text-white',
       dotClass: 'text-[#1F4E79]',
     },
     completed: {
-      label: 'Fullført',
+      label: 'status.completedShort',
       badgeClass: 'bg-[#54DA8C] text-black',
       dotClass: 'border-[#54DA8C] text-[#54DA8C]',
     },
     cancelled: {
-      label: 'Avlyst',
+      label: 'status.cancelledShort',
       badgeClass: 'bg-[#DC8A8A] text-black',
       dotClass: 'border-[#DC8A8A] text-[#DC8A8A]',
     },
     confirmed: {
-      label: 'Bekreftet',
+      label: 'status.confirmedShort',
       badgeClass: 'bg-[#54DA8C] text-black',
       dotClass: 'border-[#54DA8C] text-[#54DA8C]',
     },
     unconfirmed: {
-      label: 'Ikke bekreftet',
+      label: 'status.unconfirmedShort',
       badgeClass: 'bg-[#FFD68A] text-black',
       dotClass: 'border-[#D9A441] text-[#D9A441]',
     },

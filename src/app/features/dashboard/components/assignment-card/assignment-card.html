@@ -17,7 +17,7 @@
           : 'text-black'
       "
     >
-      {{ currentStatus.label }}
+      {{ currentStatus.label | translate }}
     </span>
     <div class="ml-auto shrink-0">
       @if (canToggleConfirmation) {
@@ -26,7 +26,7 @@
           class="surface-overlay border-theme-2 text-theme-primary inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
           (click)="onConfirmationToggle($event)"
         >
-          {{ confirmationActionLabel }}
+          {{ confirmationActionLabel | translate }}
         </button>
       }
     </div>
@@ -48,7 +48,7 @@
             {{ assignment.title }}
           </h3>
           <p class="text-theme-muted-strong mt-1 line-clamp-2 text-sm">
-            {{ assignment.shortDescription || 'Ingen beskrivelse tilgjengelig' }}
+            {{ assignment.shortDescription || ('assignment.noDescription' | translate) }}
           </p>
         </div>
 
@@ -63,7 +63,9 @@
           </p>
           <p class="flex items-center gap-2">
             <i class="pi pi-phone shrink-0"></i>
-            <span class="truncate">{{ assignment.phoneNumber || 'Ikke oppgitt' }}</span>
+            <span class="truncate">{{
+              assignment.phoneNumber || ('assignment.notSpecified' | translate)
+            }}</span>
           </p>
         </div>
       </div>

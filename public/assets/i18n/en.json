@@ -1,0 +1,71 @@
+{
+  "navbar": {
+    "menu": "Menu",
+    "user": "User",
+    "statistics": "Statistics",
+    "language": "Norsk",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
+  },
+  "status": {
+    "ongoing": "Ongoing assignment",
+    "next": "Next assignment",
+    "upcoming": "Upcoming assignment",
+    "confirmed": "Confirmed for tomorrow",
+    "confirmedShort": "Confirmed",
+    "completed": "Completed assignment",
+    "completedShort": "Completed",
+    "cancelled": "Cancelled assignment",
+    "cancelledShort": "Cancelled",
+    "unconfirmed": "Not confirmed for tomorrow",
+    "unconfirmedShort": "Not confirmed",
+    "unconfirmedDetails": "Unconfirmed"
+  },
+  "assignment": {
+    "loading": "Loading assignment...",
+    "notFound": "Assignment not found.",
+    "back": "Back",
+    "showDirections": "Show directions",
+    "expandMap": "Expand map",
+    "description": "Description",
+    "contactDetails": "Contact details",
+    "noPhone": "No phone number available",
+    "preparation": "Preparation",
+    "assignmentConfirmed": "Assignment confirmed",
+    "comment": "Comment",
+    "addComment": "Add a comment...",
+    "noDescription": "No description available",
+    "notSpecified": "Not specified",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "label": "Assignment",
+    "markConfirmed": "Mark as confirmed",
+    "markUnconfirmed": "Mark as not confirmed"
+  },
+  "daySelector": {
+    "todayOverview": "Today's Overview",
+    "tomorrowOverview": "Tomorrow's Overview",
+    "selectDay": "Select overview for day"
+  },
+  "floatingButton": {
+    "openMap": "Open map view",
+    "openList": "Open list view"
+  },
+  "sheet": {
+    "assignments": "Assignments",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "assignmentCountText": "Assignment",
+    "assignmentCountTextPlural": "Assignments"
+  },
+  "travelTime": {
+    "minDriving": "min driving"
+  },
+  "map": {
+    "loadError": "Unable to load map",
+    "loadErrorMessage": "Please check your internet connection and try again."
+  },
+  "miniCard": {
+    "showDirections": "Show directions"
+  }
+}

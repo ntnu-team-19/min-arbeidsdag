@@ -28,7 +28,12 @@ import Icon from 'ol/style/Icon';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
 import Text from 'ol/style/Text';
-import { boundingExtent, createEmpty, extend as extendExtent, isEmpty as isEmptyExtent } from 'ol/extent';
+import {
+  boundingExtent,
+  createEmpty,
+  extend as extendExtent,
+  isEmpty as isEmptyExtent,
+} from 'ol/extent';
 import { ThemeService } from '../../../core/services/theme.service';
 import {
   Assignment,
@@ -37,6 +42,7 @@ import {
   MapStop,
   MapStopKind,
 } from './map.models';
+
 
 export type { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
 
@@ -56,7 +62,7 @@ interface FocusAssignmentLegOptions extends FocusAssignmentOptions {
 @Component({
   selector: 'app-assignment-map',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })
