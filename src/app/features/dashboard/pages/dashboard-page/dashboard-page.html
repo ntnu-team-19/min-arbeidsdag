@@ -28,6 +28,9 @@
     <div class="map-stage">
       <app-assignment-map
         [assignments]="mapAssignments"
+        [stops]="mapStops"
+        [routeSegments]="routeSegments"
+        [activeSegmentId]="activeRouteSegmentId"
         [compact]="false"
         (markerClicked)="onMarkerClicked($event)"
       ></app-assignment-map>
