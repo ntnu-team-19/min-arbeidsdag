@@ -42,8 +42,7 @@ import {
   MapStop,
   MapStopKind,
 } from './map.models';
-
-
+import { TranslatePipe } from '@ngx-translate/core';
 export type { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
 
 interface FocusAssignmentOptions {
@@ -62,7 +61,7 @@ interface FocusAssignmentLegOptions extends FocusAssignmentOptions {
 @Component({
   selector: 'app-assignment-map',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })
