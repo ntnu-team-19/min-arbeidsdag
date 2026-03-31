@@ -141,9 +141,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     const assignmentId = String(assignment.id);
     const currentStop = this.findAssignmentStop(assignmentId);
     const previousStop = currentStop ? this.findPreviousStop(currentStop.id) : undefined;
-    this.activeRouteSegmentId = currentStop && previousStop
-      ? buildRouteSegmentId(previousStop.id, currentStop.id)
-      : null;
+    this.activeRouteSegmentId =
+      currentStop && previousStop ? buildRouteSegmentId(previousStop.id, currentStop.id) : null;
     const activeRouteSegment = this.activeRouteSegmentId
       ? this.routeSegments.find((segment) => segment.id === this.activeRouteSegmentId)
       : undefined;

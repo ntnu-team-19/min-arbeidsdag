@@ -35,13 +35,7 @@ import {
   isEmpty as isEmptyExtent,
 } from 'ol/extent';
 import { ThemeService } from '../../../core/services/theme.service';
-import {
-  Assignment,
-  MapLocation,
-  MapRouteSegment,
-  MapStop,
-  MapStopKind,
-} from './map.models';
+import { Assignment, MapRouteSegment, MapStop, MapStopKind } from './map.models';
 import { TranslatePipe } from '@ngx-translate/core';
 export type { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
 
@@ -294,7 +288,9 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       .map(
         (segment) =>
           new Feature({
-            geometry: new LineString(segment.coordinates.map(([lon, lat]) => fromLonLat([lon, lat]))),
+            geometry: new LineString(
+              segment.coordinates.map(([lon, lat]) => fromLonLat([lon, lat])),
+            ),
             segmentId: segment.id,
             active: segment.id === this.activeSegmentId,
           }),
@@ -316,7 +312,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       .map((stop) => {
         const assignment =
           stop.kind === 'assignment'
-            ? assignmentLookup.get(stop.assignmentId ?? '') ?? this.mapStopToAssignment(stop)
+            ? (assignmentLookup.get(stop.assignmentId ?? '') ?? this.mapStopToAssignment(stop))
             : undefined;
 
         return new Feature({
@@ -363,7 +359,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   private fitCoordinates(
-    coordinates: Array<[number, number]>,
+    coordinates: [number, number][],
     options: FocusAssignmentOptions = {},
   ): void {
     if (!this.map || coordinates.length === 0) {
@@ -596,9 +592,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     return a.location.lat === b.location.lat && a.location.lon === b.location.lon;
   }
 
-  private isMapClickEvent(
-    event: unknown,
-  ): event is {
+  private isMapClickEvent(event: unknown): event is {
     pixel: Pixel;
   } {
     if (!event || typeof event !== 'object') {

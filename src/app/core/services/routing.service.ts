@@ -20,9 +20,9 @@ interface OsrmLeg {
 
 interface OsrmRouteResponse {
   code?: string;
-  routes?: Array<{
+  routes?: {
     legs?: OsrmLeg[];
-  }>;
+  }[];
 }
 
 export const OSRM_BASE_URL = new InjectionToken<string>('OSRM_BASE_URL', {
@@ -57,9 +57,12 @@ export class RoutingService {
     });
 
     return this.http
-      .get<OsrmRouteResponse>(`${this.osrmBaseUrl.replace(/\/$/, '')}/route/v1/driving/${coordinates}`, {
-        params,
-      })
+      .get<OsrmRouteResponse>(
+        `${this.osrmBaseUrl.replace(/\/$/, '')}/route/v1/driving/${coordinates}`,
+        {
+          params,
+        },
+      )
       .pipe(
         map((response) => this.mapResponseToSegments(response, validStops)),
         catchError(() => of([])),

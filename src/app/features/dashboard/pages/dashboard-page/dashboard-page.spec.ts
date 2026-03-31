@@ -209,8 +209,11 @@ describe('DashboardPage', () => {
       'assignment-4',
       'end',
     ]);
-    expect(component.mapStops.filter((stop) => stop.kind === 'assignment').map((stop) => stop.sequenceNumber))
-      .toEqual([1, 2, 3, 4]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([1, 2, 3, 4]);
     expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
     expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
   });
@@ -286,7 +289,9 @@ describe('DashboardPage', () => {
 
     component.onMarkerClicked(markerAssignment);
 
-    expect(component.activeRouteSegmentId).toBe(buildRouteSegmentId('assignment-1', 'assignment-2'));
+    expect(component.activeRouteSegmentId).toBe(
+      buildRouteSegmentId('assignment-1', 'assignment-2'),
+    );
     expect(focusAssignmentLeg).toHaveBeenCalledWith(
       expect.objectContaining({
         fromStop: expect.objectContaining({ id: 'assignment-1' }),

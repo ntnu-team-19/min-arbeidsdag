@@ -117,7 +117,7 @@ describe('AssignmentMap', () => {
     fixture.detectChanges();
 
     const markerSource = (component as unknown as Record<string, unknown>)['markerSource'] as {
-      getFeatures: () => Array<{ get: (key: string) => unknown }>;
+      getFeatures: () => { get: (key: string) => unknown }[];
     };
     const features = markerSource.getFeatures();
 
@@ -152,7 +152,7 @@ describe('AssignmentMap', () => {
     fixture.detectChanges();
 
     const routeSource = (component as unknown as Record<string, unknown>)['routeSource'] as {
-      getFeatures: () => Array<{ get: (key: string) => unknown }>;
+      getFeatures: () => { get: (key: string) => unknown }[];
     };
     const features = routeSource.getFeatures();
 
@@ -215,7 +215,7 @@ describe('AssignmentMap', () => {
     fixture.detectChanges();
 
     const markerSource = (component as unknown as Record<string, unknown>)['markerSource'] as {
-      getFeatures: () => Array<{ get: (key: string) => unknown }>;
+      getFeatures: () => { get: (key: string) => unknown }[];
     };
     const features = markerSource.getFeatures();
 
@@ -312,9 +312,9 @@ describe('AssignmentMap', () => {
 
   it('should fall back to single-marker focus when the previous stop is invalid', () => {
     const fit = vi.fn();
-    const focusAssignmentSpy = vi.spyOn(component, 'focusAssignment').mockImplementation(
-      () => undefined,
-    );
+    const focusAssignmentSpy = vi
+      .spyOn(component, 'focusAssignment')
+      .mockImplementation(() => undefined);
 
     (component as unknown as Record<string, unknown>)['map'] = {
       getSize: () => [1000, 800],
@@ -360,7 +360,9 @@ describe('AssignmentMap', () => {
       setTarget: vi.fn(),
     };
     const getMarkerStyle = (
-      component as unknown as { getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style }
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style;
+      }
     ).getMarkerStyle.bind(component);
     const lowZoomMap = {
       ...cleanupSafeMapMixin,
@@ -410,7 +412,9 @@ describe('AssignmentMap', () => {
       setTarget: vi.fn(),
     };
     const getMarkerStyle = (
-      component as unknown as { getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style }
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style;
+      }
     ).getMarkerStyle.bind(component);
     const lowZoomMap = {
       ...cleanupSafeMapMixin,
@@ -446,7 +450,7 @@ describe('AssignmentMap', () => {
   });
 
   it('should refresh marker styles when the view resolution changes', () => {
-    const resolutionHandlers: Array<() => void> = [];
+    const resolutionHandlers: (() => void)[] = [];
     const changed = vi.fn();
     const cleanupSafeMapMixin = {
       un: vi.fn(),
