@@ -39,14 +39,6 @@ export class AssignmentDetailsPage implements OnInit {
 
   mapAssignments: MapAssignment[] = [];
 
-  // Temporary mock coordinates until backend/mock data contains real lat/lon
-  // Or until we implement geocoding based on the address
-  private readonly coordinatesByAssignmentId: Record<string, { lat: number; lon: number }> = {
-    '1315598': { lat: 63.43049, lon: 10.39506 },
-    '1316076': { lat: 63.42262, lon: 10.43138 },
-    '1315118': { lat: 63.41025, lon: 10.43291 },
-  };
-
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
 
@@ -241,16 +233,21 @@ export class AssignmentDetailsPage implements OnInit {
       return;
     }
 
-    const coordinates = this.coordinatesByAssignmentId[this.assignment.id] ?? {
-      lat: 63.43049,
-      lon: 10.39506,
-    };
+    const locationPoint = this.assignment.locationPoint;
+
+    if (!locationPoint) {
+      this.mapAssignments = [];
+      return;
+    }
 
     this.mapAssignments = [
       {
         id: Number(this.assignment.id),
         name: this.assignment.title,
-        location: coordinates,
+        location: {
+          lat: locationPoint.y,
+          lon: locationPoint.x,
+        },
         description: this.assignment.address,
       },
     ];
