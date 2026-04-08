@@ -33,6 +33,7 @@ describe('AssignmentDetailsPage', () => {
     streetAddress: 'Fagertunvegen 5',
     postalCode: '7021',
     municipalityName: 'Trondheim',
+    locationPoint: { x: 10.377162, y: 63.410492 },
     description: 'Kartlegge og registrere nøyaktig posisjon.',
     contactName: 'Ola Entreprenør',
     contactPhone: '41414141',
@@ -309,17 +310,18 @@ describe('AssignmentDetailsPage', () => {
       {
         id: 1315598,
         name: 'Ledningsmålingsoppdrag',
-        location: { lat: 63.43049, lon: 10.39506 },
+        location: { lat: 63.410492, lon: 10.377162 },
         description: 'Fagertunvegen 5, 7021 Trondheim',
       },
     ]);
   });
 
-  it('should use fallback coordinates when assignment id is unknown', async () => {
+  it('should use the assignment locationPoint even when the id changes', async () => {
     const unknownAssignment: AssignmentDetails = {
       ...mockAssignment,
       id: '9999999',
       title: 'Ukjent oppdrag',
+      locationPoint: { x: 10.43138, y: 63.42262 },
     };
 
     await createComponent('9999999', unknownAssignment);
@@ -328,10 +330,19 @@ describe('AssignmentDetailsPage', () => {
       {
         id: 9999999,
         name: 'Ukjent oppdrag',
-        location: { lat: 63.43049, lon: 10.39506 },
+        location: { lat: 63.42262, lon: 10.43138 },
         description: 'Fagertunvegen 5, 7021 Trondheim',
       },
     ]);
+  });
+
+  it('should clear map assignments when locationPoint is missing', async () => {
+    await createComponent('1315598', {
+      ...mockAssignment,
+      locationPoint: null,
+    });
+
+    expect(component.mapAssignments).toEqual([]);
   });
 
   it('should log marker click', async () => {

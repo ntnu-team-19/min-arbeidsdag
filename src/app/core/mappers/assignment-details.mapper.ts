@@ -102,7 +102,7 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
     streetAddress: dto.streetAddress,
     postalCode: dto.postalCode,
     municipalityName: dto.municipalityName,
-
+    locationPoint: dto.locationPoint ?? null,
     description: dto.inquiryDescription ?? 'Ingen beskrivelse tilgjengelig',
     contactName: dto.showingContactName ?? 'Ingen kontaktperson',
     contactPhone: dto.showingContactPhone ?? '',
