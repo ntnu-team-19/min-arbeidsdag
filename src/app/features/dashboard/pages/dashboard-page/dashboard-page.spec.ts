@@ -10,10 +10,13 @@ import { Assignment } from '../../../../core/models/assignment-card.model';
 import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
 import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
+import { RoutingService } from '../../../../core/services/routing.service';
+import { buildRouteSegmentId, MapRouteSegment } from '../../../../shared/components/map/map.models';
 
 const MOCK_CARDS: Assignment[] = [
   {
     id: '1',
+    fieldTechId: 40231,
     title: 'Pågående oppdrag',
     shortDescription: 'Beskrivelse 1',
     time: '11:30',
@@ -21,9 +24,11 @@ const MOCK_CARDS: Assignment[] = [
     phoneNumber: '12345678',
     status: 'ongoing',
     date: '2026-03-20',
+    locationPoint: { x: 10.3951, y: 63.4305 },
   },
   {
     id: '2',
+    fieldTechId: 40231,
     title: 'Neste oppdrag',
     shortDescription: 'Beskrivelse 2',
     time: '12:30',
@@ -31,9 +36,11 @@ const MOCK_CARDS: Assignment[] = [
     phoneNumber: '87654321',
     status: 'next',
     date: '2026-03-20',
+    locationPoint: { x: 10.4512, y: 63.4365 },
   },
   {
     id: '3',
+    fieldTechId: 40231,
     title: 'Kommende oppdrag',
     shortDescription: 'Beskrivelse 3',
     time: '13:45',
@@ -41,9 +48,11 @@ const MOCK_CARDS: Assignment[] = [
     phoneNumber: '11111111',
     status: 'upcoming',
     date: '2026-03-20',
+    locationPoint: { x: 10.3772, y: 63.4105 },
   },
   {
     id: '4',
+    fieldTechId: 40231,
     title: 'Fullført oppdrag',
     shortDescription: 'Beskrivelse 4',
     time: '07:00',
@@ -51,10 +60,33 @@ const MOCK_CARDS: Assignment[] = [
     phoneNumber: '22222222',
     status: 'completed',
     date: '2026-03-20',
+    locationPoint: { x: 10.4399, y: 63.4102 },
   },
 ];
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
+const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
+  {
+    id: buildRouteSegmentId('start', 'assignment-1'),
+    fromStopId: 'start',
+    toStopId: 'assignment-1',
+    coordinates: [
+      [10.3951, 63.4305],
+      [10.396, 63.431],
+      [10.3951, 63.4305],
+    ],
+  },
+  {
+    id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+    fromStopId: 'assignment-1',
+    toStopId: 'assignment-2',
+    coordinates: [
+      [10.3951, 63.4305],
+      [10.421, 63.432],
+      [10.4512, 63.4365],
+    ],
+  },
+];
 
 const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
   completedAssignments: 1,
@@ -77,6 +109,9 @@ describe('DashboardPage', () => {
     getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
   };
+  let routingServiceMock: {
+    getRouteSegments: ReturnType<typeof vi.fn>;
+  };
 
   afterEach(() => {
     vi.useRealTimers();
@@ -92,6 +127,9 @@ describe('DashboardPage', () => {
       getDailyProgressByDesiredDate: vi.fn().mockReturnValue(of(MOCK_DAILY_PROGRESS)),
       updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
     };
+    routingServiceMock = {
+      getRouteSegments: vi.fn().mockReturnValue(of(MOCK_ROUTE_SEGMENTS)),
+    };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage, RouterModule.forRoot([])],
@@ -99,6 +137,10 @@ describe('DashboardPage', () => {
         {
           provide: AssignmentService,
           useValue: assignmentServiceMock,
+        },
+        {
+          provide: RoutingService,
+          useValue: routingServiceMock,
         },
         {
           provide: ActivatedRoute,
@@ -158,6 +200,24 @@ describe('DashboardPage', () => {
     expect(component.travelTimes).toEqual([15, 12, 10, 8]);
   });
 
+  it('should build ordered stops and route segments on init', () => {
+    expect(component.mapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-1',
+      'assignment-2',
+      'assignment-3',
+      'assignment-4',
+      'end',
+    ]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([1, 2, 3, 4]);
+    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
+    expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
+  });
+
   it('should show day selector', () => {
     const daySelector = fixture.debugElement.query(By.css('app-day-selector'));
     expect(daySelector).toBeTruthy();
@@ -196,7 +256,7 @@ describe('DashboardPage', () => {
     expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
   });
 
-  it('should focus the map, snap the sheet, and highlight the matching card when a marker is clicked', () => {
+  it('should zoom to the incoming leg, snap the sheet, and highlight the matching card when a marker is clicked', () => {
     vi.useFakeTimers();
     component.isListView = false;
 
@@ -205,6 +265,7 @@ describe('DashboardPage', () => {
       name: 'Neste oppdrag',
       location: { lat: 63.4305, lon: 10.3951 },
     };
+    const focusAssignmentLeg = vi.fn();
     const focusAssignment = vi.fn();
     const snapTo = vi.fn();
     const scrollToElement = vi.fn();
@@ -212,6 +273,7 @@ describe('DashboardPage', () => {
     cardRow.dataset['assignmentId'] = '2';
 
     (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignmentLeg,
       focusAssignment,
     };
     (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
@@ -227,12 +289,18 @@ describe('DashboardPage', () => {
 
     component.onMarkerClicked(markerAssignment);
 
-    expect(focusAssignment).toHaveBeenCalledWith(
-      markerAssignment,
+    expect(component.activeRouteSegmentId).toBe(
+      buildRouteSegmentId('assignment-1', 'assignment-2'),
+    );
+    expect(focusAssignmentLeg).toHaveBeenCalledWith(
       expect.objectContaining({
+        fromStop: expect.objectContaining({ id: 'assignment-1' }),
+        toStop: expect.objectContaining({ id: 'assignment-2' }),
+        routeSegment: MOCK_ROUTE_SEGMENTS[1],
         targetYRatio: MAP_BOTTOM_SHEET_PEEK_RATIO / 2,
       }),
     );
+    expect(focusAssignment).not.toHaveBeenCalled();
     expect(snapTo).toHaveBeenCalledWith('peek');
     expect(scrollToElement).not.toHaveBeenCalled();
     expect(cardRow.classList.contains('marker-focused')).toBe(false);
@@ -274,5 +342,62 @@ describe('DashboardPage', () => {
     component.onUserInteractionStart();
 
     expect(cardRow.classList.contains('marker-focused')).toBe(false);
+  });
+
+  it('should zoom assignment 1 together with the start stop', () => {
+    component.isListView = false;
+
+    const focusAssignmentLeg = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignmentLeg,
+      focusAssignment: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
+      snapTo: vi.fn(),
+      scrollToElement: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: () => undefined,
+    };
+
+    component.onMarkerClicked({
+      id: '1',
+      name: 'Pågående oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    });
+
+    expect(component.activeRouteSegmentId).toBe(buildRouteSegmentId('start', 'assignment-1'));
+    expect(focusAssignmentLeg).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromStop: expect.objectContaining({ id: 'start' }),
+        toStop: expect.objectContaining({ id: 'assignment-1' }),
+        routeSegment: MOCK_ROUTE_SEGMENTS[0],
+      }),
+    );
+  });
+
+  it('should clear the active route segment when the selected day changes', () => {
+    component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
+
+    component.onDayChange('tomorrow');
+
+    expect(component.selectedDay).toBe('tomorrow');
+    expect(component.activeRouteSegmentId).toBeNull();
+    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledTimes(2);
+  });
+
+  it('should keep map markers functional when route data is unavailable', async () => {
+    routingServiceMock.getRouteSegments.mockReturnValueOnce(of([]));
+
+    const routeFixture = TestBed.createComponent(DashboardPage);
+    const routeComponent = routeFixture.componentInstance;
+
+    routeFixture.detectChanges();
+    await routeFixture.whenStable();
+    routeFixture.detectChanges();
+
+    expect(routeComponent.mapAssignments.length).toBe(4);
+    expect(routeComponent.routeSegments).toEqual([]);
   });
 });
