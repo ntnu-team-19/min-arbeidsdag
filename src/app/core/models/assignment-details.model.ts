@@ -7,6 +7,11 @@ export type AssignmentStatus =
   | 'confirmed'
   | 'unconfirmed';
 
+export interface AssignmentLocationPoint {
+  x: number;
+  y: number;
+}
+
 export interface AssignmentDetails {
   id: string;
   title: string;
@@ -23,6 +28,7 @@ export interface AssignmentDetails {
   streetAddress: string;
   postalCode: string;
   municipalityName: string;
+  locationPoint: AssignmentLocationPoint | null;
 
   description: string;
   contactName: string;
