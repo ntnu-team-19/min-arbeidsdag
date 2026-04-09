@@ -377,6 +377,28 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('should reuse marker click flow when mini card directions is clicked', () => {
+    const markerClickSpy = vi.spyOn(component, 'onMarkerClicked');
+
+    component.onMiniAssignmentDirectionsClick(MOCK_CARDS[1]);
+
+    expect(markerClickSpy).toHaveBeenCalledWith(component.mapAssignments[1]);
+  });
+
+  it('should build fallback map assignment when mini card is missing from mapAssignments', () => {
+    const markerClickSpy = vi.spyOn(component, 'onMarkerClicked');
+    component.mapAssignments = [];
+
+    component.onMiniAssignmentDirectionsClick(MOCK_CARDS[2]);
+
+    expect(markerClickSpy).toHaveBeenCalledWith({
+      id: '3',
+      name: 'Kommende oppdrag',
+      location: { lat: 63.4105, lon: 10.3772 },
+      description: 'Adresse 3, 7021 Trondheim',
+    });
+  });
+
   it('should clear the active route segment when the selected day changes', () => {
     component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
 
