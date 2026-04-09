@@ -39,6 +39,7 @@
     "today": "Today",
     "tomorrow": "Tomorrow",
     "label": "Assignment",
+    "detailsTitle": "Assignment details",
     "markConfirmed": "Mark as confirmed",
     "markUnconfirmed": "Mark as not confirmed"
   },
