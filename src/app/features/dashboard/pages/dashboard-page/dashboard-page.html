@@ -53,6 +53,7 @@
               <app-mini-assignment-card
                 [assignment]="assignment"
                 (cardClick)="goToAssignmentDetails($event)"
+                (directionsClick)="onMiniAssignmentDirectionsClick($event)"
               />
             </div>
           }

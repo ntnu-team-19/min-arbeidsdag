@@ -163,6 +163,29 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.scrollToAssignmentCard(assignmentId);
   }
 
+  onMiniAssignmentDirectionsClick(assignment: Assignment): void {
+    const matchingMapAssignment = this.mapAssignments.find(
+      (mapAssignment) => String(mapAssignment.id) === assignment.id,
+    );
+
+    if (matchingMapAssignment) {
+      this.onMarkerClicked(matchingMapAssignment);
+      return;
+    }
+
+    const location = this.toMapLocation(assignment);
+    if (!location) {
+      return;
+    }
+
+    this.onMarkerClicked({
+      id: assignment.id,
+      name: assignment.title,
+      location,
+      description: assignment.address,
+    });
+  }
+
   onViewChange(listView: boolean) {
     this.isListView = listView;
     if (listView) {
