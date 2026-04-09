@@ -102,6 +102,14 @@ describe('AssignmentDetailsPage', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should render a title in the top bar', async () => {
+    await createComponent('1315598');
+
+    const topBarTitle = fixture.nativeElement.querySelector('.mb-4 p');
+
+    expect(topBarTitle?.textContent).toContain('assignment.detailsTitle');
+  });
+
   it('should load assignment on init when route id exists', async () => {
     await createComponent('1315598');
 
