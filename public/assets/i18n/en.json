@@ -61,6 +61,31 @@
   "travelTime": {
     "minDriving": "min driving"
   },
+  "dailyProgress": {
+    "todayTitle": "Today's progress",
+    "tomorrowTitle": "Tomorrow's overview",
+    "assignmentHeadline": "{{assignmentCount}} {{assignmentLabel}} across {{typeCount}} {{typeLabel}}",
+    "assignmentLabelSingular": "assignment",
+    "assignmentLabelPlural": "assignments",
+    "typeLabelSingular": "type",
+    "typeLabelPlural": "types",
+    "assignmentTypes": "Assignment types",
+    "showAssignmentTypes": "Show assignment types",
+    "hideAssignmentTypes": "Hide assignment types",
+    "completedAssignments": "Completed assignments",
+    "plannedAssignments": "Planned assignments",
+    "noAssignmentsRegistered": "No assignments registered",
+    "allAssignmentsCompleted": "All assignments are completed",
+    "assignmentsRemaining": "{{count}} {{assignmentLabel}} remaining",
+    "plannedTravelTime": "Planned driving time: {{minutes}} min",
+    "travelTime": "Driving time: {{completedMinutes}} min of {{totalMinutes}} min",
+    "tomorrowEstimate": "Estimated for tomorrow's assignments",
+    "travelTimeFootnote": "{{percentage}}% of today's time spent driving",
+    "noAssignmentTypesPlanned": "No assignment types planned",
+    "noAssignmentTypesForDay": "No assignment types for the selected day",
+    "plannedDrivingTime": "Planned driving time",
+    "drivingTimeUsed": "Driving time used"
+  },
   "map": {
     "loadError": "Unable to load map",
     "loadErrorMessage": "Please check your internet connection and try again."

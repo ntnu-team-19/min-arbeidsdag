@@ -1,4 +1,5 @@
-import { Component, HostListener, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, HostListener, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { DayOption } from '../day-selector/day-selector.types';
 import {
   AssignmentTypeBreakdownItem,
@@ -14,6 +15,7 @@ import {
 })
 export class DailyProgressInfobox implements OnChanges {
   private static nextTypeSummaryId = 0;
+  private readonly translate = inject(TranslateService);
 
   @Input() summary: Partial<DailyProgressSummary> | null = null;
   @Input({ required: true }) day!: DayOption;
@@ -30,7 +32,9 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get title(): string {
-    return this.viewDay === 'tomorrow' ? 'Morgendagens oversikt' : 'Dagens fremdrift';
+    return this.translate.instant(
+      this.viewDay === 'tomorrow' ? 'dailyProgress.tomorrowTitle' : 'dailyProgress.todayTitle',
+    );
   }
 
   get totalAssignments(): number {
@@ -54,7 +58,20 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get assignmentHeadline(): string {
-    return `${this.totalAssignments} oppdrag fordelt på ${this.typeBreakdownItems.length} typer`;
+    return this.translate.instant('dailyProgress.assignmentHeadline', {
+      assignmentCount: this.totalAssignments,
+      typeCount: this.typeBreakdownItems.length,
+      assignmentLabel: this.translate.instant(
+        this.totalAssignments === 1
+          ? 'dailyProgress.assignmentLabelSingular'
+          : 'dailyProgress.assignmentLabelPlural',
+      ),
+      typeLabel: this.translate.instant(
+        this.typeBreakdownItems.length === 1
+          ? 'dailyProgress.typeLabelSingular'
+          : 'dailyProgress.typeLabelPlural',
+      ),
+    });
   }
 
   get hasTypeBreakdown(): boolean {
@@ -70,7 +87,11 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get typeToggleLabel(): string {
-    return this.areMobileTypesExpanded ? 'Skjul oppdragstyper' : 'Vis oppdragstyper';
+    return this.translate.instant(
+      this.areMobileTypesExpanded
+        ? 'dailyProgress.hideAssignmentTypes'
+        : 'dailyProgress.showAssignmentTypes',
+    );
   }
 
   get assignmentProgressValue(): number {
@@ -90,7 +111,11 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get assignmentProgressLabel(): string {
-    return this.viewDay === 'tomorrow' ? 'Planlagte oppdrag' : 'Fullførte oppdrag';
+    return this.translate.instant(
+      this.viewDay === 'tomorrow'
+        ? 'dailyProgress.plannedAssignments'
+        : 'dailyProgress.completedAssignments',
+    );
   }
 
   get assignmentMetricText(): string {
@@ -99,16 +124,23 @@ export class DailyProgressInfobox implements OnChanges {
     }
 
     if (this.totalAssignments === 0) {
-      return 'Ingen oppdrag registrert';
+      return this.translate.instant('dailyProgress.noAssignmentsRegistered');
     }
 
     const remainingAssignments = Math.max(this.totalAssignments - this.completedAssignments, 0);
 
     if (remainingAssignments === 0) {
-      return 'Alle oppdrag er fullført';
+      return this.translate.instant('dailyProgress.allAssignmentsCompleted');
     }
 
-    return `${remainingAssignments} oppdrag gjenstår`;
+    return this.translate.instant('dailyProgress.assignmentsRemaining', {
+      count: remainingAssignments,
+      assignmentLabel: this.translate.instant(
+        remainingAssignments === 1
+          ? 'dailyProgress.assignmentLabelSingular'
+          : 'dailyProgress.assignmentLabelPlural',
+      ),
+    });
   }
 
   get assignmentPieBackground(): string {
@@ -118,18 +150,25 @@ export class DailyProgressInfobox implements OnChanges {
 
   get travelHeadline(): string {
     if (this.viewDay === 'tomorrow') {
-      return `Planlagt kjøretid: ${this.totalTravelMinutes} min`;
+      return this.translate.instant('dailyProgress.plannedTravelTime', {
+        minutes: this.totalTravelMinutes,
+      });
     }
 
-    return `Kjøretid: ${this.completedTravelMinutes} min av ${this.totalTravelMinutes} min`;
+    return this.translate.instant('dailyProgress.travelTime', {
+      completedMinutes: this.completedTravelMinutes,
+      totalMinutes: this.totalTravelMinutes,
+    });
   }
 
   get travelFootnote(): string {
     if (this.viewDay === 'tomorrow') {
-      return 'Estimert for morgendagens oppdrag';
+      return this.translate.instant('dailyProgress.tomorrowEstimate');
     }
 
-    return `${this.travelBarPercentage}% av dagens tid brukt på kjøring`;
+    return this.translate.instant('dailyProgress.travelTimeFootnote', {
+      percentage: this.travelBarPercentage,
+    });
   }
 
   get travelProgressLabel(): string {
@@ -145,13 +184,35 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get typeFallbackText(): string {
-    return this.viewDay === 'tomorrow'
-      ? 'Ingen oppdragstyper planlagt'
-      : 'Ingen oppdragstyper for valgt dag';
+    return this.translate.instant(
+      this.viewDay === 'tomorrow'
+        ? 'dailyProgress.noAssignmentTypesPlanned'
+        : 'dailyProgress.noAssignmentTypesForDay',
+    );
   }
 
   get isPlannedDay(): boolean {
     return this.viewDay === 'tomorrow';
+  }
+
+  get typeSummaryAriaLabel(): string {
+    return this.translate.instant('dailyProgress.assignmentTypes');
+  }
+
+  get assignmentProgressAriaLabel(): string {
+    return this.translate.instant(
+      this.viewDay === 'tomorrow'
+        ? 'dailyProgress.plannedAssignments'
+        : 'dailyProgress.completedAssignments',
+    );
+  }
+
+  get travelProgressAriaLabel(): string {
+    return this.translate.instant(
+      this.viewDay === 'tomorrow'
+        ? 'dailyProgress.plannedDrivingTime'
+        : 'dailyProgress.drivingTimeUsed',
+    );
   }
 
   get viewDay(): DayOption {
