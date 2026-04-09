@@ -17,17 +17,21 @@
   } @else if (assignment) {
     <div class="mx-auto max-w-6xl p-4 md:p-6">
       <!-- Top bar -->
-      <div class="mb-4 flex items-center justify-between">
+      <div class="mb-4 flex items-center gap-3">
         <button
           pButton
           type="button"
           [label]="'assignment.back' | translate"
           icon="pi pi-arrow-left"
           severity="secondary"
-          class="theme-secondary-button rounded-lg"
+          class="theme-secondary-button shrink-0 rounded-lg"
           (click)="goBack()"
           aria-label="tilbake-knapp"
         ></button>
+
+        <p class="text-theme-primary min-w-0 truncate text-xl font-semibold md:text-2xl">
+          {{ 'assignment.detailsTitle' | translate }}
+        </p>
       </div>
 
       <!-- Map section -->

@@ -39,6 +39,7 @@
     "today": "I dag",
     "tomorrow": "I morgen",
     "label": "Oppdrag",
+    "detailsTitle": "Oppdragsdetaljer",
     "markConfirmed": "Marker som bekreftet",
     "markUnconfirmed": "Marker som ikke bekreftet"
   },
