@@ -36,6 +36,7 @@ describe('DailyProgressInfobox', () => {
       writable: true,
       value: originalInnerWidth,
     });
+    document.documentElement.classList.remove('dark');
   });
 
   function render(
@@ -165,8 +166,42 @@ describe('DailyProgressInfobox', () => {
 
     expect(component.assignmentProgressPercentage).toBe(50);
     expect(component.assignmentPieBackground).toContain('180deg');
+    expect(component.assignmentPieBackground).toContain('var(--pie-fill)');
+    expect(component.assignmentPieBackground).toContain('var(--pie-track)');
     expect(component.travelBarPercentage).toBe(60);
     expect(travelFill.nativeElement.style.width).toBe('60%');
+  });
+
+  it('should render with theme-aware progress styling in dark mode', () => {
+    document.documentElement.classList.add('dark');
+    render('today');
+
+    const text = fixture.nativeElement.textContent;
+    const pieChart = fixture.debugElement.query(By.css('.pie-chart'));
+
+    expect(text).toContain('Dagens fremdrift');
+    expect(text).toContain('4 / 8');
+    expect(text).toContain('60% av dagens tid brukt på kjøring');
+    expect(component.assignmentPieBackground).toContain('var(--pie-fill)');
+    expect(component.assignmentPieBackground).not.toContain('#90aecb');
+    expect(component.assignmentPieBackground).not.toContain('#d7e4f1');
+    expect(pieChart.nativeElement.style.background).toContain('var(--pie-fill)');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('should preserve planned-state progress styling in dark mode', () => {
+    document.documentElement.classList.add('dark');
+    render('tomorrow');
+
+    const text = fixture.nativeElement.textContent;
+    const pieChart = fixture.debugElement.query(By.css('.pie-chart'));
+    const travelTrack = fixture.debugElement.query(By.css('.progress-track'));
+
+    expect(text).toContain('Morgendagens oversikt');
+    expect(text).toContain('Planlagt kjøretid: 75 min');
+    expect(component.assignmentPieBackground).toContain('var(--pie-track)');
+    expect(pieChart.nativeElement.className).toContain('pie-chart--planned');
+    expect(travelTrack.nativeElement.className).toContain('progress-track--planned');
   });
 
   it('should fall back safely for empty data', () => {

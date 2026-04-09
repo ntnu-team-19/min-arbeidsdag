@@ -113,7 +113,7 @@ export class DailyProgressInfobox implements OnChanges {
 
   get assignmentPieBackground(): string {
     const completedDegrees = (this.assignmentProgressPercentage / 100) * 360;
-    return `conic-gradient(#90aecb 0deg ${completedDegrees}deg, #d7e4f1 ${completedDegrees}deg 360deg)`;
+    return `conic-gradient(var(--pie-fill) 0deg ${completedDegrees}deg, var(--pie-track) ${completedDegrees}deg 360deg)`;
   }
 
   get travelHeadline(): string {
