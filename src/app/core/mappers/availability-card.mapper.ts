@@ -37,9 +37,7 @@ export function mapAvailabilityDtoToAssignmentCardModel(dto: AvailabilityDto): A
   return {
     id: buildAvailabilityCardId(dto.start),
     title: 'Tannlegetime',
-    shortDescription: dto.absenceWithoutGoingHome
-      ? 'Fravaer uten hjemreise.'
-      : 'Privat avtale.',
+    shortDescription: dto.absenceWithoutGoingHome ? 'Fravaer uten hjemreise.' : 'Privat avtale.',
     time: formatTimeRange(dto.start, dto.stop, dto.allDay),
     duration: Math.max(
       0,
@@ -53,5 +51,3 @@ export function mapAvailabilityDtoToAssignmentCardModel(dto: AvailabilityDto): A
     isAvailability: true,
   };
 }
-
-

@@ -23,6 +23,3 @@ export const MOCK_AVAILABILITIES: AvailabilityDto[] = [
     locationPoint: { x: 10.4042, y: 63.4239 },
   },
 ];
-
-
-

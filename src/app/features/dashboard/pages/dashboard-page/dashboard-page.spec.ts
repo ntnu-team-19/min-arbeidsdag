@@ -498,7 +498,9 @@ describe('DashboardPage', () => {
       MOCK_CARDS[3],
     ];
 
-    assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(of(cardsWithTwoUpcoming));
+    assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
+      of(cardsWithTwoUpcoming),
+    );
     assignmentServiceMock.getTravelTimesByDesiredDate.mockReturnValueOnce(of([15, 12, 10, 9, 8]));
     availabilityServiceMock.getAvailabilitiesByDate.mockReturnValueOnce(
       of([
@@ -526,7 +528,9 @@ describe('DashboardPage', () => {
       'Fullført oppdrag',
     ]);
 
-    const availabilityCard = component.assignmentCards.find((card) => card.title === 'Tannlegetime');
+    const availabilityCard = component.assignmentCards.find(
+      (card) => card.title === 'Tannlegetime',
+    );
     expect(availabilityCard).toBeTruthy();
     expect(component.getTravelTimeForCard(availabilityCard!)).toBe(12);
   });

@@ -9,5 +9,3 @@ export interface AvailabilityDto {
   absenceWithoutGoingHome: boolean;
   locationPoint: AssignmentLocationPoint | null;
 }
-
-

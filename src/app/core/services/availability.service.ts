@@ -51,7 +51,8 @@ export class AvailabilityService {
       start: source.start ?? '',
       stop: source.stop ?? '',
       calculatedTraveltime:
-        typeof source.calculatedTraveltime === 'number' && Number.isFinite(source.calculatedTraveltime)
+        typeof source.calculatedTraveltime === 'number' &&
+        Number.isFinite(source.calculatedTraveltime)
           ? source.calculatedTraveltime
           : 0,
       available: source.available ?? false,
@@ -61,5 +62,3 @@ export class AvailabilityService {
     };
   }
 }
-
-

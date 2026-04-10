@@ -55,7 +55,9 @@ describe('AvailabilityService', () => {
     storage.setItem(STORAGE_KEY, JSON.stringify(stored));
     const newService = new AvailabilityService();
 
-    const result = await firstValueFrom(newService.getAvailabilitiesByDate(MOCK_AVAILABILITIES[0].start.slice(0, 10)));
+    const result = await firstValueFrom(
+      newService.getAvailabilitiesByDate(MOCK_AVAILABILITIES[0].start.slice(0, 10)),
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0].start).toBe(MOCK_AVAILABILITIES[0].start);
@@ -70,7 +72,9 @@ describe('AvailabilityService', () => {
     storage.setItem(STORAGE_KEY, JSON.stringify([legacyAvailability]));
     const newService = new AvailabilityService();
 
-    const result = await firstValueFrom(newService.getAvailabilitiesByDate(MOCK_AVAILABILITIES[0].start.slice(0, 10)));
+    const result = await firstValueFrom(
+      newService.getAvailabilitiesByDate(MOCK_AVAILABILITIES[0].start.slice(0, 10)),
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0].calculatedTraveltime).toBe(0);
@@ -101,5 +105,3 @@ function createStorageMock(): Storage {
     },
   };
 }
-
-
