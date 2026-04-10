@@ -420,6 +420,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   private getMarkerStyle(feature: FeatureLike): Style {
     const stopKind = feature.get('stopKind') as MapStopKind | undefined;
     const markerLabel = feature.get('markerLabel') as string | undefined;
+    const assignment = feature.get('assignment') as Assignment | undefined;
     const markerScale = this.getMarkerScale();
 
     if (stopKind === 'start') {
@@ -435,7 +436,11 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       });
     }
 
-    const fillColor = stopKind === 'end' ? '#D65A4A' : '#1F4E79';
+    const isAvailabilityStop =
+      stopKind === 'assignment' && this.isAvailabilityAssignmentId(assignment?.id);
+    const fillColor =
+      stopKind === 'end' ? '#D65A4A' : isAvailabilityStop ? '#C7A27B' : '#1F4E79';
+    const textColor = isAvailabilityStop ? '#4A2F1B' : '#FFFFFF';
     const radius = (stopKind === 'assignment' ? 16 : 13) * markerScale;
     const fontSize = Math.max(10, Math.round(12 * markerScale));
 
@@ -450,7 +455,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       }),
       text: new Text({
         text: markerLabel ?? '',
-        fill: new Fill({ color: '#FFFFFF' }),
+        fill: new Fill({ color: textColor }),
         font: `700 ${fontSize}px sans-serif`,
         textAlign: 'center',
         textBaseline: 'middle',
@@ -610,5 +615,9 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
 
   private clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
+  }
+
+  private isAvailabilityAssignmentId(assignmentId: string | number | undefined): boolean {
+    return typeof assignmentId === 'string' && assignmentId.startsWith('availability-');
   }
 }
