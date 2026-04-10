@@ -20,6 +20,7 @@ describe('MiniAssignmentCard', () => {
     phoneNumber: '12345678',
     status: 'ongoing',
     date: '2026-02-19',
+    locationPoint: { x: 10.3951, y: 63.4305 },
   };
 
   async function createComponent(assignment: Assignment = mockAssignment) {
@@ -111,6 +112,13 @@ describe('MiniAssignmentCard', () => {
     expect(directionsClickSpy).toHaveBeenCalledWith(mockAssignment);
   });
 
+  it('should hide directions button when assignment has no location', async () => {
+    await createComponent({ ...mockAssignment, locationPoint: null });
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    expect(buttons).toHaveLength(1);
+  });
+
   it('should not fail if assignment is missing in onDirectionsClick', () => {
     const stopPropagation = vi.fn();
     const event = { stopPropagation } as unknown as MouseEvent;
@@ -133,6 +141,18 @@ describe('MiniAssignmentCard', () => {
     fixture.detectChanges();
 
     expect(component.currentStatus.label).toBe('status.completedShort');
+  });
+
+  it('should show absence status label when assignment status is absence', () => {
+    fixture = TestBed.createComponent(MiniAssignmentCard);
+    component = fixture.componentInstance;
+    component.assignment = {
+      ...mockAssignment,
+      status: 'absence',
+    };
+    fixture.detectChanges();
+
+    expect(component.currentStatus.label).toBe('status.absenceShort');
   });
 
   it('should show cancelled status label when assignment status is cancelled', () => {
