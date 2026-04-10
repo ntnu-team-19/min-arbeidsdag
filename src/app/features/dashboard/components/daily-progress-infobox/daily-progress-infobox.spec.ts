@@ -35,7 +35,8 @@ describe('DailyProgressInfobox', () => {
       dailyProgress: {
         todayTitle: 'Dagens fremdrift',
         tomorrowTitle: 'Morgendagens oversikt',
-        assignmentHeadline: '{{assignmentCount}} {{assignmentLabel}} fordelt på {{typeCount}} {{typeLabel}}',
+        assignmentHeadline:
+          '{{assignmentCount}} {{assignmentLabel}} fordelt på {{typeCount}} {{typeLabel}}',
         assignmentLabelSingular: 'oppdrag',
         assignmentLabelPlural: 'oppdrag',
         typeLabelSingular: 'type',
@@ -62,7 +63,8 @@ describe('DailyProgressInfobox', () => {
       dailyProgress: {
         todayTitle: "Today's progress",
         tomorrowTitle: "Tomorrow's overview",
-        assignmentHeadline: '{{assignmentCount}} {{assignmentLabel}} across {{typeCount}} {{typeLabel}}',
+        assignmentHeadline:
+          '{{assignmentCount}} {{assignmentLabel}} across {{typeCount}} {{typeLabel}}',
         assignmentLabelSingular: 'assignment',
         assignmentLabelPlural: 'assignments',
         typeLabelSingular: 'type',
