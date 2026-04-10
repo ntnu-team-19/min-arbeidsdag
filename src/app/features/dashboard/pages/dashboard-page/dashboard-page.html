@@ -9,6 +9,53 @@
     </div>
 
     <div class="flex flex-col gap-2 px-4 pb-24">
+      @if (shouldShowStartLocationCard && startTechnicianLocation) {
+        <article class="surface-1 border-theme-2 block w-full overflow-hidden rounded-2xl border shadow-sm">
+          <div class="flex items-center gap-3 bg-[#1E7F5C] px-4 py-2 text-sm font-semibold text-white">
+            <span class="min-w-0 flex-1 truncate">
+              {{ getTechnicianLocationRoleLabel(startTechnicianLocation) }}
+            </span>
+            @if (startTechnicianLocation.isTemporary) {
+              <span class="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] uppercase tracking-wide">
+                {{ getTechnicianLocationContextLabel(startTechnicianLocation) }}
+              </span>
+            }
+          </div>
+
+          <div class="flex items-center justify-between gap-4 p-4">
+            <div class="flex min-w-0 items-start gap-4">
+              <div class="surface-1 mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-[#D4E8DD] bg-[#F3FBF7] text-[#1E7F5C]">
+                <i class="pi pi-home text-xl"></i>
+              </div>
+
+              <div class="min-w-0">
+                <h3 class="text-theme-primary truncate text-xl font-bold">
+                  {{ getTechnicianLocationLabel(startTechnicianLocation) }}
+                </h3>
+
+                <div class="text-theme-secondary mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <span class="flex items-center gap-1">
+                    <i class="pi pi-clock"></i>
+                    {{ getStartLocationDepartureLabel() }}
+                  </span>
+
+                  @if (startTechnicianLocation.isTemporary) {
+                    <span class="flex items-center gap-1">
+                      <i class="pi pi-map-marker"></i>
+                      {{ getTechnicianLocationContextLabel(startTechnicianLocation) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <div class="shrink-0 text-[#1E7F5C]">
+              <i class="pi pi-map-marker text-3xl"></i>
+            </div>
+          </div>
+        </article>
+      }
+
       @for (card of assignmentCards; track card.id; let i = $index) {
         @if (
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
@@ -41,6 +88,53 @@
         </h2>
 
         <div sheet-body>
+          @if (shouldShowStartLocationCard && startTechnicianLocation) {
+            <article class="surface-1 border-theme-2 mb-2 block w-full overflow-hidden rounded-2xl border shadow-sm">
+              <div class="flex items-center gap-3 bg-[#1E7F5C] px-4 py-2 text-sm font-semibold text-white">
+                <span class="min-w-0 flex-1 truncate">
+                  {{ getTechnicianLocationRoleLabel(startTechnicianLocation) }}
+                </span>
+                @if (startTechnicianLocation.isTemporary) {
+                  <span class="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] uppercase tracking-wide">
+                    {{ getTechnicianLocationContextLabel(startTechnicianLocation) }}
+                  </span>
+                }
+              </div>
+
+              <div class="flex items-center justify-between gap-4 p-4">
+                <div class="flex min-w-0 items-start gap-4">
+                  <div class="surface-1 mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-[#D4E8DD] bg-[#F3FBF7] text-[#1E7F5C]">
+                    <i class="pi pi-home text-xl"></i>
+                  </div>
+
+                  <div class="min-w-0">
+                    <h3 class="text-theme-primary truncate text-xl font-bold">
+                      {{ getTechnicianLocationLabel(startTechnicianLocation) }}
+                    </h3>
+
+                    <div class="text-theme-secondary mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                      <span class="flex items-center gap-1">
+                        <i class="pi pi-clock"></i>
+                        {{ getStartLocationDepartureLabel() }}
+                      </span>
+
+                      @if (startTechnicianLocation.isTemporary) {
+                        <span class="flex items-center gap-1">
+                          <i class="pi pi-map-marker"></i>
+                          {{ getTechnicianLocationContextLabel(startTechnicianLocation) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shrink-0 text-[#1E7F5C]">
+                  <i class="pi pi-map-marker text-3xl"></i>
+                </div>
+              </div>
+            </article>
+          }
+
           @for (assignment of assignmentCards; track assignment.id; let i = $index) {
             @if (travelTimes[i] !== undefined) {
               <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
