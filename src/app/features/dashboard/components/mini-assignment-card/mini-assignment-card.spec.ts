@@ -84,23 +84,19 @@ describe('MiniAssignmentCard', () => {
     expect(spy).toHaveBeenCalledWith('123');
   });
 
-  it('should stop propagation and open Google Maps when directions button is clicked', () => {
+  it('should stop propagation and emit directionsClick when directions button is clicked', () => {
     const stopPropagation = vi.fn();
     const event = { stopPropagation } as unknown as MouseEvent;
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const directionsClickSpy = vi.spyOn(component.directionsClick, 'emit');
 
     component.onDirectionsClick(event);
 
     expect(stopPropagation).toHaveBeenCalled();
-    expect(windowOpenSpy).toHaveBeenCalledWith(
-      'https://www.google.com/maps/dir/?api=1&destination=Kl%C3%B8buvegen%20179%2C%207031%20Trondheim',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    expect(directionsClickSpy).toHaveBeenCalledWith(mockAssignment);
   });
 
-  it('should open Google Maps when directions button in template is clicked', () => {
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  it('should emit directionsClick when directions button in template is clicked', () => {
+    const directionsClickSpy = vi.spyOn(component.directionsClick, 'emit');
 
     const buttons = fixture.debugElement.queryAll(By.css('button'));
     const directionsButton = buttons[1];
@@ -112,23 +108,19 @@ describe('MiniAssignmentCard', () => {
     directionsButton.triggerEventHandler('click', clickEvent);
 
     expect(clickEvent.stopPropagation).toHaveBeenCalled();
-    expect(windowOpenSpy).toHaveBeenCalledWith(
-      'https://www.google.com/maps/dir/?api=1&destination=Kl%C3%B8buvegen%20179%2C%207031%20Trondheim',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    expect(directionsClickSpy).toHaveBeenCalledWith(mockAssignment);
   });
 
   it('should not fail if assignment is missing in onDirectionsClick', () => {
     const stopPropagation = vi.fn();
     const event = { stopPropagation } as unknown as MouseEvent;
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const directionsClickSpy = vi.spyOn(component.directionsClick, 'emit');
 
     (component as { assignment?: Assignment }).assignment = undefined;
 
     expect(() => component.onDirectionsClick(event)).not.toThrow();
     expect(stopPropagation).toHaveBeenCalled();
-    expect(windowOpenSpy).not.toHaveBeenCalled();
+    expect(directionsClickSpy).not.toHaveBeenCalled();
   });
 
   it('should show completed status label when assignment status is completed', () => {

@@ -73,11 +73,6 @@ export class MiniAssignmentCard {
 
     if (!this.assignment) return;
 
-    const destination = encodeURIComponent(this.assignment.address);
-    window.open(
-      `https://www.google.com/maps/dir/?api=1&destination=${destination}`,
-      '_blank',
-      'noopener,noreferrer',
-    );
+    this.directionsClick.emit(this.assignment);
   }
 }
