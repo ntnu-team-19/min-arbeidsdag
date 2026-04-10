@@ -6,6 +6,7 @@ import { AssignmentDetailsDto } from '../models/assignment-details.dto';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
 
 const STORAGE_KEY = 'assignment-details';
+const PERSONAL_NOTES_STORAGE_KEY = 'assignment-personal-notes';
 
 describe('AssignmentService', () => {
   let service: AssignmentService;
@@ -277,6 +278,40 @@ describe('AssignmentService', () => {
       totalTravelMinutes: 0,
       typeBreakdown: [],
     });
+  });
+
+  it('should return empty personal note when no note is saved', async () => {
+    const result = await firstValueFrom(service.getPersonalNote(1315598));
+
+    expect(result).toBe('');
+  });
+
+  it('should save and retrieve personal note for a specific assignment', async () => {
+    await firstValueFrom(service.savePersonalNote(1315598, 'Husk å sjekke kabelskap'));
+
+    const result = await firstValueFrom(service.getPersonalNote(1315598));
+
+    expect(result).toBe('Husk å sjekke kabelskap');
+  });
+
+  it('should keep personal notes separated per assignment', async () => {
+    await firstValueFrom(service.savePersonalNote(1315598, 'Notat A'));
+    await firstValueFrom(service.savePersonalNote(1316076, 'Notat B'));
+
+    const first = await firstValueFrom(service.getPersonalNote(1315598));
+    const second = await firstValueFrom(service.getPersonalNote(1316076));
+
+    expect(first).toBe('Notat A');
+    expect(second).toBe('Notat B');
+  });
+
+  it('should recover from malformed personal note storage data', async () => {
+    storage.setItem(PERSONAL_NOTES_STORAGE_KEY, '{bad json');
+
+    const result = await firstValueFrom(service.getPersonalNote(1315598));
+
+    expect(result).toBe('');
+    expect(storage.getItem(PERSONAL_NOTES_STORAGE_KEY)).toBe('{}');
   });
 });
 
