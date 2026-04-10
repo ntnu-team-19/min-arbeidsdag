@@ -11,6 +11,8 @@
     "ongoing": "Ongoing assignment",
     "next": "Next assignment",
     "upcoming": "Upcoming assignment",
+    "absence": "Absence",
+    "absenceShort": "Absence",
     "confirmed": "Confirmed for tomorrow",
     "confirmedShort": "Confirmed",
     "completed": "Completed assignment",

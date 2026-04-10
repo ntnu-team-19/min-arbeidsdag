@@ -11,6 +11,8 @@
     "ongoing": "Pågående oppdrag",
     "next": "Neste oppdrag",
     "upcoming": "Kommende oppdrag",
+    "absence": "Fravær",
+    "absenceShort": "Fravær",
     "confirmed": "Bekreftet for i morgen",
     "confirmedShort": "Bekreftet",
     "completed": "Fullført oppdrag",
