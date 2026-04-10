@@ -121,7 +121,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   getTechnicianLocationLabel(location: TechnicianLocation): string {
-    return location.label || this.translate.instant(location.role === 'start' ? 'location.start' : 'location.end');
+    return (
+      location.label ||
+      this.translate.instant(location.role === 'start' ? 'location.start' : 'location.end')
+    );
   }
 
   getTechnicianLocationRoleLabel(location: TechnicianLocation): string {
@@ -172,7 +175,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     const assignmentDate = this.getDateForDay(this.selectedDay);
-    const parsedDate = new Date(`${assignmentDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+    const parsedDate = new Date(
+      `${assignmentDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`,
+    );
 
     if (Number.isNaN(parsedDate.getTime())) {
       return undefined;

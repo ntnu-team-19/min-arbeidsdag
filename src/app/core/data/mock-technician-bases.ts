@@ -80,7 +80,9 @@ function isLocationActive(location: MockTechnicianLocation, referenceTimestamp: 
   }
 
   const startTimestamp = toTimestamp(location.startTime);
-  const stopTimestamp = location.stopTime ? toTimestamp(location.stopTime) : Number.POSITIVE_INFINITY;
+  const stopTimestamp = location.stopTime
+    ? toTimestamp(location.stopTime)
+    : Number.POSITIVE_INFINITY;
 
   return referenceTimestamp >= startTimestamp && referenceTimestamp < stopTimestamp;
 }
@@ -95,7 +97,9 @@ function selectLocation(
     return undefined;
   }
 
-  const activeLocations = roleLocations.filter((location) => isLocationActive(location, referenceTimestamp));
+  const activeLocations = roleLocations.filter((location) =>
+    isLocationActive(location, referenceTimestamp),
+  );
   if (activeLocations.length > 0) {
     return activeLocations.sort((a, b) => {
       if (a.isTemporary !== b.isTemporary) {
@@ -164,9 +168,9 @@ export function getTechnicianDayLocations(
   const startLocation = selectLocation(technicianLocations, referenceTimestamp, 'start');
   const endLocation = selectLocation(technicianLocations, referenceTimestamp, 'end');
 
-  const resolvedLocations = [startLocation, endLocation].filter(Boolean).map((location) =>
-    toTechnicianLocation(location!),
-  );
+  const resolvedLocations = [startLocation, endLocation]
+    .filter(Boolean)
+    .map((location) => toTechnicianLocation(location!));
 
   if (resolvedLocations.length > 0) {
     return resolvedLocations;

@@ -122,7 +122,9 @@ export class AssignmentService {
     const assignments = this.getSortedAssignmentsByDesiredDate(date);
     const firstAssignment = assignments[0];
 
-    return of(getTechnicianDayLocations(firstAssignment?.fieldTechId, firstAssignment?.showingStartDate));
+    return of(
+      getTechnicianDayLocations(firstAssignment?.fieldTechId, firstAssignment?.showingStartDate),
+    );
   }
 
   updateTomorrowConfirmation(
