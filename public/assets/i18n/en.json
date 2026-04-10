@@ -59,6 +59,18 @@
     "assignmentCountText": "Assignment",
     "assignmentCountTextPlural": "Assignments"
   },
+  "location": {
+    "start": "Start location",
+    "end": "End location",
+    "home": "Home",
+    "temporary": "Temporary",
+    "allDay": "All day",
+    "validFrom": "Valid from",
+    "validUntil": "Valid until",
+    "unknownValidity": "Unknown validity",
+    "leaveBy": "Leave home by",
+    "leaveUnknown": "Unknown departure time"
+  },
   "travelTime": {
     "minDriving": "min driving"
   },
