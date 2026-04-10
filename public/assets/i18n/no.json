@@ -62,6 +62,31 @@
   "travelTime": {
     "minDriving": "min kjøring"
   },
+  "dailyProgress": {
+    "todayTitle": "Dagens fremdrift",
+    "tomorrowTitle": "Morgendagens oversikt",
+    "assignmentHeadline": "{{assignmentCount}} {{assignmentLabel}} fordelt på {{typeCount}} {{typeLabel}}",
+    "assignmentLabelSingular": "oppdrag",
+    "assignmentLabelPlural": "oppdrag",
+    "typeLabelSingular": "type",
+    "typeLabelPlural": "typer",
+    "assignmentTypes": "Oppdragstyper",
+    "showAssignmentTypes": "Vis oppdragstyper",
+    "hideAssignmentTypes": "Skjul oppdragstyper",
+    "completedAssignments": "Fullførte oppdrag",
+    "plannedAssignments": "Planlagte oppdrag",
+    "noAssignmentsRegistered": "Ingen oppdrag registrert",
+    "allAssignmentsCompleted": "Alle oppdrag er fullført",
+    "assignmentsRemaining": "{{count}} {{assignmentLabel}} gjenstår",
+    "plannedTravelTime": "Planlagt kjøretid: {{minutes}} min",
+    "travelTime": "Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min",
+    "tomorrowEstimate": "Estimert for morgendagens oppdrag",
+    "travelTimeFootnote": "{{percentage}}% av dagens tid brukt på kjøring",
+    "noAssignmentTypesPlanned": "Ingen oppdragstyper planlagt",
+    "noAssignmentTypesForDay": "Ingen oppdragstyper for valgt dag",
+    "plannedDrivingTime": "Planlagt kjøretid",
+    "drivingTimeUsed": "Kjøretid brukt"
+  },
   "map": {
     "loadError": "Klarte ikke å laste kartet",
     "loadErrorMessage": "Sjekk internettilkoblingen din og prøv igjen."

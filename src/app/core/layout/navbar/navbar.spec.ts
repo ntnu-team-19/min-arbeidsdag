@@ -15,8 +15,20 @@ describe('Navbar', () => {
   let fixture: ComponentFixture<Navbar>;
   let component: Navbar;
   let translate: TranslateService;
+  let localStorageSetItemSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
+    localStorageSetItemSpy = vi.fn();
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: vi.fn(() => null),
+        setItem: localStorageSetItemSpy,
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      },
+    });
+
     await TestBed.configureTestingModule({
       imports: [Navbar, RouterModule.forRoot([])],
       providers: [
@@ -161,9 +173,9 @@ describe('Navbar', () => {
 
   it('should persist language choice to localStorage', () => {
     component.toggleLanguage();
-    // Note: The component calls translate.use() which should update currentLang
-    // The test verifies that toggleLanguage can be called without errors
+
     expect(component.currentLang).toBeTruthy();
+    expect(localStorageSetItemSpy).not.toHaveBeenCalled();
   });
 
   it('should hide navbar on scroll down and show on scroll up', () => {

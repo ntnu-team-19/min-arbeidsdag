@@ -159,12 +159,58 @@ describe('DashboardPage', () => {
     const translateService = TestBed.inject(TranslateService);
     translateService.setDefaultLang('no');
     translateService.setTranslation('no', {
+      daySelector: {
+        todayOverview: 'Dagens Oversikt',
+        tomorrowOverview: 'Morgendagens Oversikt',
+        selectDay: 'Velg oversikt for dag',
+      },
       sheet: {
         assignments: 'Oppdrag',
         today: 'i dag',
         tomorrow: 'i morgen',
         assignmentCountText: 'Oppdrag',
         assignmentCountTextPlural: 'Oppdrag',
+      },
+      travelTime: {
+        minDriving: 'min kjøring',
+      },
+      status: {
+        ongoing: 'Pågående oppdrag',
+        next: 'Neste oppdrag',
+        upcoming: 'Kommende oppdrag',
+        completed: 'Fullført oppdrag',
+      },
+      assignment: {
+        noDescription: 'Ingen beskrivelse tilgjengelig',
+        notSpecified: 'Ikke oppgitt',
+        markConfirmed: 'Marker som bekreftet',
+        markUnconfirmed: 'Marker som ikke bekreftet',
+      },
+      dailyProgress: {
+        todayTitle: 'Dagens fremdrift',
+        tomorrowTitle: 'Morgendagens oversikt',
+        assignmentHeadline:
+          '{{assignmentCount}} {{assignmentLabel}} fordelt på {{typeCount}} {{typeLabel}}',
+        assignmentLabelSingular: 'oppdrag',
+        assignmentLabelPlural: 'oppdrag',
+        typeLabelSingular: 'type',
+        typeLabelPlural: 'typer',
+        assignmentTypes: 'Oppdragstyper',
+        showAssignmentTypes: 'Vis oppdragstyper',
+        hideAssignmentTypes: 'Skjul oppdragstyper',
+        completedAssignments: 'Fullførte oppdrag',
+        plannedAssignments: 'Planlagte oppdrag',
+        noAssignmentsRegistered: 'Ingen oppdrag registrert',
+        allAssignmentsCompleted: 'Alle oppdrag er fullført',
+        assignmentsRemaining: '{{count}} {{assignmentLabel}} gjenstår',
+        plannedTravelTime: 'Planlagt kjøretid: {{minutes}} min',
+        travelTime: 'Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min',
+        tomorrowEstimate: 'Estimert for morgendagens oppdrag',
+        travelTimeFootnote: '{{percentage}}% av dagens tid brukt på kjøring',
+        noAssignmentTypesPlanned: 'Ingen oppdragstyper planlagt',
+        noAssignmentTypesForDay: 'Ingen oppdragstyper for valgt dag',
+        plannedDrivingTime: 'Planlagt kjøretid',
+        drivingTimeUsed: 'Kjøretid brukt',
       },
     });
     translateService.use('no');

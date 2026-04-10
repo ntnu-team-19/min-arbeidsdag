@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { DailyProgressInfobox } from './daily-progress-infobox';
 import { DayOption } from '../day-selector/day-selector.types';
 import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
@@ -7,6 +8,7 @@ import { DailyProgressSummary } from '../../../../core/models/daily-progress.mod
 describe('DailyProgressInfobox', () => {
   let component: DailyProgressInfobox;
   let fixture: ComponentFixture<DailyProgressInfobox>;
+  let translateService: TranslateService;
   const originalInnerWidth = window.innerWidth;
 
   const mockSummary: DailyProgressSummary = {
@@ -24,7 +26,68 @@ describe('DailyProgressInfobox', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DailyProgressInfobox],
+      providers: [provideTranslateService()],
     }).compileComponents();
+
+    translateService = TestBed.inject(TranslateService);
+    translateService.setDefaultLang('no');
+    translateService.setTranslation('no', {
+      dailyProgress: {
+        todayTitle: 'Dagens fremdrift',
+        tomorrowTitle: 'Morgendagens oversikt',
+        assignmentHeadline:
+          '{{assignmentCount}} {{assignmentLabel}} fordelt på {{typeCount}} {{typeLabel}}',
+        assignmentLabelSingular: 'oppdrag',
+        assignmentLabelPlural: 'oppdrag',
+        typeLabelSingular: 'type',
+        typeLabelPlural: 'typer',
+        assignmentTypes: 'Oppdragstyper',
+        showAssignmentTypes: 'Vis oppdragstyper',
+        hideAssignmentTypes: 'Skjul oppdragstyper',
+        completedAssignments: 'Fullførte oppdrag',
+        plannedAssignments: 'Planlagte oppdrag',
+        noAssignmentsRegistered: 'Ingen oppdrag registrert',
+        allAssignmentsCompleted: 'Alle oppdrag er fullført',
+        assignmentsRemaining: '{{count}} {{assignmentLabel}} gjenstår',
+        plannedTravelTime: 'Planlagt kjøretid: {{minutes}} min',
+        travelTime: 'Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min',
+        tomorrowEstimate: 'Estimert for morgendagens oppdrag',
+        travelTimeFootnote: '{{percentage}}% av dagens tid brukt på kjøring',
+        noAssignmentTypesPlanned: 'Ingen oppdragstyper planlagt',
+        noAssignmentTypesForDay: 'Ingen oppdragstyper for valgt dag',
+        plannedDrivingTime: 'Planlagt kjøretid',
+        drivingTimeUsed: 'Kjøretid brukt',
+      },
+    });
+    translateService.setTranslation('en', {
+      dailyProgress: {
+        todayTitle: "Today's progress",
+        tomorrowTitle: "Tomorrow's overview",
+        assignmentHeadline:
+          '{{assignmentCount}} {{assignmentLabel}} across {{typeCount}} {{typeLabel}}',
+        assignmentLabelSingular: 'assignment',
+        assignmentLabelPlural: 'assignments',
+        typeLabelSingular: 'type',
+        typeLabelPlural: 'types',
+        assignmentTypes: 'Assignment types',
+        showAssignmentTypes: 'Show assignment types',
+        hideAssignmentTypes: 'Hide assignment types',
+        completedAssignments: 'Completed assignments',
+        plannedAssignments: 'Planned assignments',
+        noAssignmentsRegistered: 'No assignments registered',
+        allAssignmentsCompleted: 'All assignments are completed',
+        assignmentsRemaining: '{{count}} {{assignmentLabel}} remaining',
+        plannedTravelTime: 'Planned driving time: {{minutes}} min',
+        travelTime: 'Driving time: {{completedMinutes}} min of {{totalMinutes}} min',
+        tomorrowEstimate: "Estimated for tomorrow's assignments",
+        travelTimeFootnote: "{{percentage}}% of today's time spent driving",
+        noAssignmentTypesPlanned: 'No assignment types planned',
+        noAssignmentTypesForDay: 'No assignment types for the selected day',
+        plannedDrivingTime: 'Planned driving time',
+        drivingTimeUsed: 'Driving time used',
+      },
+    });
+    translateService.use('no');
 
     fixture = TestBed.createComponent(DailyProgressInfobox);
     component = fixture.componentInstance;
@@ -36,6 +99,7 @@ describe('DailyProgressInfobox', () => {
       writable: true,
       value: originalInnerWidth,
     });
+    document.documentElement.classList.remove('dark');
   });
 
   function render(
@@ -165,8 +229,42 @@ describe('DailyProgressInfobox', () => {
 
     expect(component.assignmentProgressPercentage).toBe(50);
     expect(component.assignmentPieBackground).toContain('180deg');
+    expect(component.assignmentPieBackground).toContain('var(--pie-fill)');
+    expect(component.assignmentPieBackground).toContain('var(--pie-track)');
     expect(component.travelBarPercentage).toBe(60);
     expect(travelFill.nativeElement.style.width).toBe('60%');
+  });
+
+  it('should render with theme-aware progress styling in dark mode', () => {
+    document.documentElement.classList.add('dark');
+    render('today');
+
+    const text = fixture.nativeElement.textContent;
+    const pieChart = fixture.debugElement.query(By.css('.pie-chart'));
+
+    expect(text).toContain('Dagens fremdrift');
+    expect(text).toContain('4 / 8');
+    expect(text).toContain('60% av dagens tid brukt på kjøring');
+    expect(component.assignmentPieBackground).toContain('var(--pie-fill)');
+    expect(component.assignmentPieBackground).not.toContain('#90aecb');
+    expect(component.assignmentPieBackground).not.toContain('#d7e4f1');
+    expect(pieChart.nativeElement.style.background).toContain('var(--pie-fill)');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('should preserve planned-state progress styling in dark mode', () => {
+    document.documentElement.classList.add('dark');
+    render('tomorrow');
+
+    const text = fixture.nativeElement.textContent;
+    const pieChart = fixture.debugElement.query(By.css('.pie-chart'));
+    const travelTrack = fixture.debugElement.query(By.css('.progress-track'));
+
+    expect(text).toContain('Morgendagens oversikt');
+    expect(text).toContain('Planlagt kjøretid: 75 min');
+    expect(component.assignmentPieBackground).toContain('var(--pie-track)');
+    expect(pieChart.nativeElement.className).toContain('pie-chart--planned');
+    expect(travelTrack.nativeElement.className).toContain('progress-track--planned');
   });
 
   it('should fall back safely for empty data', () => {
@@ -181,6 +279,26 @@ describe('DailyProgressInfobox', () => {
     expect(text).toContain('Kjøretid: 0 min av 0 min');
     expect(text).toContain('0% av dagens tid brukt på kjøring');
     expect(fixture.debugElement.query(By.css('.type-toggle'))).toBeFalsy();
+  });
+
+  it('should translate the infobox copy when switching to English', async () => {
+    await translateService.use('en');
+    render('today');
+
+    const text = fixture.nativeElement.textContent;
+    const typeSummary = fixture.debugElement.query(By.css('.type-summary'));
+    const pieChart = fixture.debugElement.query(By.css('.pie-chart'));
+    const travelTrack = fixture.debugElement.query(By.css('.progress-track'));
+
+    expect(text).toContain("Today's progress");
+    expect(text).toContain('8 assignments across 3 types');
+    expect(text).toContain('Completed assignments');
+    expect(text).toContain('4 assignments remaining');
+    expect(text).toContain('Driving time: 45 min of 75 min');
+    expect(text).toContain("60% of today's time spent driving");
+    expect(typeSummary.nativeElement.getAttribute('aria-label')).toBe('Assignment types');
+    expect(pieChart.nativeElement.getAttribute('aria-label')).toBe('Completed assignments');
+    expect(travelTrack.nativeElement.getAttribute('aria-label')).toBe('Driving time used');
   });
 
   it('should merge duplicate types and ignore invalid entries in the secondary type summary', () => {
