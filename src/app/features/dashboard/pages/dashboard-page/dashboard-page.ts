@@ -14,7 +14,6 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
@@ -378,7 +377,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     const date = this.getDateForDay(this.selectedDay);
 
     forkJoin({
-cards: this.assignmentService.getAssignmentCardsByDesiredDate(date),
+      cards: this.assignmentService.getAssignmentCardsByDesiredDate(date),
       availabilities: this.availabilityService.getAvailabilitiesByDate(date),
       travelTimes: this.assignmentService.getTravelTimesByDesiredDate(date),
       progress: this.assignmentService.getDailyProgressByDesiredDate(date),
