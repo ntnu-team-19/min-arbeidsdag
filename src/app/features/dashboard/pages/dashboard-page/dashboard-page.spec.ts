@@ -12,6 +12,7 @@ import { DailyProgressInfobox } from '../../components/daily-progress-infobox/da
 import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapRouteSegment } from '../../../../shared/components/map/map.models';
+import { TechnicianLocation } from '../../../../core/models/tech-location.model';
 
 const MOCK_CARDS: Assignment[] = [
   {
@@ -65,6 +66,18 @@ const MOCK_CARDS: Assignment[] = [
 ];
 
 const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
+const MOCK_TECHNICIAN_LOCATIONS: TechnicianLocation[] = [
+  {
+    fieldTechId: 392841,
+    role: 'start',
+    label: 'Hjem',
+    location: { lat: 63.35514, lon: 10.35346 },
+    startTime: '2026-03-20T00:00:00',
+    stopTime: '2026-03-20T11:30:00',
+    isAllDay: false,
+    isTemporary: false,
+  },
+];
 const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
   {
     id: buildRouteSegmentId('start', 'assignment-1'),
@@ -107,6 +120,7 @@ describe('DashboardPage', () => {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
     getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
     getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
+    getTechnicianLocationsByDesiredDate: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
   };
   let routingServiceMock: {
@@ -125,6 +139,7 @@ describe('DashboardPage', () => {
       getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
       getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
       getDailyProgressByDesiredDate: vi.fn().mockReturnValue(of(MOCK_DAILY_PROGRESS)),
+      getTechnicianLocationsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TECHNICIAN_LOCATIONS)),
       updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
     };
     routingServiceMock = {
@@ -273,6 +288,81 @@ describe('DashboardPage', () => {
     const infobox = fixture.debugElement.query(By.css('app-daily-progress-infobox'));
     expect(infobox).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Dagens fremdrift');
+  });
+
+  it('should not render the technician start location card when first assignment is not next', () => {
+    expect(component.shouldShowStartLocationCard).toBe(false);
+    expect(fixture.nativeElement.textContent).not.toContain('Hjem');
+  });
+
+  it('should render the technician start location card when first assignment is next', async () => {
+    const localFixture = TestBed.createComponent(DashboardPage);
+    const localComponent = localFixture.componentInstance;
+
+    localComponent.assignmentCards = [
+      {
+        ...MOCK_CARDS[1],
+        status: 'next',
+      },
+      {
+        ...MOCK_CARDS[2],
+      },
+    ];
+    localComponent.technicianLocations = MOCK_TECHNICIAN_LOCATIONS;
+
+    localFixture.detectChanges();
+    await localFixture.whenStable();
+
+    expect(localComponent.shouldShowStartLocationCard).toBe(true);
+    expect(localFixture.nativeElement.textContent).toContain('Hjem');
+  });
+
+  it('should render the technician start location card in map-bottom-sheet when first assignment is next', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const localFixture = TestBed.createComponent(DashboardPage);
+    const localComponent = localFixture.componentInstance;
+
+    localComponent.assignmentCards = [
+      {
+        ...MOCK_CARDS[1],
+        status: 'next',
+      },
+      {
+        ...MOCK_CARDS[2],
+      },
+    ];
+    localComponent.technicianLocations = MOCK_TECHNICIAN_LOCATIONS;
+    localComponent.isListView = false;
+
+    localFixture.detectChanges();
+    await localFixture.whenStable();
+
+    expect(localComponent.shouldShowStartLocationCard).toBe(true);
+    expect(localFixture.nativeElement.textContent).toContain('Hjem');
+  });
+
+  it('should render the technician start location card for tomorrow view', async () => {
+    const localFixture = TestBed.createComponent(DashboardPage);
+    const localComponent = localFixture.componentInstance;
+
+    localComponent.selectedDay = 'tomorrow';
+    localComponent.assignmentCards = [
+      {
+        ...MOCK_CARDS[0],
+        status: 'confirmed',
+      },
+      {
+        ...MOCK_CARDS[2],
+      },
+    ];
+    localComponent.technicianLocations = MOCK_TECHNICIAN_LOCATIONS;
+
+    localFixture.detectChanges();
+    await localFixture.whenStable();
+
+    expect(localComponent.shouldShowStartLocationCard).toBe(true);
+    expect(localFixture.nativeElement.textContent).toContain('Hjem');
   });
 
   it('should not show the daily progress infobox in map view', async () => {

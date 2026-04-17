@@ -9,6 +9,16 @@
     </div>
 
     <div class="flex flex-col gap-2 px-4 pb-24">
+      @if (shouldShowStartLocationCard && startTechnicianLocation) {
+        <app-home-location-card
+          [roleLabel]="getTechnicianLocationRoleLabel(startTechnicianLocation)"
+          [locationLabel]="getTechnicianLocationLabel(startTechnicianLocation)"
+          [departureLabel]="getStartLocationDepartureLabel()"
+          [contextLabel]="getTechnicianLocationContextLabel(startTechnicianLocation)"
+          [isTemporary]="startTechnicianLocation.isTemporary"
+        />
+      }
+
       @for (card of assignmentCards; track card.id; let i = $index) {
         @if (
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
@@ -41,6 +51,17 @@
         </h2>
 
         <div sheet-body>
+          @if (shouldShowStartLocationCard && startTechnicianLocation) {
+            <app-home-location-card
+              [withBottomMargin]="true"
+              [roleLabel]="getTechnicianLocationRoleLabel(startTechnicianLocation)"
+              [locationLabel]="getTechnicianLocationLabel(startTechnicianLocation)"
+              [departureLabel]="getStartLocationDepartureLabel()"
+              [contextLabel]="getTechnicianLocationContextLabel(startTechnicianLocation)"
+              [isTemporary]="startTechnicianLocation.isTemporary"
+            />
+          }
+
           @for (assignment of assignmentCards; track assignment.id; let i = $index) {
             @if (travelTimes[i] !== undefined) {
               <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />

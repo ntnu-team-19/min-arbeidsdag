@@ -6,6 +6,8 @@ import { Assignment, AssignmentStatus } from '../models/assignment-card.model';
 import { AssignmentDetails } from '../models/assignment-details.model';
 import { AssignmentTypeBreakdownItem, DailyProgressSummary } from '../models/daily-progress.model';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
+import { getTechnicianDayLocations } from '../data/mock-technician-bases';
+import { TechnicianLocation } from '../models/tech-location.model';
 import {
   mapAssignmentDetailsDtoToAssignmentCardModel,
   mapDtoStatusToCardStatus,
@@ -145,6 +147,15 @@ export class AssignmentService {
       ),
       typeBreakdown: this.buildTypeBreakdown(assignments),
     });
+  }
+
+  getTechnicianLocationsByDesiredDate(date: string): Observable<TechnicianLocation[]> {
+    const assignments = this.getSortedAssignmentsByDesiredDate(date);
+    const firstAssignment = assignments[0];
+
+    return of(
+      getTechnicianDayLocations(firstAssignment?.fieldTechId, firstAssignment?.showingStartDate),
+    );
   }
 
   updateTomorrowConfirmation(

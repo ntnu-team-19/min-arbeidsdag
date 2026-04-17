@@ -66,6 +66,18 @@
     "assignmentCountText": "Oppdrag",
     "assignmentCountTextPlural": "Oppdrag"
   },
+  "location": {
+    "start": "Startpunkt",
+    "end": "Sluttpunkt",
+    "home": "Hjem",
+    "temporary": "Midlertidig",
+    "allDay": "Hele dagen",
+    "validFrom": "Gyldig fra",
+    "validUntil": "Gyldig til",
+    "unknownValidity": "Ukjent gyldighet",
+    "leaveBy": "Dra hjemmefra",
+    "leaveUnknown": "Ukjent avreisetid"
+  },
   "travelTime": {
     "minDriving": "min kjøring"
   },
