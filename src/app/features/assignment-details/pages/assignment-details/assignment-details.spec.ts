@@ -14,6 +14,8 @@ describe('AssignmentDetailsPage', () => {
   let assignmentServiceMock: {
     getAssignmentDetailsViewById: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
+    getPersonalNote: ReturnType<typeof vi.fn>;
+    savePersonalNote: ReturnType<typeof vi.fn>;
   };
 
   let routerMock: {
@@ -38,7 +40,7 @@ describe('AssignmentDetailsPage', () => {
     contactName: 'Ola Entreprenør',
     contactPhone: '41414141',
     contactEmail: 'ola@mail.com',
-    comment: 'Testkommentar',
+    coordinatorMessage: 'Testkommentar',
     orderedFor: ['TELENOR NORGE'],
     canMarkContacted: false,
     contacted: false,
@@ -49,10 +51,13 @@ describe('AssignmentDetailsPage', () => {
     returnedAssignment = mockAssignment,
     routeDay: 'today' | 'tomorrow' | null = null,
     routeView: 'list' | 'map' | null = null,
+    personalNote = '',
   ) {
     assignmentServiceMock = {
       getAssignmentDetailsViewById: vi.fn().mockReturnValue(of(returnedAssignment)),
       updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
+      getPersonalNote: vi.fn().mockReturnValue(of(personalNote)),
+      savePersonalNote: vi.fn().mockReturnValue(of(personalNote)),
     };
 
     routerMock = {
@@ -111,10 +116,13 @@ describe('AssignmentDetailsPage', () => {
   });
 
   it('should load assignment on init when route id exists', async () => {
-    await createComponent('1315598');
+    await createComponent('1315598', mockAssignment, null, null, 'Eksisterende notat');
 
     expect(assignmentServiceMock.getAssignmentDetailsViewById).toHaveBeenCalledWith('1315598');
+    expect(assignmentServiceMock.getPersonalNote).toHaveBeenCalledWith('1315598');
     expect(component.assignment).toEqual(mockAssignment);
+    expect(component.personalNoteDraft).toBe('Eksisterende notat');
+    expect(component.noteSaveState).toBe('saved');
     expect(component.notFound).toBe(false);
     expect(component.isLoading).toBe(false);
   });
@@ -300,6 +308,51 @@ describe('AssignmentDetailsPage', () => {
     expect(component.assignment.contacted).toBe(true);
     expect(component.assignment.status).toBe('confirmed');
     expect(assignmentServiceMock.updateTomorrowConfirmation).toHaveBeenCalledWith('1315598', true);
+  });
+
+  it('should auto-save personal note when edited', async () => {
+    await createComponent('1315598', mockAssignment, null, null, 'Lagret notat');
+    vi.useFakeTimers();
+
+    component.onPersonalNoteChange('Lagret notat med endring');
+
+    expect(component.personalNoteDraft).toBe('Lagret notat med endring');
+    expect(component.noteSaveState).toBe('saving');
+    expect(assignmentServiceMock.savePersonalNote).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(500);
+
+    expect(assignmentServiceMock.savePersonalNote).toHaveBeenCalledWith(
+      '1315598',
+      'Lagret notat med endring',
+    );
+    expect(component.noteSaveState).toBe('saved');
+    vi.useRealTimers();
+  });
+
+  it('should do nothing in onPersonalNoteChange when assignment is undefined', async () => {
+    await createComponent('1315598');
+    component.assignment = undefined;
+
+    component.onPersonalNoteChange('Nytt notat');
+
+    expect(assignmentServiceMock.savePersonalNote).not.toHaveBeenCalled();
+  });
+
+  it('should report coordinator message availability correctly', async () => {
+    await createComponent('1315598');
+
+    component.assignment = {
+      ...mockAssignment,
+      coordinatorMessage: 'Hei fra koordinator',
+    };
+    expect(component.hasCoordinatorMessage).toBe(true);
+
+    component.assignment = {
+      ...mockAssignment,
+      coordinatorMessage: '   ',
+    };
+    expect(component.hasCoordinatorMessage).toBe(false);
   });
 
   it('should do nothing in onContactedChange when assignment is undefined', async () => {

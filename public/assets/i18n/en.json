@@ -36,6 +36,13 @@
     "assignmentConfirmed": "Assignment confirmed",
     "comment": "Comment",
     "addComment": "Add a comment...",
+    "personalNotes": "Notes to myself",
+    "personalNotesPlaceholder": "Write a note to yourself...",
+    "saveNote": "Save note",
+    "noteSaved": "Saved",
+    "noteUnsaved": "Changes are not saved",
+    "coordinatorMessage": "Message from contractor/coordinator",
+    "coordinatorMessageEmpty": "No message available",
     "noDescription": "No description available",
     "notSpecified": "Not specified",
     "today": "Today",
@@ -60,6 +67,18 @@
     "tomorrow": "tomorrow",
     "assignmentCountText": "Assignment",
     "assignmentCountTextPlural": "Assignments"
+  },
+  "location": {
+    "start": "Start location",
+    "end": "End location",
+    "home": "Home",
+    "temporary": "Temporary",
+    "allDay": "All day",
+    "validFrom": "Valid from",
+    "validUntil": "Valid until",
+    "unknownValidity": "Unknown validity",
+    "leaveBy": "Leave home by",
+    "leaveUnknown": "Unknown departure time"
   },
   "travelTime": {
     "minDriving": "min driving"

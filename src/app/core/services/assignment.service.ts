@@ -6,6 +6,8 @@ import { Assignment, AssignmentStatus } from '../models/assignment-card.model';
 import { AssignmentDetails } from '../models/assignment-details.model';
 import { AssignmentTypeBreakdownItem, DailyProgressSummary } from '../models/daily-progress.model';
 import { MOCK_ASSIGNMENTS } from '../data/mock-assignments';
+import { getTechnicianDayLocations } from '../data/mock-technician-bases';
+import { TechnicianLocation } from '../models/tech-location.model';
 import {
   mapAssignmentDetailsDtoToAssignmentCardModel,
   mapDtoStatusToCardStatus,
@@ -13,6 +15,9 @@ import {
 import { mapAssignmentDetailsDtoToAssignmentDetails } from '../mappers/assignment-details.mapper';
 
 const STORAGE_KEY = 'assignment-details';
+const PERSONAL_NOTES_STORAGE_KEY = 'assignment-personal-notes';
+
+type PersonalNotesByAssignmentId = Record<string, string>;
 
 @Injectable({
   providedIn: 'root',
@@ -50,6 +55,34 @@ export class AssignmentService {
 
   private saveAllToStorage(assignments: AssignmentDetailsDto[]): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+  }
+
+  private getAllPersonalNotesFromStorage(): PersonalNotesByAssignmentId {
+    const raw = localStorage.getItem(PERSONAL_NOTES_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return Object.entries(parsed).reduce<PersonalNotesByAssignmentId>((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
+      }
+    } catch {
+      // fall through to reset below
+    }
+
+    localStorage.setItem(PERSONAL_NOTES_STORAGE_KEY, JSON.stringify({}));
+    return {};
+  }
+
+  private saveAllPersonalNotesToStorage(notes: PersonalNotesByAssignmentId): void {
+    localStorage.setItem(PERSONAL_NOTES_STORAGE_KEY, JSON.stringify(notes));
   }
 
   getAllAssignmentDetails(): Observable<AssignmentDetailsDto[]> {
@@ -116,6 +149,15 @@ export class AssignmentService {
     });
   }
 
+  getTechnicianLocationsByDesiredDate(date: string): Observable<TechnicianLocation[]> {
+    const assignments = this.getSortedAssignmentsByDesiredDate(date);
+    const firstAssignment = assignments[0];
+
+    return of(
+      getTechnicianDayLocations(firstAssignment?.fieldTechId, firstAssignment?.showingStartDate),
+    );
+  }
+
   updateTomorrowConfirmation(
     id: string | number,
     confirmed: boolean,
@@ -137,6 +179,20 @@ export class AssignmentService {
     this.saveAllToStorage(assignments);
 
     return of(updatedAssignment);
+  }
+
+  getPersonalNote(id: string | number): Observable<string> {
+    const normalizedId = String(id);
+    const notes = this.getAllPersonalNotesFromStorage();
+    return of(notes[normalizedId] ?? '');
+  }
+
+  savePersonalNote(id: string | number, note: string): Observable<string> {
+    const normalizedId = String(id);
+    const notes = this.getAllPersonalNotesFromStorage();
+    notes[normalizedId] = note;
+    this.saveAllPersonalNotesToStorage(notes);
+    return of(note);
   }
 
   private readonly statusOrder: Record<AssignmentStatus, number> = {

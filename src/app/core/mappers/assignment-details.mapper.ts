@@ -108,7 +108,7 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
     contactPhone: dto.showingContactPhone ?? '',
     contactEmail: null, // not present in dto yet
 
-    comment: dto.commentFromShower ?? '',
+    coordinatorMessage: dto.commentFromShower ?? '',
     orderedFor: dto.orderedFor ?? [],
 
     canMarkContacted: dayLabel === 'tomorrow',

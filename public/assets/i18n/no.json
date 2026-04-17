@@ -36,6 +36,13 @@
     "assignmentConfirmed": "Oppdrag bekreftet",
     "comment": "Kommentar",
     "addComment": "Legg til kommentar...",
+    "personalNotes": "Notater til meg selv",
+    "personalNotesPlaceholder": "Skriv et notat til deg selv...",
+    "saveNote": "Lagre notat",
+    "noteSaved": "Lagret",
+    "noteUnsaved": "Endringer er ikke lagret",
+    "coordinatorMessage": "Beskjed fra entreprenør/koordinator",
+    "coordinatorMessageEmpty": "Ingen beskjed tilgjengelig",
     "noDescription": "Ingen beskrivelse tilgjengelig",
     "notSpecified": "Ikke oppgitt",
     "today": "I dag",
@@ -60,6 +67,18 @@
     "tomorrow": "i morgen",
     "assignmentCountText": "Oppdrag",
     "assignmentCountTextPlural": "Oppdrag"
+  },
+  "location": {
+    "start": "Startpunkt",
+    "end": "Sluttpunkt",
+    "home": "Hjem",
+    "temporary": "Midlertidig",
+    "allDay": "Hele dagen",
+    "validFrom": "Gyldig fra",
+    "validUntil": "Gyldig til",
+    "unknownValidity": "Ukjent gyldighet",
+    "leaveBy": "Dra hjemmefra",
+    "leaveUnknown": "Ukjent avreisetid"
   },
   "travelTime": {
     "minDriving": "min kjøring"

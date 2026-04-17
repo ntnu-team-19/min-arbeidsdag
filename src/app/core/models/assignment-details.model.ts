@@ -35,7 +35,7 @@ export interface AssignmentDetails {
   contactPhone: string;
   contactEmail: string | null;
 
-  comment: string;
+  coordinatorMessage: string;
   orderedFor: string[];
 
   canMarkContacted: boolean;

@@ -1,0 +1,32 @@
+.notes-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .notes-action-row {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}
+
+.typing-dots {
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  animation: pulse-dots 0.9s infinite ease-in-out;
+}
+
+@keyframes pulse-dots {
+  0% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
