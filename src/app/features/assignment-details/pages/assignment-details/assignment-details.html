@@ -187,7 +187,31 @@
             </div>
           </section>
 
-          <!-- Comment -->
+          <!-- Coordinator message -->
+          <section class="flex gap-4">
+            <div
+              class="surface-2 text-theme-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+            >
+              <i class="pi pi-megaphone text-lg"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <h2 class="text-theme-muted text-sm font-medium">
+                {{ 'assignment.coordinatorMessage' | translate }}
+              </h2>
+              @if (hasCoordinatorMessage) {
+                <p class="text-theme-primary mt-1 min-h-[44px] whitespace-pre-wrap text-lg">
+                  {{ assignment.coordinatorMessage }}
+                </p>
+              } @else {
+                <p class="text-theme-muted mt-1 min-h-[44px] flex items-center text-base">
+                  {{ 'assignment.coordinatorMessageEmpty' | translate }}
+                </p>
+              }
+            </div>
+          </section>
+
+          <!-- Personal notes -->
           <section class="flex gap-4">
             <div
               class="surface-2 text-theme-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
@@ -197,15 +221,26 @@
 
             <div class="min-w-0 flex-1">
               <h2 class="text-theme-muted text-sm font-medium">
-                {{ 'assignment.comment' | translate }}
+                {{ 'assignment.personalNotes' | translate }}
               </h2>
               <textarea
+                #noteInput
                 pInputTextarea
                 rows="4"
                 class="theme-textarea mt-1 w-full rounded-xl border p-3 text-base outline-none"
-                [ngModel]="assignment.comment"
-                [placeholder]="'assignment.addComment' | translate"
+                [value]="personalNoteDraft"
+                (input)="onPersonalNoteChange(noteInput.value)"
+                [placeholder]="'assignment.personalNotesPlaceholder' | translate"
               ></textarea>
+              <div class="notes-action-row mt-2">
+                <p class="text-theme-muted min-h-[20px] text-sm" aria-live="polite">
+                  @if (noteSaveState === 'saving') {
+                    <span class="typing-dots" aria-label="lagrer notat">...</span>
+                  } @else if (noteSaveState === 'saved') {
+                    {{ 'assignment.noteSaved' | translate }}
+                  }
+                </p>
+              </div>
             </div>
           </section>
         </div>

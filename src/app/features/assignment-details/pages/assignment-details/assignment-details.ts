@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AssignmentService } from '../../../../core/services/assignment.service';
@@ -26,18 +26,24 @@ import { TranslatePipe } from '@ngx-translate/core';
     TranslatePipe,
   ],
   templateUrl: './assignment-details.html',
+  styleUrl: './assignment-details.css',
 })
 export class AssignmentDetailsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly assignmentService = inject(AssignmentService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   assignment?: AssignmentDetails;
   isLoading = true;
   notFound = false;
+  personalNoteDraft = '';
+  noteSaveState: 'idle' | 'saving' | 'saved' = 'idle';
 
   mapAssignments: MapAssignment[] = [];
+  private noteSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly noteSaveDelayMs = 500;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -56,6 +62,7 @@ export class AssignmentDetailsPage implements OnInit {
         this.notFound = !assignment;
         this.isLoading = false;
         this.updateMapAssignments();
+        this.loadPersonalNote();
       });
   }
 
@@ -223,6 +230,34 @@ export class AssignmentDetailsPage implements OnInit {
       .subscribe();
   }
 
+  onPersonalNoteChange(note: string): void {
+    if (!this.assignment) {
+      this.personalNoteDraft = note;
+      return;
+    }
+
+    const assignmentId = this.assignment.id;
+    this.personalNoteDraft = note;
+    this.noteSaveState = 'saving';
+
+    if (this.noteSaveTimeout) {
+      clearTimeout(this.noteSaveTimeout);
+      this.noteSaveTimeout = null;
+    }
+
+    this.noteSaveTimeout = setTimeout(() => {
+      this.assignmentService
+        .savePersonalNote(assignmentId, this.personalNoteDraft)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          this.noteSaveState = 'saved';
+          this.cdr.detectChanges();
+        });
+      this.noteSaveTimeout = null;
+      this.cdr.detectChanges();
+    }, this.noteSaveDelayMs);
+  }
+
   onMarkerClicked(marker: MapAssignment): void {
     console.log('Marker clicked:', marker);
   }
@@ -253,6 +288,22 @@ export class AssignmentDetailsPage implements OnInit {
     ];
   }
 
+  private loadPersonalNote(): void {
+    if (!this.assignment) {
+      this.personalNoteDraft = '';
+      this.noteSaveState = 'idle';
+      return;
+    }
+
+    this.assignmentService
+      .getPersonalNote(this.assignment.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((note) => {
+        this.personalNoteDraft = note;
+        this.noteSaveState = note ? 'saved' : 'idle';
+      });
+  }
+
   get formattedPhone(): string {
     if (!this.assignment?.contactPhone) return '';
     const digits = this.assignment.contactPhone.replace(/\D/g, '');
@@ -260,5 +311,9 @@ export class AssignmentDetailsPage implements OnInit {
       return `${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5)}`;
     }
     return this.assignment.contactPhone;
+  }
+
+  get hasCoordinatorMessage(): boolean {
+    return !!this.assignment?.coordinatorMessage?.trim();
   }
 }
