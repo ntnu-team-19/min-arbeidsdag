@@ -38,6 +38,7 @@ import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/m
 import { TravelTimeIndicator } from '../../components/travel-time-indicator/travel-time-indicator';
 import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-assignment-card';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
+import { HomeLocationCard } from '../../components/home-location-card/home-location-card';
 import { DEFAULT_TECHNICIAN_BASE } from '../../../../core/data/mock-technician-bases';
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapLocation } from '../../../../shared/components/map/map.models';
@@ -59,6 +60,7 @@ const CARD_HIGHLIGHT_DELAY_AFTER_SCROLL_MS = 180;
     forwardRef(() => TravelTimeIndicator),
     forwardRef(() => MiniAssignmentCard),
     forwardRef(() => DailyProgressInfobox),
+    forwardRef(() => HomeLocationCard),
   ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',

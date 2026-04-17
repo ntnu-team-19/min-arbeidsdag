@@ -1,0 +1,49 @@
+<article
+  class="surface-1 border-theme-2 block w-full overflow-hidden rounded-2xl border shadow-sm"
+  [class.mb-2]="withBottomMargin"
+>
+  <div class="flex items-center gap-3 bg-[#1E7F5C] px-4 py-2 text-sm font-semibold text-white">
+    <span class="min-w-0 flex-1 truncate">
+      {{ roleLabel }}
+    </span>
+    @if (isTemporary) {
+      <span class="shrink-0 rounded-full bg-white/15 px-2 py-0.5 text-[11px] uppercase tracking-wide">
+        {{ contextLabel }}
+      </span>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 p-4">
+    <div class="flex min-w-0 items-start gap-4">
+      <div
+        class="surface-1 mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-[#D4E8DD] bg-[#F3FBF7] text-[#1E7F5C]"
+      >
+        <i class="pi pi-home text-xl"></i>
+      </div>
+
+      <div class="min-w-0">
+        <h3 class="text-theme-primary truncate text-xl font-bold">
+          {{ locationLabel }}
+        </h3>
+
+        <div class="text-theme-secondary mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span class="flex items-center gap-1">
+            <i class="pi pi-clock"></i>
+            {{ departureLabel }}
+          </span>
+
+          @if (isTemporary) {
+            <span class="flex items-center gap-1">
+              <i class="pi pi-map-marker"></i>
+              {{ contextLabel }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="shrink-0 text-[#1E7F5C]">
+      <i class="pi pi-map-marker text-3xl"></i>
+    </div>
+  </div>
+</article>
