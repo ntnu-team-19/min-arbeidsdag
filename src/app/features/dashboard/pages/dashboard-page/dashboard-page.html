@@ -24,8 +24,8 @@
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
         ) {
           <hr class="border-theme-2 mx-9 my-10 border-t-2" />
-        } @else if (travelTimes[i] !== undefined && card.status !== 'completed') {
-          <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
+        } @else if (getTravelTimeForCard(card) !== undefined && card.status !== 'completed') {
+          <app-travel-time-indicator [travelTimeMinutes]="getTravelTimeForCard(card)!" />
         }
         <app-assignment-card
           [assignment]="card"
@@ -62,9 +62,9 @@
             />
           }
 
-          @for (assignment of assignmentCards; track assignment.id; let i = $index) {
-            @if (travelTimes[i] !== undefined) {
-              <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
+          @for (assignment of assignmentCards; track assignment.id) {
+            @if (getTravelTimeForCard(assignment) !== undefined) {
+              <app-travel-time-indicator [travelTimeMinutes]="getTravelTimeForCard(assignment)!" />
             }
             <div
               #miniAssignmentCardRow

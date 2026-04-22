@@ -199,6 +199,7 @@ export class AssignmentService {
     ongoing: 0,
     next: 1,
     upcoming: 1,
+    absence: 1,
     unconfirmed: 1,
     confirmed: 2,
     completed: 3,

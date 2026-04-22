@@ -14,6 +14,9 @@
         [ngClass]="currentStatus.dotClass"
       >
         @switch (assignment.status) {
+          @case ('absence') {
+            <i class="pi pi-calendar text-sm"></i>
+          }
           @case ('completed') {
             <i class="pi pi-check text-sm"></i>
           }
@@ -42,12 +45,14 @@
       </div>
     </div>
 
-    <button
-      type="button"
-      class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
-      (click)="onDirectionsClick($event)"
-    >
-      {{ 'miniCard.showDirections' | translate }}
-    </button>
+    @if (canShowDirections) {
+      <button
+        type="button"
+        class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
+        (click)="onDirectionsClick($event)"
+      >
+        {{ 'miniCard.showDirections' | translate }}
+      </button>
+    }
   </div>
 </button>

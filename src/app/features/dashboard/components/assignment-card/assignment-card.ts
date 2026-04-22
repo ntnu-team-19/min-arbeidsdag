@@ -29,6 +29,12 @@ export class AssignmentCard {
       iconClass: 'text-[#1F4E79]',
       icon: 'pi pi-circle',
     },
+    absence: {
+      label: 'status.absence',
+      barClass: 'bg-[#C7A27B]',
+      iconClass: 'text-[#6E4A2D]',
+      icon: 'pi pi-calendar',
+    },
     ongoing: {
       label: 'status.ongoing',
       barClass: 'bg-[#FFD68A]',

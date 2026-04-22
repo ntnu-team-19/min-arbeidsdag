@@ -33,6 +33,11 @@ export class MiniAssignmentCard {
       badgeClass: 'bg-[#547FA9] text-white',
       dotClass: 'border-[#1F4E79] text-[#1F4E79]',
     },
+    absence: {
+      label: 'status.absenceShort',
+      badgeClass: 'bg-[#C7A27B] text-black',
+      dotClass: 'border-[#6E4A2D] text-[#6E4A2D]',
+    },
     next: {
       label: 'status.next',
       badgeClass: 'bg-[#1F4E79] text-white',
@@ -62,6 +67,10 @@ export class MiniAssignmentCard {
 
   get currentStatus() {
     return this.statusConfig[this.assignment.status];
+  }
+
+  get canShowDirections(): boolean {
+    return !!this.assignment.locationPoint;
   }
 
   onCardClick(): void {

@@ -11,6 +11,8 @@
     "ongoing": "Ongoing assignment",
     "next": "Next assignment",
     "upcoming": "Upcoming assignment",
+    "absence": "Absence",
+    "absenceShort": "Absence",
     "confirmed": "Confirmed for tomorrow",
     "confirmedShort": "Confirmed",
     "completed": "Completed assignment",
@@ -74,6 +76,7 @@
     "allDay": "All day",
     "validFrom": "Valid from",
     "validUntil": "Valid until",
+    "unknownTime": "Unknown time",
     "unknownValidity": "Unknown validity",
     "leaveBy": "Leave home by",
     "leaveUnknown": "Unknown departure time"

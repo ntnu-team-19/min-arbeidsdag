@@ -14,9 +14,9 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { forkJoin } from 'rxjs';
 import {
   AssignmentMap,
   Assignment as MapAssignment,
@@ -42,6 +42,12 @@ import { HomeLocationCard } from '../../components/home-location-card/home-locat
 import { DEFAULT_TECHNICIAN_BASE } from '../../../../core/data/mock-technician-bases';
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapLocation } from '../../../../shared/components/map/map.models';
+import { AvailabilityService } from '../../../../core/services/availability.service';
+import {
+  AvailabilityCardFormattingOptions,
+  isAvailabilityCardId,
+  mapAvailabilityDtoToAssignmentCardModel,
+} from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
 
 const MAP_MARKER_FOCUS_TARGET_Y_RATIO = MAP_BOTTOM_SHEET_PEEK_RATIO / 2;
@@ -75,6 +81,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   isListView = true;
   assignmentCards: Assignment[] = [];
   travelTimes: number[] = [];
+  travelTimesByAssignmentId = new Map<string, number>();
   dailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
   technicianLocations: TechnicianLocation[] = [];
   mapAssignments: MapAssignment[] = [];
@@ -83,6 +90,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   activeRouteSegmentId: string | null = null;
 
   private assignmentService = inject(AssignmentService);
+  private availabilityService = inject(AvailabilityService);
   private routingService = inject(RoutingService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -299,6 +307,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   goToAssignmentDetails(id: string): void {
+    if (isAvailabilityCardId(id)) {
+      return;
+    }
+
     this.router.navigate(['/assignments', id], {
       queryParams: {
         day: this.selectedDay,
@@ -356,6 +368,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     return date.toISOString().slice(0, 10);
   }
 
+  private getAvailabilityFormattingOptions(): AvailabilityCardFormattingOptions {
+    const activeLang = this.translate.currentLang || this.translate.getDefaultLang();
+
+    return {
+      locale: activeLang === 'no' || activeLang === 'nb' ? 'nb-NO' : 'en-GB',
+      allDayLabel: this.translate.instant('location.allDay'),
+      unknownTimeLabel: this.translate.instant('location.unknownTime'),
+    };
+  }
+
   private loadAssignmentsForSelectedDay(): void {
     const loadVersion = ++this.loadVersion;
     this.clearPendingCardScroll();
@@ -367,34 +389,89 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     forkJoin({
       cards: this.assignmentService.getAssignmentCardsByDesiredDate(date),
+      availabilities: this.availabilityService.getAvailabilitiesByDate(date),
       travelTimes: this.assignmentService.getTravelTimesByDesiredDate(date),
       progress: this.assignmentService.getDailyProgressByDesiredDate(date),
       technicianLocations: this.assignmentService.getTechnicianLocationsByDesiredDate(date),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ cards, travelTimes, progress, technicianLocations }) => {
+      .subscribe(({ cards, availabilities, travelTimes, progress, technicianLocations }) => {
         if (loadVersion !== this.loadVersion) {
           return;
         }
 
-        this.assignmentCards = cards;
+        const availabilityFormattingOptions = this.getAvailabilityFormattingOptions();
+        const availabilityCards = availabilities.map((availability) =>
+          mapAvailabilityDtoToAssignmentCardModel(availability, availabilityFormattingOptions),
+        );
+        this.assignmentCards = this.mergeCardsWithAvailability(cards, availabilityCards);
         this.travelTimes = travelTimes;
+        this.travelTimesByAssignmentId = new Map([
+          ...this.buildTravelTimesByAssignmentId(cards, travelTimes),
+          ...this.buildTravelTimesByAssignmentId(
+            availabilityCards,
+            availabilities.map((availability) => Math.round(availability.calculatedTraveltime)),
+          ),
+        ]);
         this.dailyProgress = progress;
         this.technicianLocations = technicianLocations;
-        this.mapAssignments = cards
-          .filter((card) => card.locationPoint)
-          .map((card) => ({
-            id: card.id,
-            name: card.title,
-            location: {
-              lat: card.locationPoint!.y,
-              lon: card.locationPoint!.x,
-            },
-            description: card.address,
-          }));
-        this.mapStops = this.buildMapStops(cards, technicianLocations);
+
+        const mapCards = this.assignmentCards.filter((card) => card.locationPoint);
+        this.mapAssignments = mapCards.map((card) => ({
+          id: card.id,
+          name: card.title,
+          location: {
+            lat: card.locationPoint!.y,
+            lon: card.locationPoint!.x,
+          },
+          description: card.address,
+        }));
+
+        this.mapStops = this.buildMapStops(mapCards, technicianLocations);
         this.loadRouteSegments(this.mapStops, loadVersion);
       });
+  }
+
+  getTravelTimeForCard(card: Assignment): number | undefined {
+    return this.travelTimesByAssignmentId.get(card.id);
+  }
+
+  private mergeCardsWithAvailability(
+    assignmentCards: Assignment[],
+    availabilityCards: Assignment[],
+  ): Assignment[] {
+    if (availabilityCards.length === 0) {
+      return assignmentCards;
+    }
+
+    const firstUpcomingIndex = assignmentCards.findIndex((card) => card.status === 'upcoming');
+    const secondUpcomingIndex = assignmentCards.findIndex(
+      (card, index) => index > firstUpcomingIndex && card.status === 'upcoming',
+    );
+
+    if (firstUpcomingIndex === -1 || secondUpcomingIndex === -1) {
+      return [...assignmentCards, ...availabilityCards];
+    }
+
+    return [
+      ...assignmentCards.slice(0, secondUpcomingIndex),
+      ...availabilityCards,
+      ...assignmentCards.slice(secondUpcomingIndex),
+    ];
+  }
+
+  private buildTravelTimesByAssignmentId(
+    assignmentCards: Assignment[],
+    travelTimes: number[],
+  ): Map<string, number> {
+    const lookup = new Map<string, number>();
+    assignmentCards.forEach((card, index) => {
+      const travelTime = travelTimes[index];
+      if (travelTime !== undefined) {
+        lookup.set(card.id, travelTime);
+      }
+    });
+    return lookup;
   }
 
   private loadRouteSegments(stops: MapStop[], loadVersion: number): void {
