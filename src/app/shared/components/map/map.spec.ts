@@ -1,6 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { By } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssignmentMap, Assignment, MapRouteSegment, MapStop } from './map';
+import { GeolocationService } from '../../../core/services/geolocation.service';
+import { ThemeService } from '../../../core/services/theme.service';
+import { provideTranslateService } from '@ngx-translate/core';
 import CircleStyle from 'ol/style/Circle';
 import Icon from 'ol/style/Icon';
 import Style from 'ol/style/Style';
@@ -8,15 +13,37 @@ import Style from 'ol/style/Style';
 describe('AssignmentMap', () => {
   let component: AssignmentMap;
   let fixture: ComponentFixture<AssignmentMap>;
+  let geolocationServiceMock: {
+    watchPosition: ReturnType<typeof vi.fn>;
+  };
+  let themeService: ThemeService;
 
   beforeEach(async () => {
+    geolocationServiceMock = {
+      watchPosition: vi.fn().mockReturnValue(of({ kind: 'unsupported' as const })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AssignmentMap],
+      providers: [
+        provideTranslateService(),
+        {
+          provide: GeolocationService,
+          useValue: geolocationServiceMock,
+        },
+      ],
     }).compileComponents();
 
+    themeService = TestBed.inject(ThemeService);
     fixture = TestBed.createComponent(AssignmentMap);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('should create', () => {
@@ -181,10 +208,10 @@ describe('AssignmentMap', () => {
 
     expect(Array.isArray(activeStyle)).toBe(true);
     expect(activeStyle).toHaveLength(3);
-    expect((activeStyle as Style[])[0]?.getStroke()?.getWidth()).toBe(14);
-    expect((activeStyle as Style[])[2]?.getStroke()?.getColor()).toBe('#0B4A8B');
+    expect((activeStyle as Style[])[0]?.getStroke()?.getWidth()).toBe(16);
+    expect((activeStyle as Style[])[2]?.getStroke()?.getColor()).toBe('#1A5B95');
     expect(Array.isArray(inactiveStyle)).toBe(false);
-    expect((inactiveStyle as Style).getStroke()?.getWidth()).toBe(3);
+    expect((inactiveStyle as Style).getStroke()?.getWidth()).toBe(4);
   });
 
   it('should hide the end stop marker when start and end share the same coordinates', () => {
@@ -361,7 +388,7 @@ describe('AssignmentMap', () => {
     };
     const getMarkerStyle = (
       component as unknown as {
-        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style;
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style | Style[];
       }
     ).getMarkerStyle.bind(component);
     const lowZoomMap = {
@@ -380,29 +407,30 @@ describe('AssignmentMap', () => {
       get: (key: string) => {
         if (key === 'stopKind') return 'assignment';
         if (key === 'markerLabel') return '4';
+        if (key === 'assignmentStatus') return 'next';
         return undefined;
       },
     };
 
     (component as unknown as Record<string, unknown>)['map'] = highZoomMap;
-    const highZoomStyle = getMarkerStyle(assignmentFeature);
+    const highZoomStyle = getMarkerStyle(assignmentFeature) as Style[];
 
     (component as unknown as Record<string, unknown>)['map'] = lowZoomMap;
-    const lowZoomStyle = getMarkerStyle(assignmentFeature);
+    const lowZoomStyle = getMarkerStyle(assignmentFeature) as Style[];
 
-    expect(highZoomStyle.getImage()).toBeTruthy();
-    expect(lowZoomStyle.getImage()).toBeTruthy();
-    expect(highZoomStyle.getText()?.getText()).toBe('4');
-    expect(lowZoomStyle.getText()?.getText()).toBe('4');
-    expect((highZoomStyle.getImage() as CircleStyle).getRadius()).toBeGreaterThan(
-      (lowZoomStyle.getImage() as CircleStyle).getRadius(),
+    expect(highZoomStyle[0]?.getImage()).toBeTruthy();
+    expect(lowZoomStyle[0]?.getImage()).toBeTruthy();
+    expect(highZoomStyle[0]?.getText()?.getText()).toBe('4');
+    expect(lowZoomStyle[0]?.getText()?.getText()).toBe('4');
+    expect((highZoomStyle[0]?.getImage() as CircleStyle).getRadius()).toBeGreaterThan(
+      (lowZoomStyle[0]?.getImage() as CircleStyle).getRadius(),
     );
     const extractFontSize = (font: string | undefined): number => {
       const match = font?.match(/(\d+)px/);
       return match ? Number(match[1]) : 0;
     };
-    expect(extractFontSize(highZoomStyle.getText()?.getFont())).toBeGreaterThan(
-      extractFontSize(lowZoomStyle.getText()?.getFont()),
+    expect(extractFontSize(highZoomStyle[0]?.getText()?.getFont())).toBeGreaterThan(
+      extractFontSize(lowZoomStyle[0]?.getText()?.getFont()),
     );
   });
 
@@ -452,6 +480,7 @@ describe('AssignmentMap', () => {
   it('should refresh marker styles when the view resolution changes', () => {
     const resolutionHandlers: (() => void)[] = [];
     const changed = vi.fn();
+    const userLayerChanged = vi.fn();
     const cleanupSafeMapMixin = {
       un: vi.fn(),
       setTarget: vi.fn(),
@@ -459,6 +488,9 @@ describe('AssignmentMap', () => {
 
     (component as unknown as Record<string, unknown>)['markerLayer'] = {
       changed,
+    };
+    (component as unknown as Record<string, unknown>)['userLocationLayer'] = {
+      changed: userLayerChanged,
     };
     (component as unknown as Record<string, unknown>)['map'] = {
       ...cleanupSafeMapMixin,
@@ -481,5 +513,253 @@ describe('AssignmentMap', () => {
     resolutionHandlers[0]?.();
 
     expect(changed).toHaveBeenCalledTimes(1);
+    expect(userLayerChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('should apply focused styling for the focused assignment marker', () => {
+    const focusedFeature = {
+      get: (key: string) => {
+        if (key === 'stopKind') return 'assignment';
+        if (key === 'markerLabel') return '2';
+        if (key === 'assignmentStatus') return 'upcoming';
+        if (key === 'isFocusedAssignment') return true;
+        return undefined;
+      },
+    };
+
+    const styles = (
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style | Style[];
+      }
+    ).getMarkerStyle(focusedFeature) as Style[];
+
+    expect(styles).toHaveLength(2);
+    expect((styles[0]?.getImage() as CircleStyle).getRadius()).toBeGreaterThan(
+      (styles[1]?.getImage() as CircleStyle).getRadius(),
+    );
+    expect(styles[1]?.getText()?.getText()).toBe('2');
+  });
+
+  it('should add a pulsing halo for ongoing assignment markers', () => {
+    (component as unknown as Record<string, unknown>)['currentPulseValue'] = 0.5;
+
+    const ongoingFeature = {
+      get: (key: string) => {
+        if (key === 'stopKind') return 'assignment';
+        if (key === 'markerLabel') return '1';
+        if (key === 'assignmentStatus') return 'ongoing';
+        return undefined;
+      },
+    };
+
+    const styles = (
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style | Style[];
+      }
+    ).getMarkerStyle(ongoingFeature) as Style[];
+
+    expect(styles).toHaveLength(2);
+    expect((styles[0]?.getImage() as CircleStyle).getRadius()).toBeGreaterThan(
+      (styles[1]?.getImage() as CircleStyle).getRadius(),
+    );
+  });
+
+  it('should use the grayscale base layer for the light app theme', () => {
+    const setSource = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['tileLayer'] = {
+      setSource,
+    };
+    themeService.setTheme('light', false);
+    (component as unknown as Record<string, unknown>)['currentTheme'] = 'light';
+    (component as unknown as { syncBaseLayerToTheme: () => void }).syncBaseLayerToTheme();
+
+    expect((component as unknown as Record<string, unknown>)['activeBaseLayer']).toBe('grayscale');
+    expect(setSource).not.toHaveBeenCalled();
+  });
+
+  it('should update the tile layer when the app theme changes', () => {
+    vi.useFakeTimers();
+    const setSource = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['tileLayer'] = {
+      setSource,
+    };
+    (component as unknown as Record<string, unknown>)['currentTheme'] = 'light';
+    component.mapLoaded = true;
+    themeService.setTheme('dark', false);
+
+    (component as unknown as { setupThemeListener: () => void }).setupThemeListener();
+    vi.advanceTimersByTime(500);
+
+    expect((component as unknown as Record<string, unknown>)['activeBaseLayer']).toBe('dark');
+    expect(setSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('should use fallback user location when live geolocation is unavailable', () => {
+    fixture.componentRef.setInput('enableUserTracking', true);
+    fixture.componentRef.setInput('fallbackUserLocation', { lat: 63.43, lon: 10.39 });
+    fixture.detectChanges();
+
+    expect(geolocationServiceMock.watchPosition).toHaveBeenCalledTimes(1);
+    expect((component as unknown as Record<string, unknown>)['userTrackingMode']).toBe('fallback');
+
+    const userLocationSource = (component as unknown as Record<string, unknown>)[
+      'userLocationSource'
+    ] as {
+      getFeatures: () => unknown[];
+    };
+
+    expect(userLocationSource.getFeatures()).toHaveLength(1);
+    expect(component.userTrackingStatusKey).toBeNull();
+  });
+
+  it('should render the follow action as a quick-access button below settings', () => {
+    fixture.componentRef.setInput('enableCompletedFilter', true);
+    fixture.componentRef.setInput('enableUserTracking', true);
+    component.controlsMenuOpen = true;
+    fixture.detectChanges();
+
+    const nativeElement = fixture.nativeElement as HTMLElement;
+
+    expect(nativeElement.querySelector('.map-menu__trigger')).toBeTruthy();
+    expect(nativeElement.querySelector('.map-menu__follow .map-follow-button--quick')).toBeTruthy();
+    expect(nativeElement.querySelector('.map-menu__panel .map-follow-button')).toBeTruthy();
+    expect(nativeElement.querySelector('.map-menu__panel .map-follow-button--quick')).toBeNull();
+    expect(nativeElement.querySelector('.map-menu__panel .map-chip')).toBeNull();
+  });
+
+  it('should keep the follow action in place when the settings panel is open', () => {
+    fixture.componentRef.setInput('enableCompletedFilter', true);
+    fixture.componentRef.setInput('enableUserTracking', true);
+    component.controlsMenuOpen = true;
+    fixture.detectChanges();
+
+    const followContainer = fixture.nativeElement.querySelector(
+      '.map-menu__follow',
+    ) as HTMLElement | null;
+
+    expect(followContainer).toBeTruthy();
+    expect(followContainer?.classList.contains('map-menu__follow--offset')).toBe(false);
+    expect(fixture.nativeElement.querySelector('.map-menu__panel')).toBeTruthy();
+  });
+
+  it('should render only the standalone follow action when tracking is enabled without settings', () => {
+    fixture.componentRef.setInput('enableUserTracking', true);
+    fixture.detectChanges();
+
+    const nativeElement = fixture.nativeElement as HTMLElement;
+
+    expect(nativeElement.querySelector('.map-menu__trigger')).toBeNull();
+    expect(nativeElement.querySelector('.map-menu__follow .map-follow-button--quick')).toBeTruthy();
+  });
+
+  it('should toggle follow mode from the quick-access follow button', () => {
+    fixture.componentRef.setInput('enableUserTracking', true);
+    fixture.detectChanges();
+
+    (component as unknown as Record<string, unknown>)['userTrackingMode'] = 'live';
+    (component as unknown as Record<string, unknown>)['userLocation'] = {
+      lat: 63.4305,
+      lon: 10.3951,
+    };
+    (component as unknown as Record<string, unknown>)['map'] = {
+      getSize: () => [1000, 800],
+      getView: () => ({
+        animate: vi.fn(),
+        getZoom: () => 12,
+        fit: vi.fn(),
+      }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+
+    const followButton = fixture.debugElement.query(
+      By.css('.map-menu__follow .map-follow-button--quick'),
+    );
+
+    expect(followButton).toBeTruthy();
+
+    followButton.triggerEventHandler('click', new MouseEvent('click'));
+
+    expect(component.followUserMode).toBe(true);
+  });
+
+  it('should add overview bottom padding when fitting visible features', () => {
+    const fit = vi.fn();
+
+    fixture.componentRef.setInput('overviewBottomInsetRatio', 0.52);
+    fixture.detectChanges();
+
+    (component as unknown as Record<string, unknown>)['map'] = {
+      getSize: () => [1000, 800],
+      getView: () => ({
+        fit,
+      }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['markerSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 10, 10],
+      addFeatures: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['routeSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 0, 0],
+      addFeatures: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['userLocationSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 0, 0],
+      addFeatures: vi.fn(),
+    };
+
+    (
+      component as unknown as {
+        fitToVisibleFeatures: () => void;
+      }
+    ).fitToVisibleFeatures();
+
+    expect(fit).toHaveBeenCalledTimes(1);
+    expect(fit.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        padding: [40, 40, 456, 40],
+      }),
+    );
+  });
+
+  it('should recenter on the live user location and turn follow mode off on manual interaction', () => {
+    vi.useFakeTimers();
+    const animate = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['map'] = {
+      getView: () => ({
+        animate,
+        getZoom: () => 12,
+      }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['userTrackingMode'] = 'live';
+    (component as unknown as Record<string, unknown>)['userLocation'] = {
+      lat: 63.4305,
+      lon: 10.3951,
+    };
+
+    component.toggleFollowUserMode();
+
+    expect(component.followUserMode).toBe(true);
+    expect(animate).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(450);
+
+    (
+      component as unknown as {
+        handleManualMapInteraction: () => void;
+      }
+    ).handleManualMapInteraction();
+
+    expect(component.followUserMode).toBe(false);
   });
 });
