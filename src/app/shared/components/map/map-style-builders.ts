@@ -42,7 +42,8 @@ export function createMarkerStyle(feature: FeatureLike, ctx: MarkerStyleContext)
   const isAvailabilityStop =
     stopKind === 'assignment' && ctx.isAvailabilityAssignmentId(assignment?.id);
 
-  const radius = (stopKind === 'assignment' ? 16 : 13) * ctx.markerScale + (isFocusedAssignment ? 2 : 0);
+  const radius =
+    (stopKind === 'assignment' ? 16 : 13) * ctx.markerScale + (isFocusedAssignment ? 2 : 0);
   const fontSize = Math.max(10, Math.round(12 * ctx.markerScale));
   const isAssignment = stopKind === 'assignment';
 
@@ -160,7 +161,10 @@ export function createRouteStyle(feature: FeatureLike, tokens: MapThemeTokens): 
   });
 }
 
-export function createUserLocationStyle(feature: FeatureLike, tokens: MapThemeTokens): Style | Style[] {
+export function createUserLocationStyle(
+  feature: FeatureLike,
+  tokens: MapThemeTokens,
+): Style | Style[] {
   const userLocationKind = feature.get('userLocationKind') as 'accuracy' | 'position' | undefined;
 
   if (userLocationKind === 'accuracy') {
@@ -196,7 +200,9 @@ export function createUserLocationStyle(feature: FeatureLike, tokens: MapThemeTo
     new Style({
       image: new CircleStyle({
         radius: estimated ? 6 : 7,
-        fill: new Fill({ color: estimated ? tokens.userPositionEstimatedInnerFill : tokens.userPositionInnerFill }),
+        fill: new Fill({
+          color: estimated ? tokens.userPositionEstimatedInnerFill : tokens.userPositionInnerFill,
+        }),
         stroke: new Stroke({
           color: tokens.userPositionInnerStroke,
           width: 3,
@@ -207,7 +213,10 @@ export function createUserLocationStyle(feature: FeatureLike, tokens: MapThemeTo
   ];
 }
 
-export function getMarkerScale(map: { getView: () => { getZoom: () => number | undefined } } | undefined, compact: boolean): number {
+export function getMarkerScale(
+  map: { getView: () => { getZoom: () => number | undefined } } | undefined,
+  compact: boolean,
+): number {
   const zoom = map?.getView().getZoom() ?? (compact ? 13 : 12);
 
   if (zoom >= 13) {

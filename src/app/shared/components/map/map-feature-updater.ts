@@ -3,12 +3,7 @@ import CircleGeometry from 'ol/geom/Circle';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
-import {
-  Assignment,
-  MapLocation,
-  MapRouteSegment,
-  MapStop,
-} from './map.models';
+import { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
 
 export function getMarkerLabel(stop: MapStop): string {
   if (stop.kind === 'start') {
@@ -94,9 +89,8 @@ export function buildMarkerFeatures(args: {
   );
 
   return getRenderableStops(args.stops, args.assignments)
-    .filter(
-      (stop): stop is MapStop & { location: { lat: number; lon: number } } =>
-        args.hasValidCoordinates(stop),
+    .filter((stop): stop is MapStop & { location: { lat: number; lon: number } } =>
+      args.hasValidCoordinates(stop),
     )
     .map((stop) => {
       const assignment =

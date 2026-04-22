@@ -11,7 +11,8 @@
   --map-control-border: var(--border-2);
   --map-button-active-bg: var(--map-route-active-core);
   --map-button-active-fg: var(--text-1);
-  --map-button-active-shadow: 0 10px 24px color-mix(in srgb, var(--map-route-active-core) 28%, transparent);
+  --map-button-active-shadow: 0 10px 24px
+    color-mix(in srgb, var(--map-route-active-core) 28%, transparent);
 }
 
 :host-context(.dark) {

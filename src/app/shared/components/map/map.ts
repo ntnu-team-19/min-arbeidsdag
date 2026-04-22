@@ -25,12 +25,7 @@ import VectorSource from 'ol/source/Vector';
 import XYZ from 'ol/source/XYZ';
 import Style from 'ol/style/Style';
 import { ThemeService } from '../../../core/services/theme.service';
-import {
-  Assignment,
-  MapLocation,
-  MapRouteSegment,
-  MapStop,
-} from './map.models';
+import { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
 import {
   GeolocationPositionUpdate,
   GeolocationService,

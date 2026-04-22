@@ -1,13 +1,7 @@
 import { GeolocationPositionUpdate } from '../../../core/services/geolocation.service';
 import { MapLocation } from './map.models';
 
-export type UserTrackingMode =
-  | 'idle'
-  | 'locating'
-  | 'live'
-  | 'fallback'
-  | 'unavailable'
-  | 'denied';
+export type UserTrackingMode = 'idle' | 'locating' | 'live' | 'fallback' | 'unavailable' | 'denied';
 
 export interface TrackingState {
   mode: UserTrackingMode;
