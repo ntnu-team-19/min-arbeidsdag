@@ -67,6 +67,16 @@ describe('MiniAssignmentCard', () => {
     expect(text).toContain('08:30');
   });
 
+  it('should render the provided sequence number in the marker badge', () => {
+    fixture = TestBed.createComponent(MiniAssignmentCard);
+    component = fixture.componentInstance;
+    component.assignment = mockAssignment;
+    component.sequenceNumber = 4;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('4');
+  });
+
   it('should emit cardClick with assignment id when onCardClick is called', () => {
     const spy = vi.spyOn(component.cardClick, 'emit');
 
