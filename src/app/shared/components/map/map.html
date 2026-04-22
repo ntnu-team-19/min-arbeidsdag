@@ -1,5 +1,76 @@
 <div class="map-wrapper" [class.compact]="compact">
-  <div id="assignment-map" class="map"></div>
+  <div #mapElement class="map"></div>
+
+  @if (shouldShowControlsMenu || shouldShowFollowQuickAction) {
+    <div class="map-overlay map-overlay--top">
+      <div class="map-menu">
+        <div class="map-menu__stack">
+          @if (shouldShowControlsMenu) {
+            <div class="map-menu__settings">
+              <button
+                type="button"
+                class="map-menu__trigger surface-overlay border-theme-2 text-theme-primary"
+                [attr.aria-expanded]="controlsMenuOpen"
+                [attr.aria-label]="'map.openControlsMenu' | translate"
+                (click)="toggleControlsMenu()"
+              >
+                <i
+                  class="pi"
+                  [class.pi-sliders-h]="!controlsMenuOpen"
+                  [class.pi-times]="controlsMenuOpen"
+                ></i>
+              </button>
+
+              @if (controlsMenuOpen) {
+                <div class="map-menu__panel surface-overlay border-theme-2">
+                  @if (enableCompletedFilter) {
+                    <div class="map-control">
+                      <button
+                        type="button"
+                        class="map-follow-button map-follow-button--secondary"
+                        [attr.aria-pressed]="!showCompletedAssignments"
+                        (click)="onCompletedAssignmentsToggle()"
+                      >
+                        <i
+                          class="pi"
+                          [class.pi-eye-slash]="showCompletedAssignments"
+                          [class.pi-eye]="!showCompletedAssignments"
+                        ></i>
+                        <span>{{ completedAssignmentsLabelKey | translate }}</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (shouldShowFollowQuickAction) {
+            <div class="map-menu__follow">
+              <button
+                type="button"
+                class="map-follow-button map-follow-button--secondary map-follow-button--quick"
+                [class.map-follow-button--active]="followUserMode"
+                [disabled]="followButtonDisabled"
+                [attr.aria-pressed]="followUserMode"
+                [attr.aria-label]="followButtonLabelKey | translate"
+                [attr.title]="followButtonLabelKey | translate"
+                (click)="toggleFollowUserMode()"
+              >
+                <i class="pi pi-send"></i>
+              </button>
+
+              @if (userTrackingStatusKey) {
+                <div class="map-control__status text-theme-muted">
+                  {{ userTrackingStatusKey | translate }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 
   @if (mapError) {
     <div class="map-fallback">
