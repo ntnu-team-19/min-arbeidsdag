@@ -13,6 +13,10 @@ function isTomorrow(dateString: string | null): boolean {
   return target.toDateString() === tomorrow.toDateString();
 }
 
+function hasVisibleText(value: string | null | undefined): boolean {
+  return !!value?.trim();
+}
+
 export function mapDtoStatusToCardStatus(status: number): AssignmentStatus {
   // Based on your current domain note:
   // 1: ordered
@@ -56,6 +60,7 @@ export function formatTimeFromIso(dateString: string | null): string {
 
 export function mapAssignmentDetailsDtoToAssignmentCardModel(
   dto: AssignmentDetailsDto,
+  personalNote = '',
 ): Assignment {
   const status = isTomorrow(dto.showingStartDate)
     ? dto.tomorrowConfirmed
@@ -71,9 +76,10 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     time: formatTimeFromIso(dto.showingStartDate),
     duration: dto.editedTimeOnsite,
     address: `${dto.streetAddress}, ${dto.postalCode} ${dto.municipalityName}`,
-    phoneNumber: dto.showingContactPhone || 'Ikke oppgitt',
+    phoneNumber: dto.showingContactPhone || '',
     status,
     date: dto.showingStartDate ? dto.showingStartDate.split('T')[0] : 'Ukjent dato',
     locationPoint: dto.locationPoint ?? null,
+    hasNotesIndicator: hasVisibleText(personalNote) || hasVisibleText(dto.commentFromShower),
   };
 }

@@ -45,6 +45,7 @@ describe('AssignmentCard', () => {
     translateService.setTranslation('no', {
       status: {
         upcoming: 'Kommende oppdrag',
+        absence: 'Fravær',
         ongoing: 'Pågående oppdrag',
         next: 'Neste oppdrag',
         completed: 'Fullført oppdrag',
@@ -88,11 +89,34 @@ describe('AssignmentCard', () => {
     expect(text).toContain('+47 876 54 321');
   });
 
+  it('should show notes indicator when assignment has notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: true,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeTruthy();
+  });
+
+  it('should hide notes indicator when assignment has no notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: false,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeFalsy();
+  });
+
   // ── Status labels ──
 
   it('should show correct label for upcoming status', async () => {
     await createComponent({ ...mockAssignment, status: 'upcoming' });
     expect(component.currentStatus.label).toBe('status.upcoming');
+  });
+
+  it('should show correct label for absence status', async () => {
+    await createComponent({ ...mockAssignment, status: 'absence' });
+    expect(component.currentStatus.label).toBe('status.absence');
   });
 
   it('should show correct label for ongoing status', async () => {
@@ -130,6 +154,11 @@ describe('AssignmentCard', () => {
   it('should render circle icon for upcoming status', async () => {
     await createComponent({ ...mockAssignment, status: 'upcoming' });
     expect(fixture.debugElement.query(By.css('.pi-circle'))).toBeTruthy();
+  });
+
+  it('should render calendar icon for absence status', async () => {
+    await createComponent({ ...mockAssignment, status: 'absence' });
+    expect(fixture.debugElement.query(By.css('.pi-calendar'))).toBeTruthy();
   });
 
   it('should render circle icon for ongoing status', async () => {

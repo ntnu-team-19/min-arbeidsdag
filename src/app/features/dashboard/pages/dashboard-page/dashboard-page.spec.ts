@@ -18,6 +18,7 @@ import {
 } from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapRouteSegment } from '../../../../shared/components/map/map.models';
+import { AvailabilityService } from '../../../../core/services/availability.service';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
 
 const MOCK_CARDS: Assignment[] = [
@@ -132,6 +133,9 @@ describe('DashboardPage', () => {
   let routingServiceMock: {
     getRouteSegments: ReturnType<typeof vi.fn>;
   };
+  let availabilityServiceMock: {
+    getAvailabilitiesByDate: ReturnType<typeof vi.fn>;
+  };
 
   afterEach(() => {
     vi.useRealTimers();
@@ -151,6 +155,9 @@ describe('DashboardPage', () => {
     routingServiceMock = {
       getRouteSegments: vi.fn().mockReturnValue(of(MOCK_ROUTE_SEGMENTS)),
     };
+    availabilityServiceMock = {
+      getAvailabilitiesByDate: vi.fn().mockReturnValue(of([])),
+    };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPage, RouterModule.forRoot([])],
@@ -162,6 +169,10 @@ describe('DashboardPage', () => {
         {
           provide: RoutingService,
           useValue: routingServiceMock,
+        },
+        {
+          provide: AvailabilityService,
+          useValue: availabilityServiceMock,
         },
         {
           provide: ActivatedRoute,
@@ -206,6 +217,10 @@ describe('DashboardPage', () => {
         notSpecified: 'Ikke oppgitt',
         markConfirmed: 'Marker som bekreftet',
         markUnconfirmed: 'Marker som ikke bekreftet',
+      },
+      location: {
+        allDay: 'Hele dagen',
+        unknownTime: 'Ukjent tidspunkt',
       },
       dailyProgress: {
         todayTitle: 'Dagens fremdrift',
@@ -1043,5 +1058,64 @@ describe('DashboardPage', () => {
 
     expect(routeComponent.mapAssignments.length).toBe(4);
     expect(routeComponent.routeSegments).toEqual([]);
+  });
+
+  it('should place availability card between two upcoming assignments', () => {
+    const cardsWithTwoUpcoming: Assignment[] = [
+      ...MOCK_CARDS.slice(0, 3),
+      {
+        id: '5',
+        fieldTechId: 40231,
+        title: 'Kommende oppdrag 2',
+        shortDescription: 'Beskrivelse 5',
+        time: '15:00',
+        address: 'Adresse 5, 7032 Trondheim',
+        phoneNumber: '33333333',
+        status: 'upcoming',
+        date: '2026-03-20',
+        locationPoint: { x: 10.4301, y: 63.4058 },
+      },
+      MOCK_CARDS[3],
+    ];
+
+    assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
+      of(cardsWithTwoUpcoming),
+    );
+    assignmentServiceMock.getTravelTimesByDesiredDate.mockReturnValueOnce(of([15, 12, 10, 9, 8]));
+    availabilityServiceMock.getAvailabilitiesByDate.mockReturnValueOnce(
+      of([
+        {
+          start: '2026-03-20T14:15:00',
+          stop: '2026-03-20T14:45:00',
+          title: 'Tannlegetime',
+          shortDescription: 'Privat avtale.',
+          address: 'Tannlege',
+          phoneNumber: '',
+          calculatedTraveltime: 12,
+          available: false,
+          allDay: false,
+          absenceWithoutGoingHome: false,
+          locationPoint: null,
+        },
+      ]),
+    );
+
+    component.onDayChange('today');
+
+    const titles = component.assignmentCards.map((card) => card.title);
+    expect(titles).toEqual([
+      'Pågående oppdrag',
+      'Neste oppdrag',
+      'Kommende oppdrag',
+      'Tannlegetime',
+      'Kommende oppdrag 2',
+      'Fullført oppdrag',
+    ]);
+
+    const availabilityCard = component.assignmentCards.find(
+      (card) => card.title === 'Tannlegetime',
+    );
+    expect(availabilityCard).toBeTruthy();
+    expect(component.getTravelTimeForCard(availabilityCard!)).toBe(12);
   });
 });

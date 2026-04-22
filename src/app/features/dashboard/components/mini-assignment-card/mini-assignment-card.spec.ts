@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { MiniAssignmentCard } from './mini-assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MiniAssignmentCard', () => {
   let component: MiniAssignmentCard;
@@ -20,6 +20,7 @@ describe('MiniAssignmentCard', () => {
     phoneNumber: '12345678',
     status: 'ongoing',
     date: '2026-02-19',
+    locationPoint: { x: 10.3951, y: 63.4305 },
   };
 
   async function createComponent(assignment: Assignment = mockAssignment) {
@@ -77,6 +78,24 @@ describe('MiniAssignmentCard', () => {
     expect(fixture.nativeElement.textContent).toContain('4');
   });
 
+  it('should show notes indicator when assignment has notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: true,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeTruthy();
+  });
+
+  it('should hide notes indicator when assignment has no notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: false,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeFalsy();
+  });
+
   it('should emit cardClick with assignment id when onCardClick is called', () => {
     const spy = vi.spyOn(component.cardClick, 'emit');
 
@@ -121,6 +140,13 @@ describe('MiniAssignmentCard', () => {
     expect(directionsClickSpy).toHaveBeenCalledWith(mockAssignment);
   });
 
+  it('should hide directions button when assignment has no location', async () => {
+    await createComponent({ ...mockAssignment, locationPoint: null });
+
+    const buttons = fixture.debugElement.queryAll(By.css('button'));
+    expect(buttons).toHaveLength(1);
+  });
+
   it('should not fail if assignment is missing in onDirectionsClick', () => {
     const stopPropagation = vi.fn();
     const event = { stopPropagation } as unknown as MouseEvent;
@@ -143,6 +169,18 @@ describe('MiniAssignmentCard', () => {
     fixture.detectChanges();
 
     expect(component.currentStatus.label).toBe('status.completedShort');
+  });
+
+  it('should show absence status label when assignment status is absence', () => {
+    fixture = TestBed.createComponent(MiniAssignmentCard);
+    component = fixture.componentInstance;
+    component.assignment = {
+      ...mockAssignment,
+      status: 'absence',
+    };
+    fixture.detectChanges();
+
+    expect(component.currentStatus.label).toBe('status.absenceShort');
   });
 
   it('should show cancelled status label when assignment status is cancelled', () => {

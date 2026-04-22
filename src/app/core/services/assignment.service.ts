@@ -104,13 +104,17 @@ export class AssignmentService {
   }
 
   getAssignmentCards(): Observable<Assignment[]> {
-    const cards = this.getAllFromStorage().map(mapAssignmentDetailsDtoToAssignmentCardModel);
+    const personalNotes = this.getAllPersonalNotesFromStorage();
+    const cards = this.getAllFromStorage().map((dto) =>
+      mapAssignmentDetailsDtoToAssignmentCardModel(dto, personalNotes[String(dto.id)] ?? ''),
+    );
     return of(cards);
   }
 
   getAssignmentCardsByDesiredDate(date: string): Observable<Assignment[]> {
-    const cards = this.getSortedAssignmentsByDesiredDate(date).map(
-      mapAssignmentDetailsDtoToAssignmentCardModel,
+    const personalNotes = this.getAllPersonalNotesFromStorage();
+    const cards = this.getSortedAssignmentsByDesiredDate(date).map((dto) =>
+      mapAssignmentDetailsDtoToAssignmentCardModel(dto, personalNotes[String(dto.id)] ?? ''),
     );
 
     return of(cards);
@@ -199,6 +203,7 @@ export class AssignmentService {
     ongoing: 0,
     next: 1,
     upcoming: 1,
+    absence: 1,
     unconfirmed: 1,
     confirmed: 2,
     completed: 3,

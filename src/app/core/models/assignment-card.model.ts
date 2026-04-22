@@ -2,6 +2,7 @@ export type AssignmentStatus =
   | 'ongoing'
   | 'next'
   | 'upcoming'
+  | 'absence'
   | 'completed'
   | 'cancelled'
   | 'confirmed'
@@ -24,4 +25,6 @@ export interface Assignment {
   status: AssignmentStatus;
   date: string;
   locationPoint?: AssignmentLocationPoint | null;
+  hasNotesIndicator?: boolean;
+  isAvailability?: boolean;
 }

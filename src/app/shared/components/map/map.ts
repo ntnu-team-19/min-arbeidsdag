@@ -829,6 +829,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   private getMarkerStyle(feature: FeatureLike): Style | Style[] {
     const stopKind = feature.get('stopKind') as MapStopKind | undefined;
     const markerLabel = feature.get('markerLabel') as string | undefined;
+    const assignment = feature.get('assignment') as Assignment | undefined;
     const assignmentStatus = feature.get('assignmentStatus') as MapAssignmentStatus | undefined;
     const isFocusedAssignment = feature.get('isFocusedAssignment') === true;
     const markerScale = this.getMarkerScale();
@@ -846,19 +847,30 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       });
     }
 
+    const isAvailabilityStop =
+      stopKind === 'assignment' && this.isAvailabilityAssignmentId(assignment?.id);
+
     const radius =
       (stopKind === 'assignment' ? 16 : 13) * markerScale + (isFocusedAssignment ? 2 : 0);
     const fontSize = Math.max(10, Math.round(12 * markerScale));
     const isAssignment = stopKind === 'assignment';
+
     const palette =
-      isAssignment && assignmentStatus
-        ? this.getAssignmentMarkerPalette(assignmentStatus)
-        : {
-            fill: stopKind === 'end' ? '#D65A4A' : '#1F4E79',
-            text: '#FFFFFF',
-            halo: 'rgba(31, 78, 121, 0.2)',
-            stroke: '#FFFFFF',
-          };
+      isAvailabilityStop
+        ? {
+            fill: '#C7A27B',
+            text: '#4A2F1B',
+            halo: 'rgba(199, 162, 123, 0.22)',
+            stroke: '#F4E6D8',
+          }
+        : isAssignment && assignmentStatus
+          ? this.getAssignmentMarkerPalette(assignmentStatus)
+          : {
+              fill: stopKind === 'end' ? '#D65A4A' : '#1F4E79',
+              text: '#FFFFFF',
+              halo: 'rgba(31, 78, 121, 0.2)',
+              stroke: '#FFFFFF',
+            };
 
     const styles: Style[] = [];
 
@@ -1185,5 +1197,9 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
 
   private clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
+  }
+
+  private isAvailabilityAssignmentId(assignmentId: string | number | undefined): boolean {
+    return typeof assignmentId === 'string' && assignmentId.startsWith('availability-');
   }
 }

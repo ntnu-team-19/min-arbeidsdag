@@ -11,6 +11,8 @@
     "ongoing": "Pågående oppdrag",
     "next": "Neste oppdrag",
     "upcoming": "Kommende oppdrag",
+    "absence": "Fravær",
+    "absenceShort": "Fravær",
     "confirmed": "Bekreftet for i morgen",
     "confirmedShort": "Bekreftet",
     "completed": "Fullført oppdrag",
@@ -74,6 +76,7 @@
     "allDay": "Hele dagen",
     "validFrom": "Gyldig fra",
     "validUntil": "Gyldig til",
+    "unknownTime": "Ukjent tidspunkt",
     "unknownValidity": "Ukjent gyldighet",
     "leaveBy": "Dra hjemmefra",
     "leaveUnknown": "Ukjent avreisetid"
