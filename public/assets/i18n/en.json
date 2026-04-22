@@ -108,7 +108,15 @@
   },
   "map": {
     "loadError": "Unable to load map",
-    "loadErrorMessage": "Please check your internet connection and try again."
+    "loadErrorMessage": "Please check your internet connection and try again.",
+    "openControlsMenu": "Open map controls",
+    "followUser": "Follow user",
+    "stopFollowingUser": "Stop following",
+    "locatingUser": "Finding your live position...",
+    "locationPermissionDenied": "Live location is unavailable for this device.",
+    "locationUnavailable": "Unable to get a live position right now.",
+    "showCompletedAssignments": "Show completed on map",
+    "hideCompletedAssignments": "Hide completed on map"
   },
   "miniCard": {
     "showDirections": "Show directions"
