@@ -13,12 +13,18 @@
         class="surface-1 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-4"
         [ngClass]="currentStatus.dotClass"
       >
-        @switch (assignment.status) {
-          @case ('completed') {
-            <i class="pi pi-check text-sm"></i>
-          }
-          @case ('cancelled') {
-            <i class="pi pi-times text-sm"></i>
+        @if (sequenceNumber != null) {
+          <span class="text-xs font-bold">
+            {{ sequenceNumber }}
+          </span>
+        } @else {
+          @switch (assignment.status) {
+            @case ('completed') {
+              <i class="pi pi-check text-sm"></i>
+            }
+            @case ('cancelled') {
+              <i class="pi pi-times text-sm"></i>
+            }
           }
         }
       </div>
