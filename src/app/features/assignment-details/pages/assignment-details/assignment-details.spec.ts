@@ -110,7 +110,9 @@ describe('AssignmentDetailsPage', () => {
   it('should render a title in the top bar', async () => {
     await createComponent('1315598');
 
-    const topBarTitle = fixture.nativeElement.querySelector('.mb-4 p');
+    const topBarTitle = fixture.nativeElement.querySelector(
+      '[data-testid="assignment-details-title"]',
+    );
 
     expect(topBarTitle?.textContent).toContain('assignment.detailsTitle');
   });
