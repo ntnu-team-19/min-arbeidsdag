@@ -16,6 +16,10 @@ export const MOCK_AVAILABILITIES: AvailabilityDto[] = [
   {
     start: shiftDate('2026-02-18T14:15:00', TODAY),
     stop: shiftDate('2026-02-18T14:45:00', TODAY),
+    title: 'Tannlegetime',
+    shortDescription: 'Privat avtale.',
+    address: 'Tannlege',
+    phoneNumber: '',
     calculatedTraveltime: 12,
     available: false,
     allDay: false,

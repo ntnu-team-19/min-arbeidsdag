@@ -76,6 +76,7 @@
     "allDay": "Hele dagen",
     "validFrom": "Gyldig fra",
     "validUntil": "Gyldig til",
+    "unknownTime": "Ukjent tidspunkt",
     "unknownValidity": "Ukjent gyldighet",
     "leaveBy": "Dra hjemmefra",
     "leaveUnknown": "Ukjent avreisetid"

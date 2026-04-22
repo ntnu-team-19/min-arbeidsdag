@@ -76,6 +76,7 @@
     "allDay": "All day",
     "validFrom": "Valid from",
     "validUntil": "Valid until",
+    "unknownTime": "Unknown time",
     "unknownValidity": "Unknown validity",
     "leaveBy": "Leave home by",
     "leaveUnknown": "Unknown departure time"
