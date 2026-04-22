@@ -44,6 +44,7 @@ import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapLocation } from '../../../../shared/components/map/map.models';
 import { AvailabilityService } from '../../../../core/services/availability.service';
 import {
+  AvailabilityCardFormattingOptions,
   isAvailabilityCardId,
   mapAvailabilityDtoToAssignmentCardModel,
 } from '../../../../core/mappers/availability-card.mapper';
@@ -367,6 +368,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     return date.toISOString().slice(0, 10);
   }
 
+  private getAvailabilityFormattingOptions(): AvailabilityCardFormattingOptions {
+    const activeLang = this.translate.currentLang || this.translate.getDefaultLang();
+
+    return {
+      locale: activeLang === 'no' || activeLang === 'nb' ? 'nb-NO' : 'en-GB',
+      allDayLabel: this.translate.instant('location.allDay'),
+      unknownTimeLabel: this.translate.instant('location.unknownTime'),
+    };
+  }
+
   private loadAssignmentsForSelectedDay(): void {
     const loadVersion = ++this.loadVersion;
     this.clearPendingCardScroll();
@@ -389,7 +400,10 @@ export class DashboardPage implements OnInit, OnDestroy {
           return;
         }
 
-        const availabilityCards = availabilities.map(mapAvailabilityDtoToAssignmentCardModel);
+        const availabilityFormattingOptions = this.getAvailabilityFormattingOptions();
+        const availabilityCards = availabilities.map((availability) =>
+          mapAvailabilityDtoToAssignmentCardModel(availability, availabilityFormattingOptions),
+        );
         this.assignmentCards = this.mergeCardsWithAvailability(cards, availabilityCards);
         this.travelTimes = travelTimes;
         this.travelTimesByAssignmentId = new Map([

@@ -34,7 +34,7 @@ export class AvailabilityService {
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.map((item) => this.normalizeAvailability(item));
+        return parsed as AvailabilityDto[];
       }
     } catch {
       // fall through to re-seed below
@@ -42,23 +42,5 @@ export class AvailabilityService {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_AVAILABILITIES));
     return MOCK_AVAILABILITIES;
-  }
-
-  private normalizeAvailability(item: unknown): AvailabilityDto {
-    const source = (item ?? {}) as Partial<AvailabilityDto>;
-
-    return {
-      start: source.start ?? '',
-      stop: source.stop ?? '',
-      calculatedTraveltime:
-        typeof source.calculatedTraveltime === 'number' &&
-        Number.isFinite(source.calculatedTraveltime)
-          ? source.calculatedTraveltime
-          : 0,
-      available: source.available ?? false,
-      allDay: source.allDay ?? false,
-      absenceWithoutGoingHome: source.absenceWithoutGoingHome ?? false,
-      locationPoint: source.locationPoint ?? null,
-    };
   }
 }
