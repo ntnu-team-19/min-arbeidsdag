@@ -24,7 +24,7 @@
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
         ) {
           <hr class="border-theme-2 mx-9 my-10 border-t-2" />
-        } @else if (travelTimes[i] !== undefined && card.status !== 'completed') {
+        } @else if (shouldShowTravelTimeIndicator(card, i)) {
           <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
         }
         <app-assignment-card
@@ -35,14 +35,21 @@
       }
     </div>
   } @else {
-    <div class="map-stage">
+    <div #mapStage class="map-stage">
       <app-assignment-map
         [assignments]="mapAssignments"
         [stops]="mapStops"
-        [routeSegments]="routeSegments"
+        [routeSegments]="displayedRouteSegments"
         [activeSegmentId]="activeRouteSegmentId"
+        [focusedAssignmentId]="focusedAssignmentId"
+        [overviewBottomInsetRatio]="overviewBottomInsetRatio"
+        [enableUserTracking]="true"
+        [enableCompletedFilter]="true"
+        [showCompletedAssignments]="showCompletedAssignments"
+        [fallbackUserLocation]="fallbackUserLocation"
         [compact]="false"
         (markerClicked)="onMarkerClicked($event)"
+        (completedAssignmentsToggle)="onCompletedAssignmentsToggle()"
       ></app-assignment-map>
 
       <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
@@ -63,7 +70,7 @@
           }
 
           @for (assignment of assignmentCards; track assignment.id; let i = $index) {
-            @if (travelTimes[i] !== undefined) {
+            @if (shouldShowTravelTimeIndicator(assignment, i)) {
               <app-travel-time-indicator [travelTimeMinutes]="travelTimes[i]" />
             }
             <div
@@ -73,6 +80,7 @@
             >
               <app-mini-assignment-card
                 [assignment]="assignment"
+                [sequenceNumber]="getAssignmentSequenceNumber(assignment.id)"
                 (cardClick)="goToAssignmentDetails($event)"
                 (directionsClick)="onMiniAssignmentDirectionsClick($event)"
               />
