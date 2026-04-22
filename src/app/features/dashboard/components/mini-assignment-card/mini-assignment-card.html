@@ -42,12 +42,23 @@
       </div>
     </div>
 
-    <button
-      type="button"
-      class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
-      (click)="onDirectionsClick($event)"
-    >
-      {{ 'miniCard.showDirections' | translate }}
-    </button>
+    <div class="flex items-center gap-2 shrink-0">
+      @if (assignment.hasNotesIndicator) {
+        <span
+          class="surface-overlay border-theme-2 text-theme-secondary inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border shadow-sm"
+          title="Har notater eller meldinger"
+        >
+          <i class="pi pi-comment text-[0.75rem]"></i>
+        </span>
+      }
+
+      <button
+        type="button"
+        class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
+        (click)="onDirectionsClick($event)"
+      >
+        {{ 'miniCard.showDirections' | translate }}
+      </button>
+    </div>
   </div>
 </button>
