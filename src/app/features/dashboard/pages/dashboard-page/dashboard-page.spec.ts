@@ -212,6 +212,10 @@ describe('DashboardPage', () => {
         markConfirmed: 'Marker som bekreftet',
         markUnconfirmed: 'Marker som ikke bekreftet',
       },
+      location: {
+        allDay: 'Hele dagen',
+        unknownTime: 'Ukjent tidspunkt',
+      },
       dailyProgress: {
         todayTitle: 'Dagens fremdrift',
         tomorrowTitle: 'Morgendagens oversikt',
@@ -597,6 +601,10 @@ describe('DashboardPage', () => {
         {
           start: '2026-03-20T14:15:00',
           stop: '2026-03-20T14:45:00',
+          title: 'Tannlegetime',
+          shortDescription: 'Privat avtale.',
+          address: 'Tannlege',
+          phoneNumber: '',
           calculatedTraveltime: 12,
           available: false,
           allDay: false,

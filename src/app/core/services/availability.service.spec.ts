@@ -63,21 +63,36 @@ describe('AvailabilityService', () => {
     expect(result[0].start).toBe(MOCK_AVAILABILITIES[0].start);
   });
 
-  it('should default calculatedTraveltime to 0 for legacy availability entries', async () => {
-    const legacyAvailability = {
+  it('should not overwrite existing localStorage data', async () => {
+    const customAvailability = {
       ...MOCK_AVAILABILITIES[0],
-      calculatedTraveltime: undefined,
+      title: 'Legetime',
+      shortDescription: 'Skal ikke overskrives',
+      address: 'St. Olavs gate 1',
+      phoneNumber: '99999999',
     };
 
-    storage.setItem(STORAGE_KEY, JSON.stringify([legacyAvailability]));
+    storage.setItem(STORAGE_KEY, JSON.stringify([customAvailability]));
     const newService = new AvailabilityService();
 
+    const result = await firstValueFrom(
+      newService.getAvailabilitiesByDate(customAvailability.start.slice(0, 10)),
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(customAvailability);
+  });
+
+  it('should recover from malformed availability storage data', async () => {
+    storage.setItem(STORAGE_KEY, '{bad json');
+
+    const newService = new AvailabilityService();
     const result = await firstValueFrom(
       newService.getAvailabilitiesByDate(MOCK_AVAILABILITIES[0].start.slice(0, 10)),
     );
 
-    expect(result).toHaveLength(1);
-    expect(result[0].calculatedTraveltime).toBe(0);
+    expect(result).toEqual(MOCK_AVAILABILITIES);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!)).toEqual(MOCK_AVAILABILITIES);
   });
 });
 
