@@ -147,6 +147,12 @@ describe('AssignmentService', () => {
 
   it('should return mapped assignment cards', async () => {
     storage.setItem(STORAGE_KEY, JSON.stringify(mockStoredAssignments));
+    storage.setItem(
+      PERSONAL_NOTES_STORAGE_KEY,
+      JSON.stringify({
+        1315598: 'Husk å sjekke kabelskap',
+      }),
+    );
     const newService = new AssignmentService();
 
     const result = await firstValueFrom(newService.getAssignmentCards());
@@ -156,6 +162,35 @@ describe('AssignmentService', () => {
     expect(result[0].title).toBe('Test telenor api 10');
     expect(result[0].address).toContain('Fagertunvegen 5');
     expect(result[0].phoneNumber).toBe('41414141');
+    expect(result[0].hasNotesIndicator).toBe(true);
+    expect(result[1].hasNotesIndicator).toBe(false);
+  });
+
+  it('should show notes indicator for coordinator messages and personal notes', async () => {
+    storage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        {
+          ...mockStoredAssignments[0],
+          commentFromShower: 'Melding fra koordinator',
+        },
+        {
+          ...mockStoredAssignments[1],
+        },
+      ]),
+    );
+    storage.setItem(
+      PERSONAL_NOTES_STORAGE_KEY,
+      JSON.stringify({
+        1316076: 'Ta med ekstra materiell',
+      }),
+    );
+    const newService = new AssignmentService();
+
+    const result = await firstValueFrom(newService.getAssignmentCards());
+
+    expect(result[0].hasNotesIndicator).toBe(true);
+    expect(result[1].hasNotesIndicator).toBe(true);
   });
 
   it('should filter assignment cards by desired date', async () => {
