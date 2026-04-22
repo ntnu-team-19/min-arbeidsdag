@@ -42,35 +42,41 @@
             (markerClicked)="onMarkerClicked($event)"
           ></app-assignment-map>
 
-          <div class="surface-overlay absolute right-4 top-4 z-20 rounded-2xl p-3 shadow-md">
-            <div class="text-theme-primary text-base font-semibold">
-              {{ assignment.streetAddress }}
-            </div>
-            <div class="text-theme-secondary text-sm">
-              {{ assignment.municipalityName }}
-            </div>
+          <div class="details-map-overlay absolute right-3 top-3 z-20 md:right-4 md:top-4">
+            <div class="details-map-overlay-card surface-overlay rounded-2xl p-2 shadow-md">
+              <div class="details-map-address min-w-0">
+                <i class="pi pi-map-marker text-theme-primary text-sm" aria-hidden="true"></i>
+                <div class="min-w-0">
+                  <div class="text-theme-primary details-map-street truncate text-sm font-semibold">
+                    {{ assignment.streetAddress }}
+                  </div>
+                  <div class="text-theme-secondary truncate text-xs">
+                    {{ assignment.municipalityName }}
+                  </div>
+                </div>
+              </div>
 
-            <button
-              pButton
-              type="button"
-              [label]="'assignment.showDirections' | translate"
-              icon="pi pi-directions"
-              severity="secondary"
-              class="theme-secondary-button mt-3 rounded-full"
-              (click)="openDirections()"
-              [attr.aria-label]="'assignment.showDirections' | translate"
-            ></button>
-          </div>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-directions"
+                severity="secondary"
+                class="theme-secondary-button details-map-directions details-map-directions-compact rounded-full"
+                (click)="openDirections()"
+                [attr.aria-label]="'assignment.showDirections' | translate"
+              ></button>
 
-          <div class="absolute bottom-4 right-4 z-20">
-            <button
-              pButton
-              type="button"
-              icon="pi pi-expand"
-              severity="secondary"
-              [rounded]="true"
-              [attr.aria-label]="'assignment.expandMap' | translate"
-            ></button>
+              <button
+                pButton
+                type="button"
+                [label]="'assignment.showDirections' | translate"
+                icon="pi pi-directions"
+                severity="secondary"
+                class="theme-secondary-button details-map-directions details-map-directions-full rounded-full"
+                (click)="openDirections()"
+                [attr.aria-label]="'assignment.showDirections' | translate"
+              ></button>
+            </div>
           </div>
         </div>
 
@@ -94,7 +100,7 @@
             </h1>
 
             <p class="text-theme-secondary mt-2 text-lg">
-              {{ assignment.date }} • {{ assignment.startTime }}
+              {{ assignment.date }} <br> {{ assignment.startTime }}
               @if (assignment.endTime) {
                 - {{ assignment.endTime }}
               }
