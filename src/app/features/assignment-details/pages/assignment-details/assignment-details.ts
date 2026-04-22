@@ -46,6 +46,8 @@ export class AssignmentDetailsPage implements OnInit {
   private readonly noteSaveDelayMs = 500;
 
   ngOnInit(): void {
+    this.resetScrollPosition();
+
     const id = this.route.snapshot.paramMap.get('id');
 
     if (!id) {
@@ -64,6 +66,12 @@ export class AssignmentDetailsPage implements OnInit {
         this.updateMapAssignments();
         this.loadPersonalNote();
       });
+  }
+
+  private resetScrollPosition(): void {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }
 
   goBack(): void {

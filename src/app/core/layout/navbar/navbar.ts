@@ -1,4 +1,4 @@
-import { Component, HostBinding, HostListener, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { DrawerModule } from 'primeng/drawer';
@@ -27,22 +27,6 @@ export class Navbar {
   private router = inject(Router);
   private translate = inject(TranslateService);
   private themeService = inject(ThemeService);
-
-  // Toggles 'navbar-hidden' class on host element to hide/show navbar
-  @HostBinding('class.navbar-hidden')
-  isHidden = false;
-
-  private lastScrollY = 0;
-  private scrollThreshold = 10;
-
-  @HostListener('window:scroll')
-  onScroll() {
-    const currentScrollY = window.scrollY;
-    const delta = currentScrollY - this.lastScrollY;
-    if (Math.abs(delta) < this.scrollThreshold) return;
-    this.isHidden = delta > 0 && currentScrollY > 64;
-    this.lastScrollY = currentScrollY;
-  }
 
   get currentLang() {
     return this.translate.currentLang ?? this.translate.defaultLang;

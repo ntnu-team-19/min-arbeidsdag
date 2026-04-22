@@ -55,7 +55,6 @@ describe('Navbar', () => {
     expect(component.menuOpen).toBe(false);
     expect(component.darkMode).toBe(false);
     expect(component.currentLang).toBe('no');
-    expect(component.isHidden).toBe(false);
   });
 
   // ── Logo ──
@@ -176,38 +175,6 @@ describe('Navbar', () => {
 
     expect(component.currentLang).toBeTruthy();
     expect(localStorageSetItemSpy).not.toHaveBeenCalled();
-  });
-
-  it('should hide navbar on scroll down and show on scroll up', () => {
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(100);
-    component.onScroll();
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(200);
-    component.onScroll();
-    expect(component.isHidden).toBe(true);
-
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(180);
-    component.onScroll();
-    expect(component.isHidden).toBe(false);
-  });
-
-  it('should not hide navbar when near the top of the page', () => {
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
-    component.onScroll();
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(50);
-    component.onScroll();
-    expect(component.isHidden).toBe(false);
-  });
-
-  it('should ignore scroll deltas smaller than threshold', () => {
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(100);
-    component.onScroll();
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(200);
-    component.onScroll();
-    expect(component.isHidden).toBe(true);
-
-    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(195);
-    component.onScroll();
-    expect(component.isHidden).toBe(true);
   });
 
   // ── Cleanup ──

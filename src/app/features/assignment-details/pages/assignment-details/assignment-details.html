@@ -15,24 +15,22 @@
       ></button>
     </div>
   } @else if (assignment) {
-    <div class="mx-auto max-w-6xl p-4 md:p-6">
-      <!-- Top bar -->
-      <div class="mb-4 flex items-center gap-3">
-        <button
-          pButton
-          type="button"
-          [label]="'assignment.back' | translate"
-          icon="pi pi-arrow-left"
-          severity="secondary"
-          class="theme-secondary-button shrink-0 rounded-lg"
-          (click)="goBack()"
-          aria-label="tilbake-knapp"
-        ></button>
+    <div class="assignment-details-shell mx-auto max-w-6xl p-4 md:p-6">
+      <button
+        type="button"
+        class="details-back-fab"
+        (click)="goBack()"
+        [attr.aria-label]="'assignment.back' | translate"
+      >
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      </button>
 
-        <p class="text-theme-primary min-w-0 truncate text-xl font-semibold md:text-2xl">
-          {{ 'assignment.detailsTitle' | translate }}
-        </p>
-      </div>
+      <p
+        class="text-theme-primary mb-4 min-w-0 truncate text-xl font-semibold md:text-2xl"
+        data-testid="assignment-details-title"
+      >
+        {{ 'assignment.detailsTitle' | translate }}
+      </p>
 
       <!-- Map section -->
       <section class="surface-1 overflow-hidden rounded-2xl shadow-sm">
@@ -44,35 +42,41 @@
             (markerClicked)="onMarkerClicked($event)"
           ></app-assignment-map>
 
-          <div class="surface-overlay absolute right-4 top-4 z-20 rounded-2xl p-3 shadow-md">
-            <div class="text-theme-primary text-base font-semibold">
-              {{ assignment.streetAddress }}
-            </div>
-            <div class="text-theme-secondary text-sm">
-              {{ assignment.municipalityName }}
-            </div>
+          <div class="details-map-overlay absolute right-3 top-3 z-20 md:right-4 md:top-4">
+            <div class="details-map-overlay-card surface-overlay rounded-2xl p-2 shadow-md">
+              <div class="details-map-address min-w-0">
+                <i class="pi pi-map-marker text-theme-primary text-sm" aria-hidden="true"></i>
+                <div class="min-w-0">
+                  <div class="text-theme-primary details-map-street truncate text-sm font-semibold">
+                    {{ assignment.streetAddress }}
+                  </div>
+                  <div class="text-theme-secondary truncate text-xs">
+                    {{ assignment.municipalityName }}
+                  </div>
+                </div>
+              </div>
 
-            <button
-              pButton
-              type="button"
-              [label]="'assignment.showDirections' | translate"
-              icon="pi pi-directions"
-              severity="secondary"
-              class="theme-secondary-button mt-3 rounded-full"
-              (click)="openDirections()"
-              [attr.aria-label]="'assignment.showDirections' | translate"
-            ></button>
-          </div>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-directions"
+                severity="secondary"
+                class="theme-secondary-button details-map-directions details-map-directions-compact rounded-full"
+                (click)="openDirections()"
+                [attr.aria-label]="'assignment.showDirections' | translate"
+              ></button>
 
-          <div class="absolute bottom-4 right-4 z-20">
-            <button
-              pButton
-              type="button"
-              icon="pi pi-expand"
-              severity="secondary"
-              [rounded]="true"
-              [attr.aria-label]="'assignment.expandMap' | translate"
-            ></button>
+              <button
+                pButton
+                type="button"
+                [label]="'assignment.showDirections' | translate"
+                icon="pi pi-directions"
+                severity="secondary"
+                class="theme-secondary-button details-map-directions details-map-directions-full rounded-full"
+                (click)="openDirections()"
+                [attr.aria-label]="'assignment.showDirections' | translate"
+              ></button>
+            </div>
           </div>
         </div>
 
@@ -96,7 +100,8 @@
             </h1>
 
             <p class="text-theme-secondary mt-2 text-lg">
-              {{ assignment.date }} • {{ assignment.startTime }}
+              {{ assignment.date }} <br />
+              {{ assignment.startTime }}
               @if (assignment.endTime) {
                 - {{ assignment.endTime }}
               }
