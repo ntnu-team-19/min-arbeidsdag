@@ -14,7 +14,7 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
+import { forkJoin, map } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import {
@@ -33,8 +33,13 @@ import {
   EMPTY_DAILY_PROGRESS_SUMMARY,
 } from '../../../../core/models/daily-progress.model';
 import { AssignmentService } from '../../../../core/services/assignment.service';
-import { MapBottomSheet } from '../../components/map-bottom-sheet/map-bottom-sheet';
-import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
+import {
+  MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT,
+  MAP_BOTTOM_SHEET_EXPANDED_RATIO,
+  MAP_BOTTOM_SHEET_PEEK_RATIO,
+  MapBottomSheet,
+  SnapPoint,
+} from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { TravelTimeIndicator } from '../../components/travel-time-indicator/travel-time-indicator';
 import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-assignment-card';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
@@ -68,6 +73,7 @@ const CARD_HIGHLIGHT_DELAY_AFTER_SCROLL_MS = 180;
 export class DashboardPage implements OnInit, OnDestroy {
   @ViewChild(AssignmentMap) private assignmentMap?: AssignmentMap;
   @ViewChild(MapBottomSheet) private mapBottomSheet?: MapBottomSheet;
+  @ViewChild('mapStage', { read: ElementRef }) private mapStageRef?: ElementRef<HTMLElement>;
   @ViewChildren('miniAssignmentCardRow', { read: ElementRef })
   private miniAssignmentCardRows?: QueryList<ElementRef<HTMLElement>>;
 
@@ -79,8 +85,15 @@ export class DashboardPage implements OnInit, OnDestroy {
   technicianLocations: TechnicianLocation[] = [];
   mapAssignments: MapAssignment[] = [];
   mapStops: MapStop[] = [];
+  allDayMapStops: MapStop[] = [];
   routeSegments: MapRouteSegment[] = [];
+  allRouteSegments: MapRouteSegment[] = [];
+  focusedRouteSegment: MapRouteSegment | null = null;
   activeRouteSegmentId: string | null = null;
+  focusedAssignmentId: string | null = null;
+  showCompletedAssignments = true;
+  currentMapSheetSnap: SnapPoint = 'peek';
+  assignmentSequenceNumbers: Record<string, number> = {};
 
   private assignmentService = inject(AssignmentService);
   private routingService = inject(RoutingService);
@@ -108,6 +121,32 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   get startTechnicianLocation(): TechnicianLocation | undefined {
     return this.technicianLocations.find((location) => location.role === 'start');
+  }
+
+  get fallbackUserLocation(): MapLocation | null {
+    return this.startTechnicianLocation?.location ?? DEFAULT_TECHNICIAN_BASE;
+  }
+
+  get overviewBottomInsetRatio(): number {
+    switch (this.currentMapSheetSnap) {
+      case 'expanded':
+        return 1 - MAP_BOTTOM_SHEET_EXPANDED_RATIO;
+      case 'collapsed':
+        return MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT / this.getMapStageHeight();
+      case 'peek':
+      default:
+        return 1 - MAP_BOTTOM_SHEET_PEEK_RATIO;
+    }
+  }
+
+  get displayedRouteSegments(): MapRouteSegment[] {
+    if (!this.focusedRouteSegment) {
+      return this.routeSegments;
+    }
+
+    return this.routeSegments.some((segment) => segment.id === this.focusedRouteSegment!.id)
+      ? this.routeSegments
+      : [...this.routeSegments, this.focusedRouteSegment];
   }
 
   get shouldShowStartLocationCard(): boolean {
@@ -157,6 +196,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
 
     return `${this.translate.instant('location.leaveBy')} ${leaveTime}`;
+  }
+
+  getAssignmentSequenceNumber(assignmentId: string): number | null {
+    return this.assignmentSequenceNumbers[assignmentId] ?? null;
+  }
+
+  shouldShowTravelTimeIndicator(assignment: Assignment, index: number): boolean {
+    const travelMinutes = this.travelTimes[index];
+
+    return (
+      typeof travelMinutes === 'number' &&
+      Number.isFinite(travelMinutes) &&
+      assignment.status !== 'completed'
+    );
   }
 
   private parseAssignmentStartTime(timeValue: string | undefined): Date | undefined {
@@ -227,19 +280,15 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     const assignmentId = String(assignment.id);
-    const currentStop = this.findAssignmentStop(assignmentId);
-    const previousStop = currentStop ? this.findPreviousStop(currentStop.id) : undefined;
-    this.activeRouteSegmentId =
-      currentStop && previousStop ? buildRouteSegmentId(previousStop.id, currentStop.id) : null;
-    const activeRouteSegment = this.activeRouteSegmentId
-      ? this.routeSegments.find((segment) => segment.id === this.activeRouteSegmentId)
-      : undefined;
+    this.focusedAssignmentId = assignmentId;
+    const { currentStop, previousStop, routeSegment } =
+      this.resolveFocusedRouteContext(assignmentId);
 
-    if (currentStop) {
+    if (currentStop && previousStop && routeSegment) {
       this.assignmentMap?.focusAssignmentLeg({
         fromStop: previousStop,
         toStop: currentStop,
-        routeSegment: activeRouteSegment,
+        routeSegment,
         targetYRatio: MAP_MARKER_FOCUS_TARGET_Y_RATIO,
       });
     } else {
@@ -252,6 +301,11 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   onMiniAssignmentDirectionsClick(assignment: Assignment): void {
+    if (assignment.status === 'completed' && !this.showCompletedAssignments) {
+      this.showCompletedAssignments = true;
+      this.refreshMapData(this.loadVersion);
+    }
+
     const matchingMapAssignment = this.mapAssignments.find(
       (mapAssignment) => String(mapAssignment.id) === assignment.id,
     );
@@ -271,31 +325,32 @@ export class DashboardPage implements OnInit, OnDestroy {
       name: assignment.title,
       location,
       description: assignment.address,
+      status: assignment.status,
     });
   }
 
   onViewChange(listView: boolean) {
     this.isListView = listView;
-    if (listView) {
-      this.clearPendingCardScroll();
-      this.clearPendingCardHighlight();
-      this.clearMarkerCardFocus();
-      this.activeRouteSegmentId = null;
-    }
+    this.clearCardInteractionState();
+    this.clearMapSelectionState();
     this.updateQueryParams();
     this.updatePageScrollLock();
   }
 
-  onSnapChanged(snap: 'collapsed' | 'peek' | 'expanded') {
-    console.log('Bottom sheet snap:', snap);
+  onCompletedAssignmentsToggle(): void {
+    this.showCompletedAssignments = !this.showCompletedAssignments;
+    this.clearCardInteractionState();
+    this.refreshMapData(this.loadVersion);
+  }
+
+  onSnapChanged(snap: SnapPoint) {
+    this.currentMapSheetSnap = snap;
   }
 
   @HostListener('document:pointerdown')
   @HostListener('document:wheel')
   onUserInteractionStart(): void {
-    this.clearPendingCardScroll();
-    this.clearPendingCardHighlight();
-    this.clearMarkerCardFocus();
+    this.clearCardInteractionState();
   }
 
   goToAssignmentDetails(id: string): void {
@@ -358,11 +413,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   private loadAssignmentsForSelectedDay(): void {
     const loadVersion = ++this.loadVersion;
-    this.clearPendingCardScroll();
-    this.clearPendingCardHighlight();
-    this.clearMarkerCardFocus();
-    this.activeRouteSegmentId = null;
+    this.clearCardInteractionState();
+    this.clearMapSelectionState();
+    this.mapStops = [];
+    this.allDayMapStops = [];
     this.routeSegments = [];
+    this.allRouteSegments = [];
     const date = this.getDateForDay(this.selectedDay);
 
     forkJoin({
@@ -378,35 +434,81 @@ export class DashboardPage implements OnInit, OnDestroy {
         }
 
         this.assignmentCards = cards;
+        this.assignmentSequenceNumbers = this.buildAssignmentSequenceNumbers(cards);
         this.travelTimes = travelTimes;
         this.dailyProgress = progress;
         this.technicianLocations = technicianLocations;
-        this.mapAssignments = cards
-          .filter((card) => card.locationPoint)
-          .map((card) => ({
-            id: card.id,
-            name: card.title,
-            location: {
-              lat: card.locationPoint!.y,
-              lon: card.locationPoint!.x,
-            },
-            description: card.address,
-          }));
-        this.mapStops = this.buildMapStops(cards, technicianLocations);
-        this.loadRouteSegments(this.mapStops, loadVersion);
+        this.refreshMapData(loadVersion);
       });
   }
 
-  private loadRouteSegments(stops: MapStop[], loadVersion: number): void {
-    this.routingService
-      .getRouteSegments(stops)
+  private refreshMapData(loadVersion: number): void {
+    const visibleCards = this.getVisibleMapAssignments(this.assignmentCards);
+    this.allDayMapStops = this.buildMapStops(
+      this.assignmentCards,
+      this.technicianLocations,
+      this.assignmentSequenceNumbers,
+    );
+
+    this.mapAssignments = visibleCards
+      .filter((card) => card.locationPoint)
+      .map((card) => ({
+        id: card.id,
+        name: card.title,
+        location: {
+          lat: card.locationPoint!.y,
+          lon: card.locationPoint!.x,
+        },
+        description: card.address,
+        status: card.status,
+      }));
+
+    this.mapStops = this.buildMapStops(
+      visibleCards,
+      this.technicianLocations,
+      this.assignmentSequenceNumbers,
+    );
+
+    if (
+      this.focusedAssignmentId &&
+      !visibleCards.some((card) => card.id === this.focusedAssignmentId)
+    ) {
+      this.focusedAssignmentId = null;
+      this.activeRouteSegmentId = null;
+      this.focusedRouteSegment = null;
+    }
+
+    this.loadRouteSegments(this.mapStops, this.allDayMapStops, loadVersion);
+  }
+
+  private loadRouteSegments(visibleStops: MapStop[], allStops: MapStop[], loadVersion: number): void {
+    const visibleSegments$ = this.routingService.getRouteSegments(visibleStops);
+    const useSharedSegments = this.haveSameStopIds(visibleStops, allStops);
+
+    const routeSegments$ = useSharedSegments
+      ? forkJoin({
+        visibleSegments: visibleSegments$,
+        }).pipe(
+          map(({ visibleSegments }) => ({
+            visibleSegments,
+            allSegments: visibleSegments,
+          })),
+        )
+      : forkJoin({
+          visibleSegments: visibleSegments$,
+          allSegments: this.routingService.getRouteSegments(allStops),
+        });
+
+    routeSegments$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((segments) => {
+      .subscribe(({ visibleSegments, allSegments }) => {
         if (loadVersion !== this.loadVersion) {
           return;
         }
 
-        this.routeSegments = segments;
+        this.routeSegments = visibleSegments;
+        this.allRouteSegments = allSegments ?? visibleSegments;
+        this.syncFocusedRouteSelection();
       });
   }
 
@@ -458,16 +560,35 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.highlightedCardElement = undefined;
   }
 
-  private buildMapStops(cards: Assignment[], technicianLocations: TechnicianLocation[]): MapStop[] {
+  private clearCardInteractionState(): void {
+    this.clearPendingCardScroll();
+    this.clearPendingCardHighlight();
+    this.clearMarkerCardFocus();
+  }
+
+  private clearMapSelectionState(): void {
+    this.activeRouteSegmentId = null;
+    this.focusedAssignmentId = null;
+    this.focusedRouteSegment = null;
+  }
+
+  private buildMapStops(
+    cards: Assignment[],
+    technicianLocations: TechnicianLocation[],
+    sequenceNumbers: Record<string, number>,
+  ): MapStop[] {
     if (cards.length === 0) {
       return [];
     }
 
+    const orderedCards = this.sortCardsBySequenceNumber(cards, sequenceNumbers);
     const startLocation = technicianLocations.find((location) => location.role === 'start');
     const endLocation = technicianLocations.find((location) => location.role === 'end');
-    const baseLocation = startLocation?.location ?? this.toMapLocation(cards[0]);
+    const baseLocation = startLocation?.location ?? this.toMapLocation(orderedCards[0]);
     const terminalLocation = endLocation?.location ?? baseLocation;
-    const assignmentStops = cards.map((card, index) => this.buildAssignmentStop(card, index + 1));
+    const assignmentStops = orderedCards.map((card) =>
+      this.buildAssignmentStop(card, sequenceNumbers[card.id] ?? null),
+    );
 
     return [
       {
@@ -486,15 +607,82 @@ export class DashboardPage implements OnInit, OnDestroy {
     ];
   }
 
-  private buildAssignmentStop(card: Assignment, sequenceNumber: number): MapStop {
+  private buildAssignmentStop(card: Assignment, sequenceNumber: number | null): MapStop {
     return {
       id: `assignment-${card.id}`,
       kind: 'assignment',
       label: card.title,
       assignmentId: card.id,
-      sequenceNumber,
+      sequenceNumber: sequenceNumber ?? undefined,
       location: this.toMapLocation(card),
     };
+  }
+
+  private buildAssignmentSequenceNumbers(cards: Assignment[]): Record<string, number> {
+    const orderedCards = this.sortCardsByTime(cards);
+
+    return orderedCards.reduce<Record<string, number>>((lookup, entry, index) => {
+      const { card } = entry;
+      lookup[card.id] = index + 1;
+      return lookup;
+    }, {});
+  }
+
+  private toTimeOfDayMinutes(timeValue: string | undefined): number {
+    if (!timeValue) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    const match = /^(\d{1,2}):(\d{2})$/.exec(timeValue.trim());
+    if (!match) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours > 23 || minutes > 59) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    return hours * 60 + minutes;
+  }
+
+  private sortCardsBySequenceNumber(
+    cards: Assignment[],
+    sequenceNumbers: Record<string, number>,
+  ): Assignment[] {
+    return [...cards].sort((firstCard, secondCard) => {
+      const firstSequence = sequenceNumbers[firstCard.id] ?? Number.MAX_SAFE_INTEGER;
+      const secondSequence = sequenceNumbers[secondCard.id] ?? Number.MAX_SAFE_INTEGER;
+
+      if (firstSequence !== secondSequence) {
+        return firstSequence - secondSequence;
+      }
+
+      return this.toTimeOfDayMinutes(firstCard.time) - this.toTimeOfDayMinutes(secondCard.time);
+    });
+  }
+
+  private sortCardsByTime(cards: Assignment[]): Array<{
+    card: Assignment;
+    index: number;
+    minutes: number;
+  }> {
+    return [...cards]
+      .map((card, index) => ({
+        card,
+        index,
+        minutes: this.toTimeOfDayMinutes(card.time),
+      }))
+      .sort((a, b) => {
+        const timeDiff = a.minutes - b.minutes;
+        if (timeDiff !== 0) {
+          return timeDiff;
+        }
+
+        return a.index - b.index;
+      });
   }
 
   private toMapLocation(card: Assignment): MapLocation {
@@ -508,33 +696,94 @@ export class DashboardPage implements OnInit, OnDestroy {
     };
   }
 
-  private getIncomingSegmentIdForAssignment(assignmentId: string): string | null {
-    const currentStop = this.findAssignmentStop(assignmentId);
-    if (!currentStop) {
-      return null;
-    }
-
-    const previousStop = this.findPreviousStop(currentStop.id);
-    if (!previousStop) {
-      return null;
-    }
-
-    return buildRouteSegmentId(previousStop.id, currentStop.id);
+  private findAssignmentStop(assignmentId: string): MapStop | undefined {
+    return this.findAssignmentStopIn(this.mapStops, assignmentId);
   }
 
-  private findAssignmentStop(assignmentId: string): MapStop | undefined {
-    return this.mapStops.find(
+  private findAssignmentStopIn(stops: MapStop[], assignmentId: string): MapStop | undefined {
+    return stops.find(
       (stop) => stop.kind === 'assignment' && stop.assignmentId === assignmentId,
     );
   }
 
-  private findPreviousStop(stopId: string): MapStop | undefined {
-    const currentStopIndex = this.mapStops.findIndex((stop) => stop.id === stopId);
-    if (currentStopIndex <= 0) {
+  private findValidPreviousStopForAssignment(
+    assignmentId: string,
+    currentStopId: string,
+    stops: MapStop[] = this.mapStops,
+  ): MapStop | undefined {
+    const currentSequenceNumber = this.assignmentSequenceNumbers[assignmentId];
+    if (!Number.isInteger(currentSequenceNumber) || currentSequenceNumber <= 0) {
       return undefined;
     }
 
-    return this.mapStops[currentStopIndex - 1];
+    if (currentSequenceNumber === 1) {
+      return stops.find((stop) => stop.id === 'start');
+    }
+
+    const previousAssignmentId = Object.entries(this.assignmentSequenceNumbers).find(
+      ([, sequenceNumber]) => sequenceNumber === currentSequenceNumber - 1,
+    )?.[0];
+
+    if (!previousAssignmentId) {
+      return undefined;
+    }
+
+    const previousStop = this.findAssignmentStopIn(stops, previousAssignmentId);
+    if (!previousStop || previousStop.id === currentStopId) {
+      return undefined;
+    }
+
+    return previousStop;
+  }
+
+  private resolveFocusedRouteContext(assignmentId: string): {
+    currentStop?: MapStop;
+    previousStop?: MapStop;
+    routeSegment?: MapRouteSegment;
+  } {
+    const currentStop =
+      this.findAssignmentStopIn(this.allDayMapStops, assignmentId) ?? this.findAssignmentStop(assignmentId);
+
+    if (!currentStop) {
+      this.activeRouteSegmentId = null;
+      this.focusedRouteSegment = null;
+      return {};
+    }
+
+    const previousStop = this.findValidPreviousStopForAssignment(
+      assignmentId,
+      currentStop.id,
+      this.allDayMapStops,
+    );
+    const routeSegmentId =
+      previousStop ? buildRouteSegmentId(previousStop.id, currentStop.id) : null;
+    const routeSegment = routeSegmentId ? this.findRouteSegmentById(routeSegmentId) : undefined;
+
+    this.activeRouteSegmentId = routeSegment?.id ?? null;
+    this.focusedRouteSegment = routeSegment ?? null;
+
+    return {
+      currentStop,
+      previousStop,
+      routeSegment,
+    };
+  }
+
+  private findRouteSegmentById(segmentId: string): MapRouteSegment | undefined {
+    return (
+      this.allRouteSegments.find((segment) => segment.id === segmentId) ??
+      this.routeSegments.find((segment) => segment.id === segmentId)
+    );
+  }
+
+  private syncFocusedRouteSelection(): void {
+    if (!this.focusedAssignmentId) {
+      this.activeRouteSegmentId = null;
+      this.focusedRouteSegment = null;
+      return;
+    }
+
+    this.resolveFocusedRouteContext(this.focusedAssignmentId);
   }
 
   private clearPendingCardScroll(): void {
@@ -553,5 +802,38 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     clearTimeout(this.pendingCardHighlightTimeoutId);
     this.pendingCardHighlightTimeoutId = undefined;
+  }
+
+  private getMapStageHeight(): number {
+    const stageHeight = this.mapStageRef?.nativeElement.getBoundingClientRect().height;
+    if (typeof stageHeight === 'number' && Number.isFinite(stageHeight) && stageHeight > 0) {
+      return stageHeight;
+    }
+
+    if (
+      typeof window !== 'undefined' &&
+      Number.isFinite(window.innerHeight) &&
+      window.innerHeight > 0
+    ) {
+      return window.innerHeight;
+    }
+
+    return 1;
+  }
+
+  private getVisibleMapAssignments(cards: Assignment[]): Assignment[] {
+    if (this.showCompletedAssignments) {
+      return cards;
+    }
+
+    return cards.filter((card) => card.status !== 'completed');
+  }
+
+  private haveSameStopIds(firstStops: MapStop[], secondStops: MapStop[]): boolean {
+    if (firstStops.length !== secondStops.length) {
+      return false;
+    }
+
+    return firstStops.every((stop, index) => stop.id === secondStops[index]?.id);
   }
 }
