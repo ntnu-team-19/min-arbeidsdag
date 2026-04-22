@@ -24,4 +24,5 @@ export interface Assignment {
   status: AssignmentStatus;
   date: string;
   locationPoint?: AssignmentLocationPoint | null;
+  hasNotesIndicator?: boolean;
 }
