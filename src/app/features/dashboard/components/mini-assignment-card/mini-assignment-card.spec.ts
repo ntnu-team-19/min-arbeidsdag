@@ -67,6 +67,24 @@ describe('MiniAssignmentCard', () => {
     expect(text).toContain('08:30');
   });
 
+  it('should show notes indicator when assignment has notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: true,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeTruthy();
+  });
+
+  it('should hide notes indicator when assignment has no notes or messages', async () => {
+    await createComponent({
+      ...mockAssignment,
+      hasNotesIndicator: false,
+    });
+
+    expect(fixture.debugElement.query(By.css('.pi-comment'))).toBeFalsy();
+  });
+
   it('should emit cardClick with assignment id when onCardClick is called', () => {
     const spy = vi.spyOn(component.cardClick, 'emit');
 
