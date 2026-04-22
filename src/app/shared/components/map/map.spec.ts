@@ -9,6 +9,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import CircleStyle from 'ol/style/Circle';
 import Icon from 'ol/style/Icon';
 import Style from 'ol/style/Style';
+import { resolveMapThemeTokens } from './map-theme-tokens';
 
 describe('AssignmentMap', () => {
   let component: AssignmentMap;
@@ -562,6 +563,75 @@ describe('AssignmentMap', () => {
     expect((styles[0]?.getImage() as CircleStyle).getRadius()).toBeGreaterThan(
       (styles[1]?.getImage() as CircleStyle).getRadius(),
     );
+    const pulseFill = String((styles[0]?.getImage() as CircleStyle).getFill()?.getColor());
+    const pulseOpacity = Number(pulseFill.replace(/^rgba\([^,]+,[^,]+,[^,]+,\s*|\)$/g, ''));
+    expect(pulseOpacity).toBeCloseTo(0.18, 2);
+  });
+
+  it('should resolve availability marker palette through semantic map tokens', () => {
+    const availabilityFeature = {
+      get: (key: string) => {
+        if (key === 'stopKind') return 'assignment';
+        if (key === 'markerLabel') return 'A';
+        if (key === 'assignmentStatus') return 'unconfirmed';
+        if (key === 'assignment') return { id: 'availability-1' };
+        return undefined;
+      },
+    };
+
+    const styles = (
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style | Style[];
+      }
+    ).getMarkerStyle(availabilityFeature) as Style[];
+
+    expect((styles[0]?.getImage() as CircleStyle).getFill()?.getColor()).toBe('#C7A27B');
+    expect(styles[0]?.getText()?.getFill()?.getColor()).toBe('#4A2F1B');
+  });
+
+  it('should keep focused marker halo styling after tokenized style resolution', () => {
+    const focusedFeature = {
+      get: (key: string) => {
+        if (key === 'stopKind') return 'assignment';
+        if (key === 'markerLabel') return '2';
+        if (key === 'assignmentStatus') return 'next';
+        if (key === 'isFocusedAssignment') return true;
+        return undefined;
+      },
+    };
+
+    const styles = (
+      component as unknown as {
+        getMarkerStyle: (feature: { get: (key: string) => unknown }) => Style | Style[];
+      }
+    ).getMarkerStyle(focusedFeature) as Style[];
+
+    expect(styles).toHaveLength(2);
+    expect((styles[0]?.getImage() as CircleStyle).getStroke()?.getWidth()).toBe(2);
+    expect((styles[0]?.getImage() as CircleStyle).getStroke()?.getColor()).toBe(
+      'rgba(255, 255, 255, 0.88)',
+    );
+    expect(styles[1]?.getZIndex()).toBe(32);
+  });
+
+  it('should resolve different map token palettes for light and dark theme variables', () => {
+    const rootStyle = document.documentElement.style;
+    const originalLight = rootStyle.getPropertyValue('--map-route-active-core');
+    const originalDark = rootStyle.getPropertyValue('--map-user-position-inner-fill');
+
+    rootStyle.setProperty('--map-route-active-core', '#1A5B95');
+    rootStyle.setProperty('--map-user-position-inner-fill', '#3684FF');
+    const lightTokens = resolveMapThemeTokens();
+
+    rootStyle.setProperty('--map-route-active-core', '#60A5FA');
+    rootStyle.setProperty('--map-user-position-inner-fill', '#60A5FA');
+    const darkTokens = resolveMapThemeTokens();
+
+    expect(lightTokens.routeActiveCore).not.toBe(darkTokens.routeActiveCore);
+    expect(lightTokens.userPositionInnerFill).not.toBe(darkTokens.userPositionInnerFill);
+
+    rootStyle.setProperty('--map-route-active-core', originalLight);
+    rootStyle.setProperty('--map-user-position-inner-fill', originalDark);
   });
 
   it('should use the grayscale base layer for the light app theme', () => {
