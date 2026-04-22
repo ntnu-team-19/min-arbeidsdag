@@ -10,7 +10,8 @@ export type MapAssignmentStatus =
   | 'completed'
   | 'cancelled'
   | 'confirmed'
-  | 'unconfirmed';
+  | 'unconfirmed'
+  | 'absence';
 
 export interface Assignment {
   id: string | number;
