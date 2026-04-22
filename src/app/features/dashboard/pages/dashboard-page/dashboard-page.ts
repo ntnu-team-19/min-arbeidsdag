@@ -745,11 +745,11 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
   }
 
-  private sortCardsByTime(cards: Assignment[]): Array<{
+  private sortCardsByTime(cards: Assignment[]): {
     card: Assignment;
     index: number;
     minutes: number;
-  }> {
+  }[] {
     return [...cards]
       .map((card, index) => ({
         card,
@@ -782,9 +782,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   private findAssignmentStopIn(stops: MapStop[], assignmentId: string): MapStop | undefined {
-    return stops.find(
-      (stop) => stop.kind === 'assignment' && stop.assignmentId === assignmentId,
-    );
+    return stops.find((stop) => stop.kind === 'assignment' && stop.assignmentId === assignmentId);
   }
 
   private findValidPreviousStopForAssignment(
@@ -823,7 +821,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     routeSegment?: MapRouteSegment;
   } {
     const currentStop =
-      this.findAssignmentStopIn(this.allDayMapStops, assignmentId) ?? this.findAssignmentStop(assignmentId);
+      this.findAssignmentStopIn(this.allDayMapStops, assignmentId) ??
+      this.findAssignmentStop(assignmentId);
 
     if (!currentStop) {
       this.activeRouteSegmentId = null;
@@ -836,8 +835,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       currentStop.id,
       this.allDayMapStops,
     );
-    const routeSegmentId =
-      previousStop ? buildRouteSegmentId(previousStop.id, currentStop.id) : null;
+    const routeSegmentId = previousStop
+      ? buildRouteSegmentId(previousStop.id, currentStop.id)
+      : null;
     const routeSegment = routeSegmentId ? this.findRouteSegmentById(routeSegmentId) : undefined;
 
     this.activeRouteSegmentId = routeSegment?.id ?? null;

@@ -71,9 +71,7 @@
 
           @for (assignment of assignmentCards; track assignment.id) {
             @if (shouldShowTravelTimeIndicator(assignment)) {
-              <app-travel-time-indicator
-                [travelTimeMinutes]="getTravelTimeForCard(assignment)!"
-              />
+              <app-travel-time-indicator [travelTimeMinutes]="getTravelTimeForCard(assignment)!" />
             }
             <div
               #miniAssignmentCardRow

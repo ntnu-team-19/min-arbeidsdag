@@ -13,23 +13,23 @@
         class="surface-1 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-4"
         [ngClass]="currentStatus.dotClass"
       >
-              @if (sequenceNumber != null) {
-        <span class="text-xs font-bold">
-          {{ sequenceNumber }}
-        </span>
-      } @else {
-        @switch (assignment.status) {
-          @case ('absence') {
-            <i class="pi pi-calendar text-sm"></i>
-          }
-          @case ('completed') {
-            <i class="pi pi-check text-sm"></i>
-          }
-          @case ('cancelled') {
-            <i class="pi pi-times text-sm"></i>
+        @if (sequenceNumber !== null && sequenceNumber !== undefined) {
+          <span class="text-xs font-bold">
+            {{ sequenceNumber }}
+          </span>
+        } @else {
+          @switch (assignment.status) {
+            @case ('absence') {
+              <i class="pi pi-calendar text-sm"></i>
+            }
+            @case ('completed') {
+              <i class="pi pi-check text-sm"></i>
+            }
+            @case ('cancelled') {
+              <i class="pi pi-times text-sm"></i>
+            }
           }
         }
-      }
       </div>
 
       <div class="min-w-0">

@@ -855,22 +855,21 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     const fontSize = Math.max(10, Math.round(12 * markerScale));
     const isAssignment = stopKind === 'assignment';
 
-    const palette =
-      isAvailabilityStop
-        ? {
-            fill: '#C7A27B',
-            text: '#4A2F1B',
-            halo: 'rgba(199, 162, 123, 0.22)',
-            stroke: '#F4E6D8',
-          }
-        : isAssignment && assignmentStatus
-          ? this.getAssignmentMarkerPalette(assignmentStatus)
-          : {
-              fill: stopKind === 'end' ? '#D65A4A' : '#1F4E79',
-              text: '#FFFFFF',
-              halo: 'rgba(31, 78, 121, 0.2)',
-              stroke: '#FFFFFF',
-            };
+    const palette = isAvailabilityStop
+      ? {
+          fill: '#C7A27B',
+          text: '#4A2F1B',
+          halo: 'rgba(199, 162, 123, 0.22)',
+          stroke: '#F4E6D8',
+        }
+      : isAssignment && assignmentStatus
+        ? this.getAssignmentMarkerPalette(assignmentStatus)
+        : {
+            fill: stopKind === 'end' ? '#D65A4A' : '#1F4E79',
+            text: '#FFFFFF',
+            halo: 'rgba(31, 78, 121, 0.2)',
+            stroke: '#FFFFFF',
+          };
 
     const styles: Style[] = [];
 
