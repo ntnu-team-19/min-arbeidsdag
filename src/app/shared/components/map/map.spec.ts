@@ -726,6 +726,7 @@ describe('AssignmentMap', () => {
 
   it('should toggle follow mode from the quick-access follow button', () => {
     fixture.componentRef.setInput('enableUserTracking', true);
+    fixture.componentRef.setInput('overviewBottomInsetRatio', 0.5);
     fixture.detectChanges();
 
     (component as unknown as Record<string, unknown>)['userTrackingMode'] = 'live';
@@ -733,13 +734,26 @@ describe('AssignmentMap', () => {
       lat: 63.4305,
       lon: 10.3951,
     };
+    let center: [number, number] = [0, 0];
+    const setCenter = vi.fn((nextCenter: [number, number]) => {
+      center = nextCenter;
+    });
+    const centerOn = vi.fn((coordinate: [number, number], size: [number, number], anchor: [number, number]) => {
+      center = [coordinate[0] + anchor[0] / 10, coordinate[1] + anchor[1] / 10];
+      return anchor;
+    });
+    const view = {
+      animate: vi.fn(),
+      getZoom: () => 12,
+      getCenter: () => center,
+      setCenter,
+      setZoom: vi.fn(),
+      centerOn,
+      fit: vi.fn(),
+    };
     (component as unknown as Record<string, unknown>)['map'] = {
       getSize: () => [1000, 800],
-      getView: () => ({
-        animate: vi.fn(),
-        getZoom: () => 12,
-        fit: vi.fn(),
-      }),
+      getView: () => view,
       un: vi.fn(),
       setTarget: vi.fn(),
     };
@@ -753,6 +767,12 @@ describe('AssignmentMap', () => {
     followButton.triggerEventHandler('click', new MouseEvent('click'));
 
     expect(component.followUserMode).toBe(true);
+    expect(centerOn).toHaveBeenCalledWith(
+      expect.any(Array),
+      [1000, 800],
+      [500, 200],
+    );
+    expect(setCenter).toHaveBeenCalled();
   });
 
   it('should add overview bottom padding when fitting visible features', () => {
@@ -909,11 +929,22 @@ describe('AssignmentMap', () => {
   it('should recenter on the live user location and turn follow mode off on manual interaction', () => {
     vi.useFakeTimers();
     const animate = vi.fn();
+    const centerOn = vi.fn();
+    const setCenter = vi.fn();
+    const setZoom = vi.fn();
+    const view = {
+      animate,
+      centerOn,
+      getZoom: () => 12,
+      getCenter: () => [0, 0] as [number, number],
+      setCenter,
+      setZoom,
+    };
 
     (component as unknown as Record<string, unknown>)['map'] = {
+      getSize: () => [1000, 800],
       getView: () => ({
-        animate,
-        getZoom: () => 12,
+        ...view,
       }),
       un: vi.fn(),
       setTarget: vi.fn(),

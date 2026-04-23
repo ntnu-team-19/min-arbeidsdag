@@ -19,6 +19,10 @@ import {
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapRouteSegment } from '../../../../shared/components/map/map.models';
 import { AvailabilityService } from '../../../../core/services/availability.service';
+import {
+  buildAvailabilityCardId,
+  mapAvailabilityDtoToAssignmentCardModel,
+} from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
 
 const MOCK_CARDS: Assignment[] = [
@@ -325,6 +329,71 @@ describe('DashboardPage', () => {
         .filter((stop) => stop.kind === 'assignment')
         .map((stop) => stop.sequenceNumber),
     ).toEqual([2, 3, 4]);
+  });
+
+  it('should number an inserted absence in the visible list order', () => {
+    const availabilityCard = mapAvailabilityDtoToAssignmentCardModel(
+      {
+        title: 'Fravær',
+        shortDescription: 'Fravær',
+        address: 'Fravær',
+        phoneNumber: '',
+        start: '2026-03-20T12:30:00.000Z',
+        stop: '2026-03-20T13:30:00.000Z',
+        calculatedTraveltime: 60,
+        available: false,
+        allDay: false,
+        absenceWithoutGoingHome: false,
+        locationPoint: { x: 10.4, y: 63.42 },
+      },
+      {
+        locale: 'nb-NO',
+        allDayLabel: 'Hele dagen',
+        unknownTimeLabel: 'Ukjent tidspunkt',
+      },
+    );
+
+    component.assignmentCards = [
+      {
+        ...MOCK_CARDS[0],
+        status: 'ongoing',
+      },
+      {
+        ...MOCK_CARDS[1],
+        status: 'next',
+      },
+      availabilityCard,
+      {
+        ...MOCK_CARDS[2],
+        status: 'upcoming',
+      },
+    ];
+
+    component.assignmentSequenceNumbers = (
+      component as unknown as {
+        buildAssignmentSequenceNumbers: (cards: Assignment[]) => Record<string, number>;
+      }
+    ).buildAssignmentSequenceNumbers(component.assignmentCards);
+
+    (
+      component as unknown as {
+        refreshMapData: (loadVersion: number) => void;
+      }
+    ).refreshMapData(1);
+
+    expect(component.mapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-1',
+      'assignment-2',
+      `assignment-${buildAvailabilityCardId('2026-03-20T12:30:00.000Z')}`,
+      'assignment-3',
+      'end',
+    ]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([1, 2, 3, 4]);
   });
 
   it('should default the overview bottom inset ratio to the peek sheet ratio', () => {
