@@ -91,8 +91,10 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   @Input() enableCompletedFilter = false;
   @Input() showCompletedAssignments = true;
   @Input() overviewBottomInsetRatio = 0;
+  @Input() enableOverviewAutoFit = true;
   @Input() fallbackUserLocation: MapLocation | null = null;
   @Output() markerClicked = new EventEmitter<Assignment>();
+  @Output() mapBackgroundClicked = new EventEmitter<void>();
   @Output() completedAssignmentsToggle = new EventEmitter<void>();
 
   mapLoaded = false;
@@ -433,6 +435,8 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
+    let hasClickedMarker = false;
+
     this.map.forEachFeatureAtPixel(
       event.pixel,
       (feature) => {
@@ -441,6 +445,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
           return false;
         }
 
+        hasClickedMarker = true;
         this.markerClicked.emit(assignment);
         return true;
       },
@@ -448,6 +453,10 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
         layerFilter: (layer) => layer === this.markerLayer,
       },
     );
+
+    if (!hasClickedMarker) {
+      this.mapBackgroundClicked.emit();
+    }
   };
 
   private handleManualMapInteraction(): void {
@@ -565,7 +574,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     this.updateRouteSegments();
     this.updateMarkers();
 
-    if (!this.followUserMode && !this.focusedAssignmentId) {
+    if (this.enableOverviewAutoFit && !this.followUserMode && !this.focusedAssignmentId) {
       this.fitToVisibleFeatures();
     }
   }
@@ -604,7 +613,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   private fitToVisibleFeatures(): void {
-    if (!this.map) {
+    if (!this.map || !this.enableOverviewAutoFit) {
       return;
     }
 
