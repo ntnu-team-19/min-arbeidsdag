@@ -147,6 +147,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
+  get enableOverviewAutoFit(): boolean {
+    return this.currentMapSheetSnap !== 'expanded';
+  }
+
   get displayedRouteSegments(): MapRouteSegment[] {
     if (!this.focusedRouteSegment) {
       return this.routeSegments;
@@ -353,6 +357,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   onSnapChanged(snap: SnapPoint) {
     this.currentMapSheetSnap = snap;
+  }
+
+  onMapBackgroundClicked(): void {
+    this.clearCardInteractionState();
+    this.clearMapSelectionState();
   }
 
   @HostListener('document:pointerdown')

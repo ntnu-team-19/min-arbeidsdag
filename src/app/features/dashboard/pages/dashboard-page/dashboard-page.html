@@ -43,12 +43,14 @@
         [activeSegmentId]="activeRouteSegmentId"
         [focusedAssignmentId]="focusedAssignmentId"
         [overviewBottomInsetRatio]="overviewBottomInsetRatio"
+        [enableOverviewAutoFit]="enableOverviewAutoFit"
         [enableUserTracking]="true"
         [enableCompletedFilter]="true"
         [showCompletedAssignments]="showCompletedAssignments"
         [fallbackUserLocation]="fallbackUserLocation"
         [compact]="false"
         (markerClicked)="onMarkerClicked($event)"
+        (mapBackgroundClicked)="onMapBackgroundClicked()"
         (completedAssignmentsToggle)="onCompletedAssignmentsToggle()"
       ></app-assignment-map>
 
