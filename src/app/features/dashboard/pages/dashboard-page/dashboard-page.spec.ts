@@ -289,7 +289,6 @@ describe('DashboardPage', () => {
   it('should build ordered stops and route segments on init', () => {
     expect(component.mapStops.map((stop) => stop.id)).toEqual([
       'start',
-      'assignment-4',
       'assignment-1',
       'assignment-2',
       'assignment-3',
@@ -299,7 +298,7 @@ describe('DashboardPage', () => {
       component.mapStops
         .filter((stop) => stop.kind === 'assignment')
         .map((stop) => stop.sequenceNumber),
-    ).toEqual([1, 2, 3, 4]);
+    ).toEqual([2, 3, 4]);
     expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
     expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
   });
@@ -325,7 +324,7 @@ describe('DashboardPage', () => {
       component.mapStops
         .filter((stop) => stop.kind === 'assignment')
         .map((stop) => stop.sequenceNumber),
-    ).toEqual([1, 2, 3, 4]);
+    ).toEqual([2, 3, 4]);
   });
 
   it('should default the overview bottom inset ratio to the peek sheet ratio', () => {
@@ -704,13 +703,14 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('should filter completed assignments from the map when the map filter is toggled', () => {
+  it('should show completed assignments in the map when the map filter is toggled', () => {
     component.onCompletedAssignmentsToggle();
 
-    expect(component.showCompletedAssignments).toBe(false);
-    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual(['1', '2', '3']);
+    expect(component.showCompletedAssignments).toBe(true);
+    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual(['1', '2', '3', '4']);
     expect(component.mapStops.map((stop) => stop.id)).toEqual([
       'start',
+      'assignment-4',
       'assignment-1',
       'assignment-2',
       'assignment-3',
@@ -720,7 +720,7 @@ describe('DashboardPage', () => {
       component.mapStops
         .filter((stop) => stop.kind === 'assignment')
         .map((stop) => stop.sequenceNumber),
-    ).toEqual([2, 3, 4]);
+    ).toEqual([1, 2, 3, 4]);
     expect(component.allDayMapStops.map((stop) => stop.id)).toEqual([
       'start',
       'assignment-4',
@@ -1003,6 +1003,7 @@ describe('DashboardPage', () => {
   });
 
   it('should clear focus when the completed filter removes the focused assignment', () => {
+    component.showCompletedAssignments = true;
     component.focusedAssignmentId = '4';
     component.activeRouteSegmentId = buildRouteSegmentId('assignment-3', 'assignment-4');
 
@@ -1041,7 +1042,7 @@ describe('DashboardPage', () => {
     expect(component.selectedDay).toBe('tomorrow');
     expect(component.activeRouteSegmentId).toBeNull();
     expect(component.focusedAssignmentId).toBeNull();
-    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledTimes(2);
+    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledTimes(4);
   });
 
   it('should clear focused assignment state when switching views', () => {
@@ -1081,7 +1082,7 @@ describe('DashboardPage', () => {
     await routeFixture.whenStable();
     routeFixture.detectChanges();
 
-    expect(routeComponent.mapAssignments.length).toBe(4);
+    expect(routeComponent.mapAssignments.length).toBe(3);
     expect(routeComponent.routeSegments).toEqual([]);
   });
 
