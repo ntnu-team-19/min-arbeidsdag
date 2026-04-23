@@ -561,11 +561,38 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
 
     const userLocation = this.userLocation;
     const view = this.map.getView();
+    const size = this.map.getSize();
+
+    if (!size) {
+      return;
+    }
+
+    const bottomInsetRatio = clamp(this.overviewBottomInsetRatio ?? 0, 0, 1);
+    const targetYRatio = clamp((1 - bottomInsetRatio) / 2, 0, 1);
+    const targetCoordinate = fromLonLat([userLocation.lon, userLocation.lat]);
+    const currentCenter = view.getCenter();
+    const currentZoom = view.getZoom();
+
+    if (!currentCenter || currentZoom == null) {
+      return;
+    }
+
     this.withSuppressedFollowDisable(duration, () => {
+      const nextZoom = Math.max(currentZoom, this.compact ? 14 : 15);
+      view.setZoom(nextZoom);
+      view.centerOn(targetCoordinate, size, [size[0] / 2, size[1] * targetYRatio]);
+      const targetCenter = view.getCenter();
+
+      if (!targetCenter) {
+        return;
+      }
+
+      view.setCenter(currentCenter);
+      view.setZoom(currentZoom);
       view.animate({
-        center: fromLonLat([userLocation.lon, userLocation.lat]),
+        center: targetCenter,
         duration,
-        zoom: Math.max(view.getZoom() ?? 0, this.compact ? 14 : 15),
+        zoom: nextZoom,
       });
     });
   }
