@@ -738,10 +738,12 @@ describe('AssignmentMap', () => {
     const setCenter = vi.fn((nextCenter: [number, number]) => {
       center = nextCenter;
     });
-    const centerOn = vi.fn((coordinate: [number, number], size: [number, number], anchor: [number, number]) => {
-      center = [coordinate[0] + anchor[0] / 10, coordinate[1] + anchor[1] / 10];
-      return anchor;
-    });
+    const centerOn = vi.fn(
+      (coordinate: [number, number], size: [number, number], anchor: [number, number]) => {
+        center = [coordinate[0] + anchor[0] / 10, coordinate[1] + anchor[1] / 10];
+        return anchor;
+      },
+    );
     const view = {
       animate: vi.fn(),
       getZoom: () => 12,
@@ -767,11 +769,7 @@ describe('AssignmentMap', () => {
     followButton.triggerEventHandler('click', new MouseEvent('click'));
 
     expect(component.followUserMode).toBe(true);
-    expect(centerOn).toHaveBeenCalledWith(
-      expect.any(Array),
-      [1000, 800],
-      [500, 200],
-    );
+    expect(centerOn).toHaveBeenCalledWith(expect.any(Array), [1000, 800], [500, 200]);
     expect(setCenter).toHaveBeenCalled();
   });
 

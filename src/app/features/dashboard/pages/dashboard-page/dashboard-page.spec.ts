@@ -776,7 +776,12 @@ describe('DashboardPage', () => {
     component.onCompletedAssignmentsToggle();
 
     expect(component.showCompletedAssignments).toBe(true);
-    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual(['1', '2', '3', '4']);
+    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
     expect(component.mapStops.map((stop) => stop.id)).toEqual([
       'start',
       'assignment-4',
