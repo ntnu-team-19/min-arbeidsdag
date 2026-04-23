@@ -723,7 +723,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       return Number.MAX_SAFE_INTEGER;
     }
 
-    const match = /^(\d{1,2}):(\d{2})$/.exec(timeValue.trim());
+    // Support both simple times (HH:mm) and ranges (HH:mm-HH:mm) by reading the first time.
+    const match = /(\d{1,2}):(\d{2})/.exec(timeValue.trim());
     if (!match) {
       return Number.MAX_SAFE_INTEGER;
     }
