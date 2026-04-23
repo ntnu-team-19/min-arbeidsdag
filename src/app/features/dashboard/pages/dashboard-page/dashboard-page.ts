@@ -98,7 +98,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   focusedRouteSegment: MapRouteSegment | null = null;
   activeRouteSegmentId: string | null = null;
   focusedAssignmentId: string | null = null;
-  showCompletedAssignments = true;
+  showCompletedAssignments = false;
   currentMapSheetSnap: SnapPoint = 'peek';
   assignmentSequenceNumbers: Record<string, number> = {};
 
