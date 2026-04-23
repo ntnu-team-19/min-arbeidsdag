@@ -506,6 +506,14 @@ describe('DashboardPage', () => {
     );
   });
 
+  it('should disable overview auto-fit when the bottom sheet is expanded', () => {
+    expect(component.enableOverviewAutoFit).toBe(true);
+
+    component.onSnapChanged('expanded');
+
+    expect(component.enableOverviewAutoFit).toBe(false);
+  });
+
   it('should zoom to the incoming leg, snap the sheet, and highlight the matching card when a marker is clicked', () => {
     vi.useFakeTimers();
     component.isListView = false;
@@ -1044,6 +1052,23 @@ describe('DashboardPage', () => {
 
     expect(component.focusedAssignmentId).toBeNull();
     expect(component.activeRouteSegmentId).toBeNull();
+  });
+
+  it('should clear focused assignment and active route when clicking empty map space', () => {
+    component.focusedAssignmentId = '2';
+    component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
+    component.focusedRouteSegment = {
+      id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+      fromStopId: 'assignment-1',
+      toStopId: 'assignment-2',
+      coordinates: [],
+    };
+
+    component.onMapBackgroundClicked();
+
+    expect(component.focusedAssignmentId).toBeNull();
+    expect(component.activeRouteSegmentId).toBeNull();
+    expect(component.focusedRouteSegment).toBeNull();
   });
 
   it('should keep map markers functional when route data is unavailable', async () => {

@@ -799,6 +799,113 @@ describe('AssignmentMap', () => {
     );
   });
 
+  it('should skip overview auto-fit when disabled', () => {
+    const fit = vi.fn();
+
+    fixture.componentRef.setInput('enableOverviewAutoFit', false);
+    fixture.detectChanges();
+
+    (component as unknown as Record<string, unknown>)['map'] = {
+      getSize: () => [1000, 800],
+      getView: () => ({
+        fit,
+      }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['markerSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 10, 10],
+      addFeatures: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['routeSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 0, 0],
+      addFeatures: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['userLocationSource'] = {
+      clear: vi.fn(),
+      getExtent: () => [0, 0, 0, 0],
+      addFeatures: vi.fn(),
+    };
+
+    (
+      component as unknown as {
+        updateMapFeatures: () => void;
+      }
+    ).updateMapFeatures();
+
+    expect(fit).not.toHaveBeenCalled();
+  });
+
+  it('should emit markerClicked when clicking an assignment marker', () => {
+    const markerClickedSpy = vi.spyOn(component.markerClicked, 'emit');
+    const mapBackgroundClickedSpy = vi.spyOn(component.mapBackgroundClicked, 'emit');
+    const assignment: Assignment = {
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    };
+
+    (component as unknown as Record<string, unknown>)['map'] = {
+      forEachFeatureAtPixel: (
+        _pixel: [number, number],
+        callback: (feature: { get: (key: string) => unknown }) => boolean,
+      ) => {
+        callback({
+          get: (key: string) => (key === 'assignment' ? assignment : undefined),
+        });
+      },
+      hasFeatureAtPixel: vi.fn(),
+      getView: () => ({
+        un: vi.fn(),
+      }),
+      getViewport: () => ({
+        removeEventListener: vi.fn(),
+      }),
+      getTargetElement: () => ({ style: { cursor: '' } }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+
+    (
+      component as unknown as {
+        onMapClick: (event: unknown) => void;
+      }
+    ).onMapClick({ pixel: [12, 34] });
+
+    expect(markerClickedSpy).toHaveBeenCalledWith(assignment);
+    expect(mapBackgroundClickedSpy).not.toHaveBeenCalled();
+  });
+
+  it('should emit mapBackgroundClicked when clicking empty map space', () => {
+    const markerClickedSpy = vi.spyOn(component.markerClicked, 'emit');
+    const mapBackgroundClickedSpy = vi.spyOn(component.mapBackgroundClicked, 'emit');
+
+    (component as unknown as Record<string, unknown>)['map'] = {
+      forEachFeatureAtPixel: vi.fn(),
+      hasFeatureAtPixel: vi.fn(),
+      getView: () => ({
+        un: vi.fn(),
+      }),
+      getViewport: () => ({
+        removeEventListener: vi.fn(),
+      }),
+      getTargetElement: () => ({ style: { cursor: '' } }),
+      un: vi.fn(),
+      setTarget: vi.fn(),
+    };
+
+    (
+      component as unknown as {
+        onMapClick: (event: unknown) => void;
+      }
+    ).onMapClick({ pixel: [20, 40] });
+
+    expect(markerClickedSpy).not.toHaveBeenCalled();
+    expect(mapBackgroundClickedSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('should recenter on the live user location and turn follow mode off on manual interaction', () => {
     vi.useFakeTimers();
     const animate = vi.fn();
