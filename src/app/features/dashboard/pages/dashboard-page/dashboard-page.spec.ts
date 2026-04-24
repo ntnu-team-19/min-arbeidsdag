@@ -1130,6 +1130,13 @@ describe('DashboardPage', () => {
   });
 
   it('should clear focused assignment and active route when clicking empty map space', () => {
+    const snapToSpy = vi.fn();
+    (
+      component as unknown as {
+        mapBottomSheet?: { snapTo: (snap: 'collapsed' | 'peek' | 'expanded') => void };
+      }
+    ).mapBottomSheet = { snapTo: snapToSpy };
+
     component.focusedAssignmentId = '2';
     component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
     component.focusedRouteSegment = {
@@ -1144,6 +1151,7 @@ describe('DashboardPage', () => {
     expect(component.focusedAssignmentId).toBeNull();
     expect(component.activeRouteSegmentId).toBeNull();
     expect(component.focusedRouteSegment).toBeNull();
+    expect(snapToSpy).toHaveBeenCalledWith('collapsed');
   });
 
   it('should keep map markers functional when route data is unavailable', async () => {

@@ -15,7 +15,7 @@ describe('MiniAssignmentCard', () => {
     title: 'Oppdrag 1',
     shortDescription: 'Testbeskrivelse',
     time: '08:30',
-    duration: 60,
+    duration: '1 t',
     address: 'Kløbuvegen 179, 7031 Trondheim',
     phoneNumber: '12345678',
     status: 'ongoing',
@@ -66,6 +66,12 @@ describe('MiniAssignmentCard', () => {
 
     expect(text).toContain('Kløbuvegen 179, 7031 Trondheim');
     expect(text).toContain('08:30');
+  });
+
+  it('should render formatted duration text', () => {
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).toContain('1 t');
   });
 
   it('should render the provided sequence number in the marker badge', () => {
@@ -193,5 +199,18 @@ describe('MiniAssignmentCard', () => {
     fixture.detectChanges();
 
     expect(component.currentStatus.label).toBe('status.cancelledShort');
+  });
+
+  it('should use blue status styling for confirmed assignments', () => {
+    fixture = TestBed.createComponent(MiniAssignmentCard);
+    component = fixture.componentInstance;
+    component.assignment = {
+      ...mockAssignment,
+      status: 'confirmed',
+    };
+    fixture.detectChanges();
+
+    expect(component.currentStatus.badgeClass).toBe('bg-[#1F4E79] text-white');
+    expect(component.currentStatus.dotClass).toBe('border-[#1F4E79] text-[#1F4E79]');
   });
 });

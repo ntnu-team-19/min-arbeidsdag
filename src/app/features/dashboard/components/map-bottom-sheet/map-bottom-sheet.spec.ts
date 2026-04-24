@@ -9,6 +9,8 @@ describe('MapBottomSheet', () => {
     clientHeight: number;
     scrollHeight: number;
     scrollTo: ReturnType<typeof vi.fn>;
+    addEventListener: ReturnType<typeof vi.fn>;
+    removeEventListener: ReturnType<typeof vi.fn>;
     getBoundingClientRect: () => { top: number; height: number };
   };
 
@@ -31,6 +33,8 @@ describe('MapBottomSheet', () => {
       clientHeight: 400,
       scrollHeight: 1200,
       scrollTo: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
       getBoundingClientRect: () => ({
         top: 100,
         height: 400,
@@ -51,6 +55,8 @@ describe('MapBottomSheet', () => {
     setPointerCapture.mockReset();
     releasePointerCapture.mockReset();
     mockContentElement.scrollTo.mockReset();
+    mockContentElement.addEventListener.mockReset();
+    mockContentElement.removeEventListener.mockReset();
   });
 
   it('should create', () => {
@@ -100,6 +106,27 @@ describe('MapBottomSheet', () => {
 
     expect(rafSpy).toHaveBeenCalled();
     expect(component.isAnimating).toBe(true);
+    expect(mockContentElement.addEventListener).toHaveBeenCalledWith(
+      'wheel',
+      expect.any(Function),
+      { passive: true },
+    );
+  });
+
+  it('should remove content listeners on destroy', () => {
+    component.ngOnInit();
+    component.ngAfterViewInit();
+
+    component.ngOnDestroy();
+
+    expect(mockContentElement.removeEventListener).toHaveBeenCalledWith(
+      'wheel',
+      expect.any(Function),
+    );
+    expect(mockContentElement.removeEventListener).toHaveBeenCalledWith(
+      'touchmove',
+      expect.any(Function),
+    );
   });
 
   it('should recalculate snap position on resize', () => {
@@ -283,6 +310,112 @@ describe('MapBottomSheet', () => {
     expect(component.currentSnap).toBe('peek');
     expect(component.currentTranslateY).toBe(520);
     expect(emitSpy).toHaveBeenCalledWith('peek');
+  });
+
+  it('should follow wheel pull from top and snap after wheel idle', () => {
+    vi.useFakeTimers();
+    component.ngOnInit();
+    component.currentSnap = 'peek';
+    component.isAnimating = false;
+    component.isDragging = false;
+    component.contentRef.nativeElement.scrollTop = 0;
+
+    const onContentWheel = (
+      component as unknown as {
+        onContentWheel: (event: WheelEvent) => void;
+      }
+    ).onContentWheel;
+
+    onContentWheel({ deltaY: -220 } as WheelEvent);
+
+    expect(component.currentTranslateY).toBe(740);
+    expect(component.currentSnap).toBe('peek');
+
+    vi.advanceTimersByTime(120);
+
+    expect(component.currentSnap).toBe('collapsed');
+    vi.useRealTimers();
+  });
+
+  it('should ignore wheel pull when content is scrolled', () => {
+    component.ngOnInit();
+    component.currentSnap = 'peek';
+    component.isAnimating = false;
+    component.isDragging = false;
+    component.contentRef.nativeElement.scrollTop = 12;
+
+    const onContentWheel = (
+      component as unknown as {
+        onContentWheel: (event: WheelEvent) => void;
+      }
+    ).onContentWheel;
+
+    onContentWheel({ deltaY: -50 } as WheelEvent);
+
+    expect(component.currentSnap).toBe('peek');
+    expect(component.currentTranslateY).toBe(520);
+  });
+
+  it('should ignore wheel pull while dragging', () => {
+    component.ngOnInit();
+    component.currentSnap = 'peek';
+    component.contentRef.nativeElement.scrollTop = 0;
+
+    const onContentWheel = (
+      component as unknown as {
+        onContentWheel: (event: WheelEvent) => void;
+      }
+    ).onContentWheel;
+
+    component.isDragging = true;
+    onContentWheel({ deltaY: -60 } as WheelEvent);
+    expect(component.currentSnap).toBe('peek');
+    expect(component.currentTranslateY).toBe(520);
+  });
+
+  it('should follow touch pull at top and snap on touch end', () => {
+    component.ngOnInit();
+    component.currentSnap = 'peek';
+    component.currentTranslateY = 520;
+    component.contentRef.nativeElement.scrollTop = 0;
+
+    const onContentTouchStart = (
+      component as unknown as {
+        onContentTouchStart: (event: TouchEvent) => void;
+      }
+    ).onContentTouchStart;
+    const onContentTouchMove = (
+      component as unknown as {
+        onContentTouchMove: (event: TouchEvent) => void;
+      }
+    ).onContentTouchMove;
+    const onContentTouchEnd = (
+      component as unknown as {
+        onContentTouchEnd: () => void;
+      }
+    ).onContentTouchEnd;
+
+    onContentTouchStart({
+      touches: {
+        item: () => ({ clientY: 200 }),
+      },
+    } as unknown as TouchEvent);
+
+    const preventDefault = vi.fn();
+    onContentTouchMove({
+      touches: {
+        item: () => ({ clientY: 420 }),
+      },
+      preventDefault,
+    } as unknown as TouchEvent);
+
+    expect(component.currentTranslateY).toBe(740);
+    expect(preventDefault).toHaveBeenCalled();
+
+    onContentTouchEnd();
+
+    expect(component.currentSnap).toBe('collapsed');
+
   });
 
   it('should scroll only the sheet content to a target element', () => {

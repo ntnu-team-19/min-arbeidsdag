@@ -247,6 +247,30 @@ describe('AssignmentDetailsPage', () => {
     expect(component.statusLabel).toBe('status.unconfirmedDetails');
   });
 
+  it('should return blue banner class for confirmed status', async () => {
+    await createComponent('1315598');
+
+    component.assignment = { ...mockAssignment, status: 'confirmed' };
+
+    expect(component.statusBannerClass).toBe('bg-[#1F4E79] text-white');
+  });
+
+  it('should return blue icon class for confirmed status', async () => {
+    await createComponent('1315598');
+
+    component.assignment = { ...mockAssignment, status: 'confirmed' };
+
+    expect(component.statusIconClass).toBe('text-[#1F4E79]');
+  });
+
+  it('should return blue button class for confirmed status', async () => {
+    await createComponent('1315598');
+
+    component.assignment = { ...mockAssignment, status: 'confirmed' };
+
+    expect(component.statusButtonClass).toBe('bg-[#1F4E79] text-white');
+  });
+
   it('should have constant statusTagClass', async () => {
     await createComponent('1315598');
 
