@@ -18,6 +18,7 @@ describe('AssignmentCard', () => {
 
   const mockAssignment: Assignment = {
     id: '1',
+    inquiryId: 5866375,
     title: 'Lokalisere rør',
     shortDescription:
       'Kartlegge og registrere nøyaktig posisjon og dybde på nedgravde kabler ved hjelp av spesialutstyr.',
@@ -57,6 +58,7 @@ describe('AssignmentCard', () => {
         notSpecified: 'Ikke oppgitt',
         today: 'I dag',
         tomorrow: 'I morgen',
+        orderNumber: 'Ordrenummer',
         markConfirmed: 'Marker som bekreftet',
         markUnconfirmed: 'Marker som ikke bekreftet',
       },
@@ -75,18 +77,25 @@ describe('AssignmentCard', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render assignment title, description, time, address and phone number', async () => {
+  it('should render assignment title, order number, time, address and phone number', async () => {
     await createComponent();
 
     const text = fixture.nativeElement.textContent;
 
     expect(text).toContain('Lokalisere rør');
-    expect(text).toContain(
-      'Kartlegge og registrere nøyaktig posisjon og dybde på nedgravde kabler ved hjelp av spesialutstyr.',
-    );
+    expect(text).toContain('Ordrenummer: 5866375');
     expect(text).toContain('09:30');
     expect(text).toContain('Klæbuveien 123');
     expect(text).toContain('+47 876 54 321');
+  });
+
+  it('should hide order number when inquiryId is missing', async () => {
+    await createComponent({
+      ...mockAssignment,
+      inquiryId: undefined,
+    });
+
+    expect(fixture.nativeElement.textContent).not.toContain('Ordrenummer');
   });
 
   it('should show notes indicator when assignment has notes or messages', async () => {
