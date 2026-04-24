@@ -1,5 +1,6 @@
 import { AvailabilityDto } from '../models/availability.dto';
 import { Assignment } from '../models/assignment-card.model';
+import { formatDurationFromMinutes } from './assignment-details.mapper';
 
 const AVAILABILITY_CARD_ID_PREFIX = 'availability';
 
@@ -53,9 +54,11 @@ export function mapAvailabilityDtoToAssignmentCardModel(
     title: dto.title,
     shortDescription: dto.shortDescription,
     time: formatTimeRange(dto.start, dto.stop, dto.allDay, options),
-    duration: Math.max(
-      0,
-      Math.round((new Date(dto.stop).getTime() - new Date(dto.start).getTime()) / (1000 * 60)),
+    duration: formatDurationFromMinutes(
+      Math.max(
+        0,
+        Math.round((new Date(dto.stop).getTime() - new Date(dto.start).getTime()) / (1000 * 60)),
+      ),
     ),
     address: dto.address,
     phoneNumber: dto.phoneNumber ?? '',
