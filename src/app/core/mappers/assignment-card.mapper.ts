@@ -76,7 +76,7 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     shortDescription: dto.inquiryDescription || 'Ingen beskrivelse tilgjengelig.',
     time: formatTimeFromIso(dto.showingStartDate),
     duration: dto.editedTimeOnsite,
-    address: `${dto.streetAddress}, ${dto.postalCode} ${dto.municipalityName}`,
+    address: dto.streetAddress,
     phoneNumber: dto.showingContactPhone || '',
     status,
     date: dto.showingStartDate ? dto.showingStartDate.split('T')[0] : 'Ukjent dato',
