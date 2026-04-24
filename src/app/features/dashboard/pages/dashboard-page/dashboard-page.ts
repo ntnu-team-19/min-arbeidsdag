@@ -362,6 +362,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   onMapBackgroundClicked(): void {
     this.clearCardInteractionState();
     this.clearMapSelectionState();
+    this.mapBottomSheet?.snapTo('collapsed');
   }
 
   @HostListener('document:pointerdown')

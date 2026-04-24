@@ -44,7 +44,7 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-function formatDurationFromMinutes(minutes: number): string {
+export function formatDurationFromMinutes(minutes: number | null | undefined): string {
   if (!minutes || minutes <= 0) return '-';
 
   if (minutes < 60) {

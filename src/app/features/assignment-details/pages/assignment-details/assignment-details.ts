@@ -137,7 +137,7 @@ export class AssignmentDetailsPage implements OnInit {
       case 'completed':
         return 'bg-[#54DA8C] text-black';
       case 'confirmed':
-        return 'bg-[#54DA8C] text-black';
+        return 'bg-[#1F4E79] text-white';
       case 'cancelled':
         return 'bg-[#DC8A8A] text-black';
       case 'unconfirmed':
@@ -177,7 +177,7 @@ export class AssignmentDetailsPage implements OnInit {
       case 'completed':
         return 'text-[#54DA8C]';
       case 'confirmed':
-        return 'text-[#54DA8C]';
+        return 'text-[#1F4E79]';
       case 'cancelled':
         return 'text-[#DC8A8A]';
       case 'unconfirmed':
@@ -197,7 +197,7 @@ export class AssignmentDetailsPage implements OnInit {
       case 'completed':
         return 'bg-[#54DA8C] text-black';
       case 'confirmed':
-        return 'bg-[#54DA8C] text-black';
+        return 'bg-[#1F4E79] text-white';
       case 'cancelled':
         return 'bg-[#DC8A8A] text-black';
       case 'unconfirmed':

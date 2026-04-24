@@ -35,6 +35,10 @@
   --map-marker-upcoming-text: #ffffff;
   --map-marker-upcoming-halo: rgba(84, 127, 169, 0.2);
   --map-marker-upcoming-stroke: #eef4fa;
+  --map-marker-confirmed-fill: #1f4e79;
+  --map-marker-confirmed-text: #ffffff;
+  --map-marker-confirmed-halo: rgba(31, 78, 121, 0.2);
+  --map-marker-confirmed-stroke: #e7f0f8;
   --map-marker-completed-fill: #54da8c;
   --map-marker-completed-text: #12311f;
   --map-marker-completed-halo: rgba(84, 218, 140, 0.2);
@@ -106,6 +110,10 @@
   --map-marker-upcoming-text: #0b1220;
   --map-marker-upcoming-halo: rgba(124, 174, 222, 0.28);
   --map-marker-upcoming-stroke: #e4f1fe;
+  --map-marker-confirmed-fill: #5a98d9;
+  --map-marker-confirmed-text: #0b1220;
+  --map-marker-confirmed-halo: rgba(90, 152, 217, 0.3);
+  --map-marker-confirmed-stroke: #d7e9fb;
   --map-marker-completed-fill: #54da8c;
   --map-marker-completed-text: #0f2a1a;
   --map-marker-completed-halo: rgba(84, 218, 140, 0.28);

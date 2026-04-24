@@ -56,8 +56,8 @@ export class MiniAssignmentCard {
     },
     confirmed: {
       label: 'status.confirmedShort',
-      badgeClass: 'bg-[#54DA8C] text-black',
-      dotClass: 'border-[#54DA8C] text-[#54DA8C]',
+      badgeClass: 'bg-[#1F4E79] text-white',
+      dotClass: 'border-[#1F4E79] text-[#1F4E79]',
     },
     unconfirmed: {
       label: 'status.unconfirmedShort',

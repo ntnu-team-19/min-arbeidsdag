@@ -20,7 +20,7 @@ export interface Assignment {
   title: string;
   shortDescription?: string;
   time: string;
-  duration?: number | null;
+  duration?: string | number | null;
   address: string;
   phoneNumber: string;
   status: AssignmentStatus;
