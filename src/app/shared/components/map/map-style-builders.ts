@@ -29,7 +29,7 @@ export function createMarkerStyle(feature: FeatureLike, ctx: MarkerStyleContext)
   if (stopKind === 'start') {
     return new Style({
       image: new Icon({
-        src: '/icons/home-pin.svg',
+        src: 'icons/home-pin.svg',
         anchor: [0.5, 1],
         anchorXUnits: 'fraction',
         anchorYUnits: 'fraction',
