@@ -8,6 +8,7 @@ import {
   ViewChild,
   OnInit,
   AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 
 export type SnapPoint = 'collapsed' | 'peek' | 'expanded';
@@ -22,7 +23,7 @@ export const MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT = 156;
   templateUrl: './map-bottom-sheet.html',
   styleUrl: './map-bottom-sheet.css',
 })
-export class MapBottomSheet implements OnInit, AfterViewInit {
+export class MapBottomSheet implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('sheet') sheetRef!: ElementRef<HTMLDivElement>;
   @ViewChild('content') contentRef!: ElementRef<HTMLDivElement>;
 
@@ -37,6 +38,10 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
 
   private startPointerY = 0;
   private startTranslateY = 0;
+  private touchStartY: number | null = null;
+  private touchDragStartTranslateY = 0;
+  private isTopPullDragging = false;
+  private wheelSnapTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private snapPoints: Record<SnapPoint, number> = {
     expanded: 0,
@@ -53,10 +58,16 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.calculateSnapPoints();
     this.currentTranslateY = this.snapPoints[this.currentSnap];
+    this.bindContentListeners();
 
     requestAnimationFrame(() => {
       this.isAnimating = true;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearWheelSnapTimeout();
+    this.unbindContentListeners();
   }
 
   @HostListener('window:resize')
@@ -66,6 +77,7 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
   }
 
   onPointerDown(event: PointerEvent): void {
+    this.clearWheelSnapTimeout();
     this.isDragging = true;
     this.isAnimating = false;
     this.startPointerY = event.clientY;
@@ -97,6 +109,7 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
   snapTo(point: SnapPoint, emit = true): void {
     this.currentSnap = point;
     this.currentTranslateY = this.snapPoints[point];
+    this.isTopPullDragging = false;
 
     if (point === 'collapsed' && this.contentRef?.nativeElement) {
       this.contentRef.nativeElement.scrollTop = 0;
@@ -137,6 +150,120 @@ export class MapBottomSheet implements OnInit, AfterViewInit {
       peek: this.clamp(peekRaw, expanded, collapsed),
       collapsed,
     };
+  }
+
+  private bindContentListeners(): void {
+    const content = this.contentRef?.nativeElement;
+    if (!content) {
+      return;
+    }
+
+    content.addEventListener('wheel', this.onContentWheel as EventListener, { passive: true });
+    content.addEventListener('touchstart', this.onContentTouchStart as EventListener, {
+      passive: true,
+    });
+    content.addEventListener('touchmove', this.onContentTouchMove as EventListener, { passive: false });
+    content.addEventListener('touchend', this.onContentTouchEnd as EventListener, { passive: true });
+    content.addEventListener('touchcancel', this.onContentTouchEnd as EventListener, {
+      passive: true,
+    });
+  }
+
+  private unbindContentListeners(): void {
+    const content = this.contentRef?.nativeElement;
+    if (!content) {
+      return;
+    }
+
+    content.removeEventListener('wheel', this.onContentWheel as EventListener);
+    content.removeEventListener('touchstart', this.onContentTouchStart as EventListener);
+    content.removeEventListener('touchmove', this.onContentTouchMove as EventListener);
+    content.removeEventListener('touchend', this.onContentTouchEnd as EventListener);
+    content.removeEventListener('touchcancel', this.onContentTouchEnd as EventListener);
+  }
+
+  private onContentWheel = (event: WheelEvent): void => {
+    if (this.isDragging) {
+      return;
+    }
+
+    const content = this.contentRef?.nativeElement;
+    if (!content || content.scrollTop > 0 || event.deltaY >= 0) {
+      this.clearWheelSnapTimeout();
+      return;
+    }
+
+    this.isAnimating = false;
+    const next = this.currentTranslateY + Math.abs(event.deltaY);
+    this.currentTranslateY = this.clamp(next, this.snapPoints.expanded, this.snapPoints.collapsed);
+
+    this.clearWheelSnapTimeout();
+    this.wheelSnapTimeoutId = setTimeout(() => {
+      this.isAnimating = true;
+      this.snapTo(this.getNearestSnapPoint(this.currentTranslateY));
+    }, 120);
+  };
+
+  private onContentTouchStart = (event: TouchEvent): void => {
+    this.clearWheelSnapTimeout();
+    const firstTouch = event.touches.item(0);
+    this.touchStartY = firstTouch?.clientY ?? null;
+    this.touchDragStartTranslateY = this.currentTranslateY;
+    this.isTopPullDragging = false;
+  };
+
+  private onContentTouchMove = (event: TouchEvent): void => {
+    if (this.isDragging) {
+      return;
+    }
+
+    const content = this.contentRef?.nativeElement;
+    const firstTouch = event.touches.item(0);
+    if (!content || !firstTouch || this.touchStartY === null) {
+      return;
+    }
+
+    const deltaY = firstTouch.clientY - this.touchStartY;
+
+    if (content.scrollTop > 0 && !this.isTopPullDragging) {
+      this.touchStartY = firstTouch.clientY;
+      this.touchDragStartTranslateY = this.currentTranslateY;
+      return;
+    }
+
+    if (!this.isTopPullDragging && content.scrollTop <= 0 && deltaY > 0) {
+      this.isTopPullDragging = true;
+      this.isAnimating = false;
+      this.touchDragStartTranslateY = this.currentTranslateY;
+    }
+
+    if (!this.isTopPullDragging) {
+      return;
+    }
+
+    const next = this.touchDragStartTranslateY + deltaY;
+    this.currentTranslateY = this.clamp(next, this.snapPoints.expanded, this.snapPoints.collapsed);
+    event.preventDefault();
+  };
+
+  private onContentTouchEnd = (): void => {
+    if (this.isTopPullDragging) {
+      this.isAnimating = true;
+      this.snapTo(this.getNearestSnapPoint(this.currentTranslateY));
+    }
+
+    this.touchStartY = null;
+    this.isTopPullDragging = false;
+    this.touchDragStartTranslateY = this.currentTranslateY;
+  }
+
+  private clearWheelSnapTimeout(): void {
+    if (!this.wheelSnapTimeoutId) {
+      return;
+    }
+
+    clearTimeout(this.wheelSnapTimeoutId);
+    this.wheelSnapTimeoutId = null;
   }
 
   private getNearestSnapPoint(value: number): SnapPoint {
