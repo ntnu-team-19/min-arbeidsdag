@@ -16,6 +16,7 @@ interface OsrmStep {
 
 interface OsrmLeg {
   steps?: OsrmStep[];
+  duration?: number;
 }
 
 interface OsrmRouteResponse {
@@ -85,6 +86,7 @@ export class RoutingService {
         const fromStop = stops[index];
         const toStop = stops[index + 1];
         const coordinates = this.getLegCoordinates(leg);
+        const durationMinutes = this.toTravelMinutes(leg.duration);
 
         if (!fromStop || !toStop || coordinates.length < 2) {
           return undefined;
@@ -95,9 +97,18 @@ export class RoutingService {
           fromStopId: fromStop.id,
           toStopId: toStop.id,
           coordinates,
+          ...(durationMinutes !== undefined ? { durationMinutes } : {}),
         };
       })
       .filter((segment): segment is MapRouteSegment => segment !== undefined);
+  }
+
+  private toTravelMinutes(durationSeconds: number | undefined): number | undefined {
+    if (typeof durationSeconds !== 'number' || !Number.isFinite(durationSeconds)) {
+      return undefined;
+    }
+
+    return Math.max(0, Math.round(durationSeconds / 60));
   }
 
   private getLegCoordinates(leg: OsrmLeg): MapRouteCoordinate[] {
