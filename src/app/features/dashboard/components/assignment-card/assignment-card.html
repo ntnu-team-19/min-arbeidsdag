@@ -47,7 +47,11 @@
           <h3 class="text-theme-primary text-xl font-bold sm:truncate">
             {{ assignment.title }}
           </h3>
-          @if (assignment.inquiryId) {
+          @if (assignment.isAvailability && assignment.shortDescription) {
+            <p class="text-theme-muted-strong mt-1 line-clamp-2 text-sm">
+              {{ assignment.shortDescription }}
+            </p>
+          } @else if (assignment.inquiryId) {
             <p
               class="text-theme-muted mt-1 text-md font-medium"
               data-testid="assignment-order-number"
