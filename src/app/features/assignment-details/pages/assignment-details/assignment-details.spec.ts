@@ -24,6 +24,7 @@ describe('AssignmentDetailsPage', () => {
 
   const mockAssignment: AssignmentDetails = {
     id: '1315598',
+    inquiryId: 5866375,
     title: 'Ledningsmålingsoppdrag',
     status: 'upcoming',
     date: '2026-02-20',
@@ -115,6 +116,16 @@ describe('AssignmentDetailsPage', () => {
     );
 
     expect(topBarTitle?.textContent).toContain('assignment.detailsTitle');
+  });
+
+  it('should render order number below the assignment title', async () => {
+    await createComponent('1315598');
+
+    const orderNumber = fixture.nativeElement.querySelector(
+      '[data-testid="assignment-details-order-number"]',
+    );
+
+    expect(orderNumber?.textContent).toContain('assignment.orderNumber: 5866375');
   });
 
   it('should load assignment on init when route id exists', async () => {
