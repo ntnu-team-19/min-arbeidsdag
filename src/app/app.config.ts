@@ -19,6 +19,6 @@ export const appConfig: ApplicationConfig = {
       },
     }),
     provideTranslateService({ fallbackLang: 'no' }),
-    ...provideTranslateHttpLoader({ prefix: '/assets/i18n/', suffix: '.json' }),
+    ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
   ],
 };
