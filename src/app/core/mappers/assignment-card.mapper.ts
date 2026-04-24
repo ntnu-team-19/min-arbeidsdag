@@ -1,5 +1,6 @@
 import { AssignmentDetailsDto } from '../models/assignment-details.dto';
 import { AssignmentStatus, Assignment } from '../models/assignment-card.model';
+import { formatDurationFromMinutes } from './assignment-details.mapper';
 
 function isTomorrow(dateString: string | null): boolean {
   if (!dateString) return false;
@@ -75,7 +76,7 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
     title: dto.inquiryName || 'Oppdrag uten tittel',
     shortDescription: dto.inquiryDescription || 'Ingen beskrivelse tilgjengelig.',
     time: formatTimeFromIso(dto.showingStartDate),
-    duration: dto.editedTimeOnsite,
+    duration: formatDurationFromMinutes(dto.editedTimeOnsite),
     address: dto.streetAddress,
     phoneNumber: dto.showingContactPhone || '',
     status,
