@@ -15,6 +15,7 @@ export interface AssignmentLocationPoint {
 export interface AssignmentDetails {
   id: string;
   title: string;
+  inquiryId?: number;
   status: AssignmentStatus;
 
   date: string;

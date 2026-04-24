@@ -90,6 +90,7 @@ export function mapAssignmentDetailsDtoToAssignmentDetails(
   return {
     id: dto.id.toString(),
     title: dto.inquiryName || 'Uten tittel',
+    inquiryId: dto.inquiryId,
     status,
 
     date: formatDate(dto.showingStartDate),

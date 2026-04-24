@@ -49,6 +49,7 @@
     "tomorrow": "I morgen",
     "label": "Oppdrag",
     "detailsTitle": "Oppdragsdetaljer",
+    "orderNumber": "Ordrenummer",
     "markConfirmed": "Marker som bekreftet",
     "markUnconfirmed": "Marker som ikke bekreftet"
   },
