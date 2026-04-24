@@ -49,6 +49,7 @@
     "tomorrow": "Tomorrow",
     "label": "Assignment",
     "detailsTitle": "Assignment details",
+    "orderNumber": "Order number",
     "markConfirmed": "Mark as confirmed",
     "markUnconfirmed": "Mark as not confirmed"
   },
