@@ -3,11 +3,22 @@ export interface MapLocation {
   lon?: number | null;
 }
 
+export type MapAssignmentStatus =
+  | 'ongoing'
+  | 'next'
+  | 'upcoming'
+  | 'completed'
+  | 'cancelled'
+  | 'confirmed'
+  | 'unconfirmed'
+  | 'absence';
+
 export interface Assignment {
   id: string | number;
   name: string;
   location?: MapLocation | null;
   description?: string;
+  status?: MapAssignmentStatus | null;
 }
 
 export type MapStopKind = 'start' | 'assignment' | 'end';

@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { MiniAssignmentCard } from './mini-assignment-card';
 import { Assignment } from '../../../../core/models/assignment-card.model';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('MiniAssignmentCard', () => {
   let component: MiniAssignmentCard;
@@ -66,6 +66,16 @@ describe('MiniAssignmentCard', () => {
 
     expect(text).toContain('Kløbuvegen 179, 7031 Trondheim');
     expect(text).toContain('08:30');
+  });
+
+  it('should render the provided sequence number in the marker badge', () => {
+    fixture = TestBed.createComponent(MiniAssignmentCard);
+    component = fixture.componentInstance;
+    component.assignment = mockAssignment;
+    component.sequenceNumber = 4;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('4');
   });
 
   it('should show notes indicator when assignment has notes or messages', async () => {

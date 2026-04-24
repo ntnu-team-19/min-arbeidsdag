@@ -111,7 +111,15 @@
   },
   "map": {
     "loadError": "Klarte ikke å laste kartet",
-    "loadErrorMessage": "Sjekk internettilkoblingen din og prøv igjen."
+    "loadErrorMessage": "Sjekk internettilkoblingen din og prøv igjen.",
+    "openControlsMenu": "Åpne kartkontroller",
+    "followUser": "Følg meg",
+    "stopFollowingUser": "Stopp følging",
+    "locatingUser": "Finner posisjonen din...",
+    "locationPermissionDenied": "Live-posisjon er ikke tilgjengelig på denne enheten.",
+    "locationUnavailable": "Klarte ikke å hente live-posisjon akkurat nå.",
+    "showCompletedAssignments": "Vis fullførte i kartet",
+    "hideCompletedAssignments": "Skjul fullførte i kartet"
   },
   "miniCard": {
     "showDirections": "Vis veibeskrivelse"

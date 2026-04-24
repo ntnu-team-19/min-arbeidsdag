@@ -9,10 +9,20 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Assignment } from '../../../../core/models/assignment-card.model';
 import { DailyProgressSummary } from '../../../../core/models/daily-progress.model';
 import { DailyProgressInfobox } from '../../components/daily-progress-infobox/daily-progress-infobox';
-import { MAP_BOTTOM_SHEET_PEEK_RATIO } from '../../components/map-bottom-sheet/map-bottom-sheet';
+import { AssignmentMap } from '../../../../shared/components/map/map';
+import { MiniAssignmentCard } from '../../components/mini-assignment-card/mini-assignment-card';
+import {
+  MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT,
+  MAP_BOTTOM_SHEET_EXPANDED_RATIO,
+  MAP_BOTTOM_SHEET_PEEK_RATIO,
+} from '../../components/map-bottom-sheet/map-bottom-sheet';
 import { RoutingService } from '../../../../core/services/routing.service';
 import { buildRouteSegmentId, MapRouteSegment } from '../../../../shared/components/map/map.models';
 import { AvailabilityService } from '../../../../core/services/availability.service';
+import {
+  buildAvailabilityCardId,
+  mapAvailabilityDtoToAssignmentCardModel,
+} from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
 
 const MOCK_CARDS: Assignment[] = [
@@ -242,6 +252,10 @@ describe('DashboardPage', () => {
         plannedDrivingTime: 'Planlagt kjøretid',
         drivingTimeUsed: 'Kjøretid brukt',
       },
+      map: {
+        showCompletedAssignments: 'Vis fullførte i kartet',
+        hideCompletedAssignments: 'Skjul fullførte i kartet',
+      },
     });
     translateService.use('no');
 
@@ -282,7 +296,97 @@ describe('DashboardPage', () => {
       'assignment-1',
       'assignment-2',
       'assignment-3',
-      'assignment-4',
+      'end',
+    ]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([2, 3, 4]);
+    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
+    expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
+  });
+
+  it('should include assignment status in map assignments and expose the fallback user location', () => {
+    expect(component.mapAssignments[0]).toEqual(
+      expect.objectContaining({
+        id: '1',
+        status: 'ongoing',
+      }),
+    );
+    expect(component.fallbackUserLocation).toEqual(MOCK_TECHNICIAN_LOCATIONS[0]?.location);
+  });
+
+  it('should keep fixed day sequence numbers for assignments', () => {
+    expect(component.assignmentSequenceNumbers).toEqual({
+      '4': 1,
+      '1': 2,
+      '2': 3,
+      '3': 4,
+    });
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([2, 3, 4]);
+  });
+
+  it('should number an inserted absence in the visible list order', () => {
+    const availabilityCard = mapAvailabilityDtoToAssignmentCardModel(
+      {
+        title: 'Fravær',
+        shortDescription: 'Fravær',
+        address: 'Fravær',
+        phoneNumber: '',
+        start: '2026-03-20T12:30:00.000Z',
+        stop: '2026-03-20T13:30:00.000Z',
+        calculatedTraveltime: 60,
+        available: false,
+        allDay: false,
+        absenceWithoutGoingHome: false,
+        locationPoint: { x: 10.4, y: 63.42 },
+      },
+      {
+        locale: 'nb-NO',
+        allDayLabel: 'Hele dagen',
+        unknownTimeLabel: 'Ukjent tidspunkt',
+      },
+    );
+
+    component.assignmentCards = [
+      {
+        ...MOCK_CARDS[0],
+        status: 'ongoing',
+      },
+      {
+        ...MOCK_CARDS[1],
+        status: 'next',
+      },
+      availabilityCard,
+      {
+        ...MOCK_CARDS[2],
+        status: 'upcoming',
+      },
+    ];
+
+    component.assignmentSequenceNumbers = (
+      component as unknown as {
+        buildAssignmentSequenceNumbers: (cards: Assignment[]) => Record<string, number>;
+      }
+    ).buildAssignmentSequenceNumbers(component.assignmentCards);
+
+    (
+      component as unknown as {
+        refreshMapData: (loadVersion: number) => void;
+      }
+    ).refreshMapData(1);
+
+    expect(component.mapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-1',
+      'assignment-2',
+      `assignment-${buildAvailabilityCardId('2026-03-20T12:30:00.000Z')}`,
+      'assignment-3',
       'end',
     ]);
     expect(
@@ -290,8 +394,11 @@ describe('DashboardPage', () => {
         .filter((stop) => stop.kind === 'assignment')
         .map((stop) => stop.sequenceNumber),
     ).toEqual([1, 2, 3, 4]);
-    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
-    expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
+  });
+
+  it('should default the overview bottom inset ratio to the peek sheet ratio', () => {
+    expect(component.currentMapSheetSnap).toBe('peek');
+    expect(component.overviewBottomInsetRatio).toBeCloseTo(1 - MAP_BOTTOM_SHEET_PEEK_RATIO);
   });
 
   it('should show day selector', () => {
@@ -393,6 +500,25 @@ describe('DashboardPage', () => {
     expect(infobox).toBeFalsy();
   });
 
+  it('should hide travel time indicators before completed assignments in the map bottom sheet', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+    mapFixture.detectChanges();
+
+    const travelIndicators = mapFixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
+    expect(travelIndicators).toHaveLength(3);
+  });
+
+  it('should keep list-view travel time indicators unchanged', () => {
+    const travelIndicators = fixture.debugElement.queryAll(By.css('app-travel-time-indicator'));
+    expect(travelIndicators).toHaveLength(3);
+  });
+
   it('should pass the selected day to the daily progress infobox', async () => {
     const todayInfobox = fixture.debugElement.query(By.directive(DailyProgressInfobox));
     expect(todayInfobox.componentInstance.day).toBe('today');
@@ -405,6 +531,55 @@ describe('DashboardPage', () => {
 
     const tomorrowInfobox = tomorrowFixture.debugElement.query(By.directive(DailyProgressInfobox));
     expect(tomorrowInfobox.componentInstance.day).toBe('tomorrow');
+  });
+
+  it('should pass the overview bottom inset ratio to the map in map view', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+    mapFixture.detectChanges();
+
+    const mapDebug = mapFixture.debugElement.query(By.directive(AssignmentMap));
+
+    expect(mapDebug.componentInstance.enableCompletedFilter).toBe(true);
+    expect(mapDebug.componentInstance.overviewBottomInsetRatio).toBeCloseTo(
+      1 - MAP_BOTTOM_SHEET_PEEK_RATIO,
+    );
+  });
+
+  it('should update overview inset ratio when the bottom sheet snap changes', () => {
+    Object.defineProperty(component, 'mapStageRef', {
+      value: {
+        nativeElement: {
+          getBoundingClientRect: () => ({
+            height: 800,
+          }),
+        },
+      },
+      configurable: true,
+    });
+
+    component.onSnapChanged('expanded');
+    expect(component.currentMapSheetSnap).toBe('expanded');
+    expect(component.overviewBottomInsetRatio).toBeCloseTo(1 - MAP_BOTTOM_SHEET_EXPANDED_RATIO);
+
+    component.onSnapChanged('collapsed');
+    expect(component.currentMapSheetSnap).toBe('collapsed');
+    expect(component.overviewBottomInsetRatio).toBeCloseTo(
+      MAP_BOTTOM_SHEET_COLLAPSED_VISIBLE_HEIGHT / 800,
+    );
+  });
+
+  it('should disable overview auto-fit when the bottom sheet is expanded', () => {
+    expect(component.enableOverviewAutoFit).toBe(true);
+
+    component.onSnapChanged('expanded');
+
+    expect(component.enableOverviewAutoFit).toBe(false);
   });
 
   it('should zoom to the incoming leg, snap the sheet, and highlight the matching card when a marker is clicked', () => {
@@ -440,6 +615,7 @@ describe('DashboardPage', () => {
 
     component.onMarkerClicked(markerAssignment);
 
+    expect(component.focusedAssignmentId).toBe('2');
     expect(component.activeRouteSegmentId).toBe(
       buildRouteSegmentId('assignment-1', 'assignment-2'),
     );
@@ -495,14 +671,15 @@ describe('DashboardPage', () => {
     expect(cardRow.classList.contains('marker-focused')).toBe(false);
   });
 
-  it('should zoom assignment 1 together with the start stop', () => {
+  it('should zoom a sequence-1 assignment together with the start stop when that leg exists', () => {
     component.isListView = false;
 
     const focusAssignmentLeg = vi.fn();
+    const focusAssignment = vi.fn();
 
     (component as unknown as Record<string, unknown>)['assignmentMap'] = {
       focusAssignmentLeg,
-      focusAssignment: vi.fn(),
+      focusAssignment,
     };
     (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
       snapTo: vi.fn(),
@@ -511,21 +688,65 @@ describe('DashboardPage', () => {
     (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
       find: () => undefined,
     };
+    component.assignmentSequenceNumbers = {
+      '4': 1,
+      '1': 2,
+      '2': 3,
+      '3': 4,
+    };
+    component.mapStops = [
+      {
+        id: 'start',
+        kind: 'start',
+        label: 'Start',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+      {
+        id: 'assignment-4',
+        kind: 'assignment',
+        label: 'Fullført oppdrag',
+        assignmentId: '4',
+        sequenceNumber: 1,
+        location: { lat: 63.4102, lon: 10.4399 },
+      },
+      {
+        id: 'end',
+        kind: 'end',
+        label: 'Slutt',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+    ];
+    component.allDayMapStops = component.mapStops;
+    component.routeSegments = [
+      {
+        id: buildRouteSegmentId('start', 'assignment-4'),
+        fromStopId: 'start',
+        toStopId: 'assignment-4',
+        coordinates: [
+          [10.35346, 63.35514],
+          [10.4399, 63.4102],
+        ],
+      },
+    ];
+    component.allRouteSegments = component.routeSegments;
 
     component.onMarkerClicked({
-      id: '1',
-      name: 'Pågående oppdrag',
-      location: { lat: 63.4305, lon: 10.3951 },
+      id: '4',
+      name: 'Fullført oppdrag',
+      location: { lat: 63.4102, lon: 10.4399 },
     });
 
-    expect(component.activeRouteSegmentId).toBe(buildRouteSegmentId('start', 'assignment-1'));
+    expect(component.activeRouteSegmentId).toBe(buildRouteSegmentId('start', 'assignment-4'));
     expect(focusAssignmentLeg).toHaveBeenCalledWith(
       expect.objectContaining({
         fromStop: expect.objectContaining({ id: 'start' }),
-        toStop: expect.objectContaining({ id: 'assignment-1' }),
-        routeSegment: MOCK_ROUTE_SEGMENTS[0],
+        toStop: expect.objectContaining({ id: 'assignment-4' }),
+        routeSegment: expect.objectContaining({
+          id: buildRouteSegmentId('start', 'assignment-4'),
+        }),
       }),
     );
+    expect(focusAssignment).not.toHaveBeenCalled();
   });
 
   it('should reuse marker click flow when mini card directions is clicked', () => {
@@ -547,17 +768,382 @@ describe('DashboardPage', () => {
       name: 'Kommende oppdrag',
       location: { lat: 63.4105, lon: 10.3772 },
       description: 'Adresse 3, 7021 Trondheim',
+      status: 'upcoming',
     });
+  });
+
+  it('should show completed assignments in the map when the map filter is toggled', () => {
+    component.onCompletedAssignmentsToggle();
+
+    expect(component.showCompletedAssignments).toBe(true);
+    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
+    expect(component.mapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-4',
+      'assignment-1',
+      'assignment-2',
+      'assignment-3',
+      'end',
+    ]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([1, 2, 3, 4]);
+    expect(component.allDayMapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-4',
+      'assignment-1',
+      'assignment-2',
+      'assignment-3',
+      'end',
+    ]);
+  });
+
+  it('should preserve original day numbers when a hidden completed assignment creates a gap', () => {
+    component.assignmentCards = [MOCK_CARDS[0], MOCK_CARDS[3], MOCK_CARDS[1], MOCK_CARDS[2]];
+    component.assignmentSequenceNumbers = {
+      '1': 1,
+      '4': 2,
+      '2': 3,
+      '3': 4,
+    };
+    component.showCompletedAssignments = false;
+
+    (
+      component as unknown as {
+        refreshMapData: (loadVersion: number) => void;
+      }
+    ).refreshMapData(1);
+
+    expect(component.mapAssignments.map((assignment) => assignment.id)).toEqual(['1', '2', '3']);
+    expect(component.mapStops.map((stop) => stop.id)).toEqual([
+      'start',
+      'assignment-1',
+      'assignment-2',
+      'assignment-3',
+      'end',
+    ]);
+    expect(
+      component.mapStops
+        .filter((stop) => stop.kind === 'assignment')
+        .map((stop) => stop.sequenceNumber),
+    ).toEqual([1, 3, 4]);
+  });
+
+  it('should show the route from home for the first assignment of the day', () => {
+    component.isListView = false;
+    component.assignmentSequenceNumbers = { '1': 1, '2': 2 };
+    component.mapStops = [
+      {
+        id: 'start',
+        kind: 'start',
+        label: 'Start',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+      {
+        id: 'assignment-1',
+        kind: 'assignment',
+        label: 'Pågående oppdrag',
+        assignmentId: '1',
+        sequenceNumber: 1,
+        location: { lat: 63.4305, lon: 10.3951 },
+      },
+      {
+        id: 'end',
+        kind: 'end',
+        label: 'Slutt',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+    ];
+    component.allDayMapStops = component.mapStops;
+    component.routeSegments = [
+      {
+        id: buildRouteSegmentId('start', 'assignment-1'),
+        fromStopId: 'start',
+        toStopId: 'assignment-1',
+        coordinates: [
+          [10.35346, 63.35514],
+          [10.3951, 63.4305],
+        ],
+      },
+    ];
+    component.allRouteSegments = component.routeSegments;
+
+    const focusAssignmentLeg = vi.fn();
+    const focusAssignment = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignmentLeg,
+      focusAssignment,
+    };
+    (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
+      snapTo: vi.fn(),
+      scrollToElement: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: () => undefined,
+    };
+
+    component.onMarkerClicked({
+      id: '1',
+      name: 'Pågående oppdrag',
+      location: { lat: 63.4305, lon: 10.3951 },
+    });
+
+    expect(component.activeRouteSegmentId).toBe(buildRouteSegmentId('start', 'assignment-1'));
+    expect(focusAssignmentLeg).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromStop: expect.objectContaining({ id: 'start' }),
+        toStop: expect.objectContaining({ id: 'assignment-1' }),
+      }),
+    );
+    expect(focusAssignment).not.toHaveBeenCalled();
+  });
+
+  it('should show the true previous assignment route even when that assignment is hidden from the map', () => {
+    component.isListView = false;
+    component.assignmentSequenceNumbers = {
+      '1': 1,
+      '2': 2,
+      '3': 3,
+    };
+    component.mapStops = [
+      {
+        id: 'start',
+        kind: 'start',
+        label: 'Start',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+      {
+        id: 'assignment-2',
+        kind: 'assignment',
+        label: 'Neste oppdrag',
+        assignmentId: '2',
+        sequenceNumber: 2,
+        location: { lat: 63.4365, lon: 10.4512 },
+      },
+      {
+        id: 'assignment-3',
+        kind: 'assignment',
+        label: 'Kommende oppdrag',
+        assignmentId: '3',
+        sequenceNumber: 3,
+        location: { lat: 63.4105, lon: 10.3772 },
+      },
+      {
+        id: 'end',
+        kind: 'end',
+        label: 'Slutt',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+    ];
+    component.allDayMapStops = [
+      {
+        id: 'start',
+        kind: 'start',
+        label: 'Start',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+      {
+        id: 'assignment-1',
+        kind: 'assignment',
+        label: 'Første oppdrag',
+        assignmentId: '1',
+        sequenceNumber: 1,
+        location: { lat: 63.4305, lon: 10.3951 },
+      },
+      {
+        id: 'assignment-2',
+        kind: 'assignment',
+        label: 'Neste oppdrag',
+        assignmentId: '2',
+        sequenceNumber: 2,
+        location: { lat: 63.4365, lon: 10.4512 },
+      },
+      {
+        id: 'assignment-3',
+        kind: 'assignment',
+        label: 'Kommende oppdrag',
+        assignmentId: '3',
+        sequenceNumber: 3,
+        location: { lat: 63.4105, lon: 10.3772 },
+      },
+      {
+        id: 'end',
+        kind: 'end',
+        label: 'Slutt',
+        location: { lat: 63.35514, lon: 10.35346 },
+      },
+    ];
+    component.routeSegments = [
+      {
+        id: buildRouteSegmentId('assignment-2', 'assignment-3'),
+        fromStopId: 'assignment-2',
+        toStopId: 'assignment-3',
+        coordinates: [
+          [10.4512, 63.4365],
+          [10.3772, 63.4105],
+        ],
+      },
+    ];
+    component.allRouteSegments = [
+      {
+        id: buildRouteSegmentId('start', 'assignment-1'),
+        fromStopId: 'start',
+        toStopId: 'assignment-1',
+        coordinates: [
+          [10.35346, 63.35514],
+          [10.3951, 63.4305],
+        ],
+      },
+      {
+        id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+        fromStopId: 'assignment-1',
+        toStopId: 'assignment-2',
+        coordinates: [
+          [10.3951, 63.4305],
+          [10.4512, 63.4365],
+        ],
+      },
+      {
+        id: buildRouteSegmentId('assignment-2', 'assignment-3'),
+        fromStopId: 'assignment-2',
+        toStopId: 'assignment-3',
+        coordinates: [
+          [10.4512, 63.4365],
+          [10.3772, 63.4105],
+        ],
+      },
+    ];
+
+    const focusAssignmentLeg = vi.fn();
+    const focusAssignment = vi.fn();
+
+    (component as unknown as Record<string, unknown>)['assignmentMap'] = {
+      focusAssignmentLeg,
+      focusAssignment,
+    };
+    (component as unknown as Record<string, unknown>)['mapBottomSheet'] = {
+      snapTo: vi.fn(),
+      scrollToElement: vi.fn(),
+    };
+    (component as unknown as Record<string, unknown>)['miniAssignmentCardRows'] = {
+      find: () => undefined,
+    };
+
+    component.onMarkerClicked({
+      id: '2',
+      name: 'Neste oppdrag',
+      location: { lat: 63.4365, lon: 10.4512 },
+    });
+
+    expect(component.activeRouteSegmentId).toBe(
+      buildRouteSegmentId('assignment-1', 'assignment-2'),
+    );
+    expect(component.displayedRouteSegments.map((segment) => segment.id)).toContain(
+      buildRouteSegmentId('assignment-1', 'assignment-2'),
+    );
+    expect(focusAssignmentLeg).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromStop: expect.objectContaining({ id: 'assignment-1' }),
+        toStop: expect.objectContaining({ id: 'assignment-2' }),
+        routeSegment: expect.objectContaining({
+          id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+        }),
+      }),
+    );
+    expect(focusAssignment).not.toHaveBeenCalled();
+  });
+
+  it('should pass fixed day sequence numbers to mini assignment cards in map view', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+    mapFixture.detectChanges();
+
+    const miniCards = mapFixture.debugElement.queryAll(By.directive(MiniAssignmentCard));
+    expect(miniCards).toHaveLength(4);
+    expect(miniCards.map((card) => card.componentInstance.sequenceNumber)).toEqual([2, 3, 4, 1]);
+  });
+
+  it('should clear focus when the completed filter removes the focused assignment', () => {
+    component.showCompletedAssignments = true;
+    component.focusedAssignmentId = '4';
+    component.activeRouteSegmentId = buildRouteSegmentId('assignment-3', 'assignment-4');
+
+    component.onCompletedAssignmentsToggle();
+
+    expect(component.focusedAssignmentId).toBeNull();
+    expect(component.activeRouteSegmentId).toBeNull();
+  });
+
+  it('should reveal completed assignments on the map when directions are requested for a hidden completed card', () => {
+    const markerClickSpy = vi.spyOn(component, 'onMarkerClicked');
+    component.showCompletedAssignments = false;
+    (
+      component as unknown as {
+        refreshMapData: (loadVersion: number) => void;
+      }
+    ).refreshMapData(1);
+
+    component.onMiniAssignmentDirectionsClick(MOCK_CARDS[3]);
+
+    expect(component.showCompletedAssignments).toBe(true);
+    expect(markerClickSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: '4',
+        status: 'completed',
+      }),
+    );
   });
 
   it('should clear the active route segment when the selected day changes', () => {
     component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
+    component.focusedAssignmentId = '2';
 
     component.onDayChange('tomorrow');
 
     expect(component.selectedDay).toBe('tomorrow');
     expect(component.activeRouteSegmentId).toBeNull();
-    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledTimes(2);
+    expect(component.focusedAssignmentId).toBeNull();
+    expect(routingServiceMock.getRouteSegments).toHaveBeenCalledTimes(4);
+  });
+
+  it('should clear focused assignment state when switching views', () => {
+    component.focusedAssignmentId = '2';
+    component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
+
+    component.onViewChange(false);
+
+    expect(component.focusedAssignmentId).toBeNull();
+    expect(component.activeRouteSegmentId).toBeNull();
+  });
+
+  it('should clear focused assignment and active route when clicking empty map space', () => {
+    component.focusedAssignmentId = '2';
+    component.activeRouteSegmentId = buildRouteSegmentId('assignment-1', 'assignment-2');
+    component.focusedRouteSegment = {
+      id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+      fromStopId: 'assignment-1',
+      toStopId: 'assignment-2',
+      coordinates: [],
+    };
+
+    component.onMapBackgroundClicked();
+
+    expect(component.focusedAssignmentId).toBeNull();
+    expect(component.activeRouteSegmentId).toBeNull();
+    expect(component.focusedRouteSegment).toBeNull();
   });
 
   it('should keep map markers functional when route data is unavailable', async () => {
@@ -570,7 +1156,7 @@ describe('DashboardPage', () => {
     await routeFixture.whenStable();
     routeFixture.detectChanges();
 
-    expect(routeComponent.mapAssignments.length).toBe(4);
+    expect(routeComponent.mapAssignments.length).toBe(3);
     expect(routeComponent.routeSegments).toEqual([]);
   });
 

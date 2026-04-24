@@ -11,6 +11,7 @@ import { Assignment } from '../../../../core/models/assignment-card.model';
 })
 export class MiniAssignmentCard {
   @Input({ required: true }) assignment!: Assignment;
+  @Input() sequenceNumber: number | null = null;
 
   @Output() cardClick = new EventEmitter<string>();
   @Output() directionsClick = new EventEmitter<Assignment>();

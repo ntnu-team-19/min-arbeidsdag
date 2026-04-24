@@ -1,75 +1,111 @@
+import { CommonModule } from '@angular/common';
 import {
-  Component,
   AfterViewInit,
-  OnDestroy,
-  OnChanges,
-  Input,
-  Output,
-  EventEmitter,
-  inject,
   ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
+  inject,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { FeatureLike } from 'ol/Feature';
 import OlMap from 'ol/Map';
-import View from 'ol/View';
-import Feature, { FeatureLike } from 'ol/Feature';
-import type BaseEvent from 'ol/events/Event';
-import LineString from 'ol/geom/LineString';
-import Point from 'ol/geom/Point';
 import VectorLayer from 'ol/layer/Vector';
 import TileLayer from 'ol/layer/Tile';
-import type { Pixel } from 'ol/pixel';
 import { fromLonLat } from 'ol/proj';
 import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import XYZ from 'ol/source/XYZ';
-import CircleStyle from 'ol/style/Circle';
-import Fill from 'ol/style/Fill';
-import Icon from 'ol/style/Icon';
-import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
-import Text from 'ol/style/Text';
-import {
-  boundingExtent,
-  createEmpty,
-  extend as extendExtent,
-  isEmpty as isEmptyExtent,
-} from 'ol/extent';
 import { ThemeService } from '../../../core/services/theme.service';
-import { Assignment, MapRouteSegment, MapStop, MapStopKind } from './map.models';
-import { TranslatePipe } from '@ngx-translate/core';
+import { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
+import {
+  GeolocationPositionUpdate,
+  GeolocationService,
+} from '../../../core/services/geolocation.service';
+import {
+  FocusAssignmentLegOptions,
+  FocusAssignmentOptions,
+  clamp,
+  fitCoordinates as fitCoordinatesHelper,
+  fitToVisibleFeatures as fitToVisibleFeaturesHelper,
+  focusAssignmentView,
+  hasValidCoordinates,
+  hasValidLocation,
+  haveSameCoordinates,
+} from './map-focus-fit';
+import {
+  buildMarkerFeatures,
+  buildRouteFeatures,
+  buildUserLocationFeatures,
+  mapStopToAssignment,
+} from './map-feature-updater';
+import {
+  createMarkerStyle,
+  createRouteStyle,
+  createUserLocationStyle,
+  getMarkerScale,
+} from './map-style-builders';
+import {
+  createAssignmentMap,
+  createTileSource,
+  isMapClickEvent,
+  ThemeMapBaseLayer,
+} from './map-ol-factory';
+import { MapThemeTokens, resolveMapThemeTokens } from './map-theme-tokens';
+import {
+  applyFallbackTrackingState,
+  applyLiveTrackingState,
+  createIdleTrackingState,
+  getStatusKey,
+  resolveTrackingErrorMode,
+  UserTrackingMode,
+} from './map-tracking-state';
+
 export type { Assignment, MapLocation, MapRouteSegment, MapStop } from './map.models';
-
-interface FocusAssignmentOptions {
-  zoom?: number;
-  duration?: number;
-  targetXRatio?: number;
-  targetYRatio?: number;
-}
-
-interface FocusAssignmentLegOptions extends FocusAssignmentOptions {
-  fromStop?: MapStop;
-  toStop?: MapStop;
-  routeSegment?: MapRouteSegment;
-}
 
 @Component({
   selector: 'app-assignment-map',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './map.html',
   styleUrl: './map.css',
 })
 export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
+  @ViewChild('mapElement') private mapElementRef?: ElementRef<HTMLDivElement>;
+
   @Input() assignments: Assignment[] = [];
   @Input() stops: MapStop[] = [];
   @Input() routeSegments: MapRouteSegment[] = [];
   @Input() activeSegmentId: string | null = null;
   @Input() compact = false;
+  @Input() focusedAssignmentId: string | null = null;
+  @Input() enableUserTracking = false;
+  @Input() enableCompletedFilter = false;
+  @Input() showCompletedAssignments = true;
+  @Input() overviewBottomInsetRatio = 0;
+  @Input() enableOverviewAutoFit = true;
+  @Input() fallbackUserLocation: MapLocation | null = null;
   @Output() markerClicked = new EventEmitter<Assignment>();
+  @Output() mapBackgroundClicked = new EventEmitter<void>();
+  @Output() completedAssignmentsToggle = new EventEmitter<void>();
+
+  mapLoaded = false;
+  mapError = false;
+  followUserMode = false;
+  controlsMenuOpen = false;
 
   private map?: OlMap;
   private readonly markerSource = new VectorSource();
   private readonly routeSource = new VectorSource();
+  private readonly userLocationSource = new VectorSource();
   private readonly markerLayer = new VectorLayer({
     source: this.markerSource,
     style: (feature) => this.getMarkerStyle(feature),
@@ -78,58 +114,93 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     source: this.routeSource,
     style: (feature) => this.getRouteStyle(feature),
   });
+  private readonly userLocationLayer = new VectorLayer({
+    source: this.userLocationSource,
+    style: (feature) => this.getUserLocationStyle(feature),
+  });
 
-  mapLoaded = false;
-  mapError = false;
-  private cdr = inject(ChangeDetectorRef);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly themeService = inject(ThemeService);
+  private readonly geolocationService = inject(GeolocationService);
   private tileLayer?: TileLayer<OSM | XYZ>;
   private currentTheme: 'light' | 'dark' = 'light';
+  private activeBaseLayer: ThemeMapBaseLayer = 'grayscale';
   private themeCheckInterval?: ReturnType<typeof setInterval>;
-  private viewChangeListener?: (event: BaseEvent) => void;
+  private pulseInterval?: ReturnType<typeof setInterval>;
+  private viewChangeListener?: () => void;
+  private currentPulseValue = 0;
+  private mapThemeTokens: MapThemeTokens = resolveMapThemeTokens();
+  private geolocationSubscription?: Subscription;
+  private userLocation: MapLocation | null = null;
+  private userLocationAccuracy: number | null = null;
+  private userTrackingMode: UserTrackingMode = 'idle';
+  private suppressFollowDisable = false;
+  private suppressFollowDisableTimeoutId?: ReturnType<typeof setTimeout>;
+  private wheelListener?: EventListener;
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      changes['enableUserTracking'] ||
+      changes['fallbackUserLocation'] ||
+      changes['focusedAssignmentId']
+    ) {
+      this.syncUserTracking();
+    }
+
     this.updateMapFeatures();
+    this.updateUserLocationFeatures();
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     setTimeout(() => {
       try {
-        const mapElement = document.getElementById('assignment-map');
+        const mapElement = this.mapElementRef?.nativeElement;
 
         if (!mapElement) {
           throw new Error('Map container element not found');
         }
 
-        if (mapElement.offsetHeight === 0 || mapElement.offsetWidth === 0) {
-          throw new Error(
-            `Map container has invalid dimensions: ${mapElement.offsetWidth}x${mapElement.offsetHeight}`,
-          );
+        if (typeof ResizeObserver === 'undefined') {
+          this.mapLoaded = false;
+          this.mapError = false;
+          this.updateMapFeatures();
+          this.updateUserLocationFeatures();
+          this.syncUserTracking();
+          this.cdr.detectChanges();
+          return;
         }
 
         this.currentTheme = this.themeService.isDark() ? 'dark' : 'light';
+        this.syncBaseLayerToTheme();
+        this.refreshThemeTokens();
 
         this.tileLayer = new TileLayer({
-          source: this.createTileSource(this.currentTheme),
+          source: this.createTileSource(this.activeBaseLayer),
         });
 
-        this.map = new OlMap({
+        this.map = createAssignmentMap({
           target: mapElement,
-          layers: [this.tileLayer, this.routeLayer, this.markerLayer],
-          view: new View({
-            center: fromLonLat([10.3951, 63.4305]),
-            zoom: this.compact ? 13 : 12,
-          }),
+          compact: this.compact,
+          tileLayer: this.tileLayer,
+          routeLayer: this.routeLayer,
+          markerLayer: this.markerLayer,
+          userLocationLayer: this.userLocationLayer,
         });
 
         this.map.on('click', this.onMapClick);
+        this.map.on('pointermove', this.onPointerMove);
+        this.map.on('movestart', this.onMoveStart);
+        this.map.on('pointerdrag', this.onPointerDrag);
+        this.attachWheelListener();
         this.attachViewChangeListener();
         this.updateMapFeatures();
+        this.updateUserLocationFeatures();
+        this.syncUserTracking();
+        this.startPulseAnimation();
 
         this.mapLoaded = true;
         this.mapError = false;
         this.cdr.detectChanges();
-
         this.setupThemeListener();
       } catch (error) {
         console.error('[Map] Failed to initialize map:', error);
@@ -137,7 +208,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
         this.mapError = true;
         this.cdr.detectChanges();
       }
-    }, 200);
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -145,55 +216,78 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       clearInterval(this.themeCheckInterval);
     }
 
+    if (this.pulseInterval) {
+      clearInterval(this.pulseInterval);
+    }
+
+    if (this.suppressFollowDisableTimeoutId) {
+      clearTimeout(this.suppressFollowDisableTimeoutId);
+    }
+
+    this.stopUserTracking();
+
     if (this.map) {
       const view = this.map.getView();
       if (this.viewChangeListener) {
         view.un('change:resolution', this.viewChangeListener);
       }
+
       this.map.un('click', this.onMapClick);
+      this.map.un('pointermove', this.onPointerMove);
+      this.map.un('movestart', this.onMoveStart);
+      this.map.un('pointerdrag', this.onPointerDrag);
+
+      const viewport =
+        typeof this.map.getViewport === 'function' ? this.map.getViewport() : undefined;
+      if (this.wheelListener && viewport) {
+        viewport.removeEventListener('wheel', this.wheelListener);
+      }
+
       this.map.setTarget(undefined);
       this.map = undefined;
     }
   }
 
+  get userTrackingStatusKey(): string | null {
+    return getStatusKey(this.userTrackingMode);
+  }
+
+  get followButtonLabelKey(): string {
+    return this.followUserMode ? 'map.stopFollowingUser' : 'map.followUser';
+  }
+
+  get followButtonDisabled(): boolean {
+    return this.userTrackingMode !== 'live' || !this.hasValidLocation(this.userLocation);
+  }
+
+  get shouldShowControlsMenu(): boolean {
+    return this.enableCompletedFilter;
+  }
+
+  get shouldShowFollowQuickAction(): boolean {
+    return this.enableUserTracking;
+  }
+
+  get completedAssignmentsLabelKey(): string {
+    return this.showCompletedAssignments
+      ? 'map.hideCompletedAssignments'
+      : 'map.showCompletedAssignments';
+  }
+
   focusAssignment(assignment: Assignment, options: FocusAssignmentOptions = {}): void {
-    if (!this.map || !this.hasValidCoordinates(assignment)) {
+    if (!this.map || !hasValidCoordinates(assignment)) {
       return;
     }
 
-    const location = assignment.location;
-    const size = this.map.getSize();
-    if (!size) {
-      return;
-    }
-
-    const view = this.map.getView();
-    const currentCenter = view.getCenter();
-    const currentZoom = view.getZoom();
-    const nextZoom = Math.max(currentZoom ?? 0, options.zoom ?? (this.compact ? 14 : 16));
-
-    if (!currentCenter || currentZoom == null) {
-      return;
-    }
-
-    const targetXRatio = this.clamp(options.targetXRatio ?? 0.5, 0, 1);
-    const targetYRatio = this.clamp(options.targetYRatio ?? 0.5, 0, 1);
-    const coordinate = fromLonLat([location.lon, location.lat]);
-
-    view.setZoom(nextZoom);
-    view.centerOn(coordinate, size, [size[0] * targetXRatio, size[1] * targetYRatio]);
-    const targetCenter = view.getCenter();
-    view.setCenter(currentCenter);
-    view.setZoom(currentZoom);
-
-    if (!targetCenter) {
-      return;
-    }
-
-    view.animate({
-      center: targetCenter,
-      zoom: nextZoom,
-      duration: options.duration ?? 350,
+    this.disableFollowUserMode();
+    focusAssignmentView({
+      map: this.map,
+      assignment,
+      compact: this.compact,
+      options,
+      withSuppressedFollowDisable: (duration, callback) => {
+        this.withSuppressedFollowDisable(duration, callback);
+      },
     });
   }
 
@@ -201,11 +295,13 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     const toStop = options.toStop;
     const fromStop = options.fromStop;
 
-    if (!toStop || !this.hasValidCoordinates(toStop)) {
+    if (!toStop || !hasValidCoordinates(toStop)) {
       return;
     }
 
-    if (!this.map || !fromStop || !this.hasValidCoordinates(fromStop)) {
+    this.disableFollowUserMode();
+
+    if (!this.map || !fromStop || !hasValidCoordinates(fromStop)) {
       this.focusAssignment(this.mapStopToAssignment(toStop), options);
       return;
     }
@@ -224,15 +320,56 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     );
   }
 
+  toggleFollowUserMode(): void {
+    if (this.followUserMode) {
+      this.disableFollowUserMode();
+      return;
+    }
+
+    if (this.followButtonDisabled) {
+      return;
+    }
+
+    this.followUserMode = true;
+    this.centerOnUser(300);
+    this.cdr.detectChanges();
+  }
+
+  toggleControlsMenu(): void {
+    this.controlsMenuOpen = !this.controlsMenuOpen;
+  }
+
+  onCompletedAssignmentsToggle(): void {
+    this.completedAssignmentsToggle.emit();
+  }
+
+  private startPulseAnimation(): void {
+    if (this.pulseInterval) {
+      clearInterval(this.pulseInterval);
+    }
+
+    this.pulseInterval = setInterval(() => {
+      this.currentPulseValue = (this.currentPulseValue + 0.12) % 1;
+      this.markerLayer.changed();
+    }, 120);
+  }
+
   private setupThemeListener(): void {
     const checkTheme = () => {
       const isDark = this.themeService.isDark();
       const newTheme = isDark ? 'dark' : 'light';
 
-      if (newTheme !== this.currentTheme && this.tileLayer) {
-        this.currentTheme = newTheme;
-        this.updateTileLayer();
+      if (newTheme === this.currentTheme) {
+        return;
       }
+
+      this.currentTheme = newTheme;
+      this.syncBaseLayerToTheme();
+      this.refreshThemeTokens();
+      this.routeLayer.changed();
+      this.markerLayer.changed();
+      this.userLocationLayer.changed();
+      this.cdr.detectChanges();
     };
 
     this.themeCheckInterval = setInterval(() => {
@@ -246,6 +383,17 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     }, 500);
   }
 
+  private attachWheelListener(): void {
+    if (!this.map) {
+      return;
+    }
+
+    this.wheelListener = () => {
+      this.handleManualMapInteraction();
+    };
+    this.map.getViewport().addEventListener('wheel', this.wheelListener, { passive: true });
+  }
+
   private attachViewChangeListener(): void {
     if (!this.map) {
       return;
@@ -254,107 +402,258 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     const view = this.map.getView();
     this.viewChangeListener = () => {
       this.markerLayer.changed();
+      this.userLocationLayer.changed();
     };
     view.on('change:resolution', this.viewChangeListener);
   }
 
-  private readonly onMapClick = (event: unknown) => {
-    if (!this.map || !this.isMapClickEvent(event)) {
+  private readonly onMoveStart = () => {
+    if (this.suppressFollowDisable) {
       return;
     }
 
-    this.map.forEachFeatureAtPixel(event.pixel, (feature) => {
-      const assignment = feature.get('assignment') as Assignment | undefined;
-      if (!assignment) {
-        return false;
+    this.handleManualMapInteraction();
+  };
+
+  private readonly onPointerDrag = () => {
+    this.handleManualMapInteraction();
+  };
+
+  private readonly onPointerMove = (event: unknown) => {
+    if (!this.map || !isMapClickEvent(event)) {
+      return;
+    }
+
+    const hasFeature = this.map.hasFeatureAtPixel(event.pixel, {
+      layerFilter: (layer) => layer === this.markerLayer,
+    });
+    this.map.getTargetElement().style.cursor = hasFeature ? 'pointer' : '';
+  };
+
+  private readonly onMapClick = (event: unknown) => {
+    if (!this.map || !isMapClickEvent(event)) {
+      return;
+    }
+
+    let hasClickedMarker = false;
+
+    this.map.forEachFeatureAtPixel(
+      event.pixel,
+      (feature) => {
+        const assignment = feature.get('assignment') as Assignment | undefined;
+        if (!assignment) {
+          return false;
+        }
+
+        hasClickedMarker = true;
+        this.markerClicked.emit(assignment);
+        return true;
+      },
+      {
+        layerFilter: (layer) => layer === this.markerLayer,
+      },
+    );
+
+    if (!hasClickedMarker) {
+      this.mapBackgroundClicked.emit();
+    }
+  };
+
+  private handleManualMapInteraction(): void {
+    if (!this.followUserMode || this.suppressFollowDisable) {
+      return;
+    }
+
+    this.disableFollowUserMode();
+  }
+
+  private disableFollowUserMode(): void {
+    if (!this.followUserMode) {
+      return;
+    }
+
+    this.followUserMode = false;
+    this.cdr.detectChanges();
+  }
+
+  private syncUserTracking(): void {
+    if (!this.enableUserTracking) {
+      this.stopUserTracking();
+      const nextState = createIdleTrackingState();
+      this.followUserMode = nextState.followUserMode;
+      this.userTrackingMode = nextState.mode;
+      this.userLocation = nextState.location;
+      this.userLocationAccuracy = nextState.accuracy;
+      this.updateUserLocationFeatures();
+      return;
+    }
+
+    if (this.geolocationSubscription) {
+      if (this.userTrackingMode !== 'live') {
+        this.applyFallbackIfPossible();
+      }
+      return;
+    }
+
+    this.userTrackingMode = 'locating';
+    this.updateUserLocationFeatures();
+    this.cdr.detectChanges();
+
+    this.geolocationSubscription = this.geolocationService
+      .watchPosition({
+        enableHighAccuracy: true,
+        maximumAge: 10_000,
+        timeout: 15_000,
+      })
+      .subscribe((update) => this.handleGeolocationUpdate(update));
+  }
+
+  private stopUserTracking(): void {
+    this.geolocationSubscription?.unsubscribe();
+    this.geolocationSubscription = undefined;
+  }
+
+  private handleGeolocationUpdate(update: GeolocationPositionUpdate): void {
+    if (update.kind === 'position') {
+      const nextState = applyLiveTrackingState(update, this.followUserMode);
+      this.userTrackingMode = nextState.mode;
+      this.userLocation = nextState.location;
+      this.userLocationAccuracy = nextState.accuracy;
+      this.updateUserLocationFeatures();
+
+      if (this.followUserMode) {
+        this.centerOnUser(300);
       }
 
-      this.markerClicked.emit(assignment);
-      return true;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.applyFallbackIfPossible()) {
+      this.userLocation = null;
+      this.userLocationAccuracy = null;
+      this.userTrackingMode = resolveTrackingErrorMode(update);
+      this.followUserMode = false;
+      this.updateUserLocationFeatures();
+      this.cdr.detectChanges();
+    }
+  }
+
+  private applyFallbackIfPossible(): boolean {
+    if (!hasValidLocation(this.fallbackUserLocation)) {
+      return false;
+    }
+
+    const nextState = applyFallbackTrackingState(this.fallbackUserLocation);
+    this.userTrackingMode = nextState.mode;
+    this.userLocationAccuracy = nextState.accuracy;
+    this.userLocation = nextState.location;
+    this.followUserMode = nextState.followUserMode;
+    this.updateUserLocationFeatures();
+    this.cdr.detectChanges();
+    return true;
+  }
+
+  private centerOnUser(duration = 300): void {
+    if (!this.map || !hasValidLocation(this.userLocation)) {
+      return;
+    }
+
+    const userLocation = this.userLocation;
+    const view = this.map.getView();
+    const size = this.map.getSize();
+
+    if (!size) {
+      return;
+    }
+
+    const bottomInsetRatio = clamp(this.overviewBottomInsetRatio ?? 0, 0, 1);
+    const targetYRatio = clamp((1 - bottomInsetRatio) / 2, 0, 1);
+    const targetCoordinate = fromLonLat([userLocation.lon, userLocation.lat]);
+    const currentCenter = view.getCenter();
+    const currentZoom = view.getZoom();
+
+    if (!currentCenter || currentZoom == null) {
+      return;
+    }
+
+    this.withSuppressedFollowDisable(duration, () => {
+      const nextZoom = Math.max(currentZoom, this.compact ? 14 : 15);
+      view.setZoom(nextZoom);
+      view.centerOn(targetCoordinate, size, [size[0] / 2, size[1] * targetYRatio]);
+      const targetCenter = view.getCenter();
+
+      if (!targetCenter) {
+        return;
+      }
+
+      view.setCenter(currentCenter);
+      view.setZoom(currentZoom);
+      view.animate({
+        center: targetCenter,
+        duration,
+        zoom: nextZoom,
+      });
     });
-  };
+  }
 
   private updateMapFeatures(): void {
     this.updateRouteSegments();
     this.updateMarkers();
-    this.fitToVisibleFeatures();
+
+    if (this.enableOverviewAutoFit && !this.followUserMode && !this.focusedAssignmentId) {
+      this.fitToVisibleFeatures();
+    }
   }
 
   private updateRouteSegments(): void {
     this.routeSource.clear(true);
 
-    const features = this.routeSegments
-      .filter((segment) => segment.coordinates.length >= 2)
-      .map(
-        (segment) =>
-          new Feature({
-            geometry: new LineString(
-              segment.coordinates.map(([lon, lat]) => fromLonLat([lon, lat])),
-            ),
-            segmentId: segment.id,
-            active: segment.id === this.activeSegmentId,
-          }),
-      );
-
+    const features = buildRouteFeatures(this.routeSegments, this.activeSegmentId);
     this.routeSource.addFeatures(features);
   }
 
   private updateMarkers(): void {
     this.markerSource.clear(true);
 
-    const assignmentLookup = new globalThis.Map(
-      this.assignments.map((assignment) => [String(assignment.id), assignment]),
-    );
-    const markerFeatures = this.getRenderableStops()
-      .filter((stop): stop is MapStop & { location: { lat: number; lon: number } } =>
-        this.hasValidCoordinates(stop),
-      )
-      .map((stop) => {
-        const assignment =
-          stop.kind === 'assignment'
-            ? (assignmentLookup.get(stop.assignmentId ?? '') ?? this.mapStopToAssignment(stop))
-            : undefined;
-
-        return new Feature({
-          geometry: new Point(fromLonLat([stop.location.lon, stop.location.lat])),
-          stopKind: stop.kind,
-          stopLabel: stop.label,
-          markerLabel: this.getMarkerLabel(stop),
-          assignment,
-        });
-      });
+    const markerFeatures = buildMarkerFeatures({
+      assignments: this.assignments,
+      stops: this.getRenderableStops(),
+      focusedAssignmentId: this.focusedAssignmentId,
+      hasValidCoordinates,
+    });
 
     this.markerSource.addFeatures(markerFeatures);
   }
 
+  private updateUserLocationFeatures(): void {
+    this.userLocationSource.clear(true);
+
+    const features = buildUserLocationFeatures({
+      enableUserTracking: this.enableUserTracking,
+      userLocation: this.userLocation,
+      userLocationAccuracy: this.userLocationAccuracy,
+      userTrackingMode: this.userTrackingMode,
+      hasValidLocation,
+    });
+    this.userLocationSource.addFeatures(features);
+  }
+
   private fitToVisibleFeatures(): void {
-    if (!this.map) {
+    if (!this.map || !this.enableOverviewAutoFit) {
       return;
     }
 
-    const extent = createEmpty();
-    let hasFeatures = false;
-
-    const markerExtent = this.markerSource.getExtent();
-    if (markerExtent && !isEmptyExtent(markerExtent)) {
-      extendExtent(extent, markerExtent);
-      hasFeatures = true;
-    }
-
-    const routeExtent = this.routeSource.getExtent();
-    if (routeExtent && !isEmptyExtent(routeExtent)) {
-      extendExtent(extent, routeExtent);
-      hasFeatures = true;
-    }
-
-    if (!hasFeatures) {
-      return;
-    }
-
-    this.map.getView().fit(extent, {
-      padding: [40, 40, 40, 40],
-      maxZoom: this.compact ? 14 : 16,
-      duration: 200,
+    fitToVisibleFeaturesHelper({
+      map: this.map,
+      markerExtent: this.markerSource.getExtent(),
+      routeExtent: this.routeSource.getExtent(),
+      userLocationExtent: this.userLocationSource.getExtent(),
+      compact: this.compact,
+      overviewBottomInsetRatio: this.overviewBottomInsetRatio,
+      withSuppressedFollowDisable: (duration, callback) => {
+        this.withSuppressedFollowDisable(duration, callback);
+      },
     });
   }
 
@@ -366,22 +665,30 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
-    const size = this.map.getSize();
-    if (!size) {
-      return;
+    fitCoordinatesHelper({
+      map: this.map,
+      coordinates,
+      options,
+      compact: this.compact,
+      withSuppressedFollowDisable: (duration, callback) => {
+        this.withSuppressedFollowDisable(duration, callback);
+      },
+    });
+  }
+
+  private withSuppressedFollowDisable(duration: number, callback: () => void): void {
+    this.suppressFollowDisable = true;
+
+    if (this.suppressFollowDisableTimeoutId) {
+      clearTimeout(this.suppressFollowDisableTimeoutId);
     }
 
-    const projectedCoordinates = coordinates.map(([lon, lat]) => fromLonLat([lon, lat]));
-    const extent = boundingExtent(projectedCoordinates);
-    const targetYRatio = this.clamp(options.targetYRatio ?? 0.5, 0, 1);
-    const basePadding = 40;
-    const bottomPaddingAdjustment = Math.max(0, size[1] * (1 - 2 * targetYRatio));
+    callback();
 
-    this.map.getView().fit(extent, {
-      padding: [basePadding, basePadding, basePadding + bottomPaddingAdjustment, basePadding],
-      maxZoom: options.zoom ?? (this.compact ? 14 : 16),
-      duration: options.duration ?? 350,
-    });
+    this.suppressFollowDisableTimeoutId = setTimeout(() => {
+      this.suppressFollowDisable = false;
+      this.suppressFollowDisableTimeoutId = undefined;
+    }, duration + 100);
   }
 
   private getRenderableStops(): MapStop[] {
@@ -409,7 +716,7 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     if (
       firstStop?.kind === 'start' &&
       lastStop?.kind === 'end' &&
-      this.haveSameCoordinates(firstStop, lastStop)
+      haveSameCoordinates(firstStop, lastStop)
     ) {
       return stops.slice(0, -1);
     }
@@ -417,114 +724,25 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
     return stops;
   }
 
-  private getMarkerStyle(feature: FeatureLike): Style {
-    const stopKind = feature.get('stopKind') as MapStopKind | undefined;
-    const markerLabel = feature.get('markerLabel') as string | undefined;
-    const assignment = feature.get('assignment') as Assignment | undefined;
-    const markerScale = this.getMarkerScale();
-
-    if (stopKind === 'start') {
-      return new Style({
-        image: new Icon({
-          src: '/icons/home-pin.svg',
-          anchor: [0.5, 1],
-          anchorXUnits: 'fraction',
-          anchorYUnits: 'fraction',
-          scale: 0.9 * markerScale,
-        }),
-        zIndex: 25,
-      });
-    }
-
-    const isAvailabilityStop =
-      stopKind === 'assignment' && this.isAvailabilityAssignmentId(assignment?.id);
-    const fillColor = stopKind === 'end' ? '#D65A4A' : isAvailabilityStop ? '#C7A27B' : '#1F4E79';
-    const textColor = isAvailabilityStop ? '#4A2F1B' : '#FFFFFF';
-    const radius = (stopKind === 'assignment' ? 16 : 13) * markerScale;
-    const fontSize = Math.max(10, Math.round(12 * markerScale));
-
-    return new Style({
-      image: new CircleStyle({
-        radius,
-        fill: new Fill({ color: fillColor }),
-        stroke: new Stroke({
-          color: '#FFFFFF',
-          width: 3,
-        }),
-      }),
-      text: new Text({
-        text: markerLabel ?? '',
-        fill: new Fill({ color: textColor }),
-        font: `700 ${fontSize}px sans-serif`,
-        textAlign: 'center',
-        textBaseline: 'middle',
-      }),
-      zIndex: stopKind === 'assignment' ? 20 : 25,
+  private getMarkerStyle(feature: FeatureLike): Style | Style[] {
+    return createMarkerStyle(feature, {
+      markerScale: this.getMarkerScale(),
+      currentPulseValue: this.currentPulseValue,
+      tokens: this.mapThemeTokens,
+      isAvailabilityAssignmentId: (assignmentId) => this.isAvailabilityAssignmentId(assignmentId),
     });
+  }
+
+  private getUserLocationStyle(feature: FeatureLike): Style | Style[] {
+    return createUserLocationStyle(feature, this.mapThemeTokens);
   }
 
   private getMarkerScale(): number {
-    const zoom = this.map?.getView().getZoom() ?? (this.compact ? 13 : 12);
-
-    if (zoom >= 13) {
-      return 1;
-    }
-
-    if (zoom >= 11) {
-      return 0.85;
-    }
-
-    if (zoom >= 9) {
-      return 0.72;
-    }
-
-    return 0.62;
+    return getMarkerScale(this.map, this.compact);
   }
 
   private getRouteStyle(feature: FeatureLike): Style | Style[] {
-    const isActive = feature.get('active') === true;
-
-    if (isActive) {
-      return [
-        new Style({
-          stroke: new Stroke({
-            color: 'rgba(11, 74, 139, 0.28)',
-            width: 14,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }),
-          zIndex: 14,
-        }),
-        new Style({
-          stroke: new Stroke({
-            color: '#D9E9F8',
-            width: 9,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }),
-          zIndex: 15,
-        }),
-        new Style({
-          stroke: new Stroke({
-            color: '#0B4A8B',
-            width: 6,
-            lineCap: 'round',
-            lineJoin: 'round',
-          }),
-          zIndex: 16,
-        }),
-      ];
-    }
-
-    return new Style({
-      stroke: new Stroke({
-        color: 'rgba(107, 127, 146, 0.55)',
-        width: 3,
-        lineCap: 'round',
-        lineJoin: 'round',
-      }),
-      zIndex: 10,
-    });
+    return createRouteStyle(feature, this.mapThemeTokens);
   }
 
   private getMarkerLabel(stop: MapStop): string {
@@ -540,26 +758,22 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   private mapStopToAssignment(stop: MapStop): Assignment {
-    return {
-      id: stop.assignmentId ?? stop.id,
-      name: stop.label,
-      location: stop.location,
-      description: stop.label,
-    };
+    return mapStopToAssignment(stop);
   }
 
-  private createTileSource(theme: 'light' | 'dark'): OSM | XYZ {
-    if (theme === 'dark') {
-      return new XYZ({
-        url: 'https://cartodb-basemaps-{a-c}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
-        attributions: '© OpenStreetMap contributors, © CARTO',
-        maxZoom: 20,
-      });
+  private syncBaseLayerToTheme(): void {
+    const nextBaseLayer: ThemeMapBaseLayer = this.currentTheme === 'dark' ? 'dark' : 'grayscale';
+
+    if (this.activeBaseLayer === nextBaseLayer) {
+      return;
     }
 
-    return new OSM({
-      attributions: '© OpenStreetMap contributors',
-    });
+    this.activeBaseLayer = nextBaseLayer;
+    this.updateTileLayer();
+  }
+
+  private createTileSource(layer: ThemeMapBaseLayer): OSM | XYZ {
+    return createTileSource(layer);
   }
 
   private updateTileLayer(): void {
@@ -567,56 +781,41 @@ export class AssignmentMap implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
-    this.tileLayer.setSource(this.createTileSource(this.currentTheme));
+    this.tileLayer.setSource(this.createTileSource(this.activeBaseLayer));
   }
 
   private hasValidCoordinates(
-    item: Assignment | MapStop,
-  ): item is (Assignment | MapStop) & { location: { lat: number; lon: number } } {
-    const lat = item.location?.lat;
-    const lon = item.location?.lon;
+    item: { location?: MapLocation | null } | null | undefined,
+  ): item is { location: { lat: number; lon: number } } {
+    return hasValidCoordinates(item);
+  }
 
-    return (
-      typeof lat === 'number' &&
-      Number.isFinite(lat) &&
-      lat >= -90 &&
-      lat <= 90 &&
-      typeof lon === 'number' &&
-      Number.isFinite(lon) &&
-      lon >= -180 &&
-      lon <= 180
-    );
+  private hasValidLocation(location: MapLocation | null | undefined): location is {
+    lat: number;
+    lon: number;
+  } {
+    return hasValidLocation(location);
   }
 
   private haveSameCoordinates(a: Assignment | MapStop, b: Assignment | MapStop): boolean {
-    if (!this.hasValidCoordinates(a) || !this.hasValidCoordinates(b)) {
-      return false;
-    }
-
-    return a.location.lat === b.location.lat && a.location.lon === b.location.lon;
+    return haveSameCoordinates(a, b);
   }
 
   private isMapClickEvent(event: unknown): event is {
-    pixel: Pixel;
+    pixel: [number, number];
   } {
-    if (!event || typeof event !== 'object') {
-      return false;
-    }
-
-    const pixel = (event as { pixel?: unknown }).pixel;
-    return (
-      Array.isArray(pixel) &&
-      pixel.length === 2 &&
-      typeof pixel[0] === 'number' &&
-      typeof pixel[1] === 'number'
-    );
+    return isMapClickEvent(event);
   }
 
   private clamp(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max);
+    return clamp(value, min, max);
   }
 
   private isAvailabilityAssignmentId(assignmentId: string | number | undefined): boolean {
     return typeof assignmentId === 'string' && assignmentId.startsWith('availability-');
+  }
+
+  private refreshThemeTokens(): void {
+    this.mapThemeTokens = resolveMapThemeTokens(this.mapElementRef?.nativeElement);
   }
 }

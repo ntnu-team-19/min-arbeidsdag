@@ -24,7 +24,7 @@
           i > 0 && card.status === 'completed' && assignmentCards[i - 1].status !== 'completed'
         ) {
           <hr class="border-theme-2 mx-9 my-10 border-t-2" />
-        } @else if (getTravelTimeForCard(card) !== undefined && card.status !== 'completed') {
+        } @else if (shouldShowTravelTimeIndicator(card)) {
           <app-travel-time-indicator [travelTimeMinutes]="getTravelTimeForCard(card)!" />
         }
         <app-assignment-card
@@ -35,14 +35,23 @@
       }
     </div>
   } @else {
-    <div class="map-stage">
+    <div #mapStage class="map-stage">
       <app-assignment-map
         [assignments]="mapAssignments"
         [stops]="mapStops"
-        [routeSegments]="routeSegments"
+        [routeSegments]="displayedRouteSegments"
         [activeSegmentId]="activeRouteSegmentId"
+        [focusedAssignmentId]="focusedAssignmentId"
+        [overviewBottomInsetRatio]="overviewBottomInsetRatio"
+        [enableOverviewAutoFit]="enableOverviewAutoFit"
+        [enableUserTracking]="true"
+        [enableCompletedFilter]="true"
+        [showCompletedAssignments]="showCompletedAssignments"
+        [fallbackUserLocation]="fallbackUserLocation"
         [compact]="false"
         (markerClicked)="onMarkerClicked($event)"
+        (mapBackgroundClicked)="onMapBackgroundClicked()"
+        (completedAssignmentsToggle)="onCompletedAssignmentsToggle()"
       ></app-assignment-map>
 
       <app-map-bottom-sheet initialSnap="peek" (snapChanged)="onSnapChanged($event)">
@@ -63,7 +72,7 @@
           }
 
           @for (assignment of assignmentCards; track assignment.id) {
-            @if (getTravelTimeForCard(assignment) !== undefined) {
+            @if (shouldShowTravelTimeIndicator(assignment)) {
               <app-travel-time-indicator [travelTimeMinutes]="getTravelTimeForCard(assignment)!" />
             }
             <div
@@ -73,6 +82,7 @@
             >
               <app-mini-assignment-card
                 [assignment]="assignment"
+                [sequenceNumber]="getAssignmentSequenceNumber(assignment.id)"
                 (cardClick)="goToAssignmentDetails($event)"
                 (directionsClick)="onMiniAssignmentDirectionsClick($event)"
               />
