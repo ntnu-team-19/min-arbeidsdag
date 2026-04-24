@@ -39,6 +39,7 @@ export interface MapRouteSegment {
   fromStopId: string;
   toStopId: string;
   coordinates: MapRouteCoordinate[];
+  durationMinutes?: number;
 }
 
 export function buildRouteSegmentId(fromStopId: string, toStopId: string): string {
