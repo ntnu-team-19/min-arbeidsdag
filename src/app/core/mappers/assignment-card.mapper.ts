@@ -71,6 +71,7 @@ export function mapAssignmentDetailsDtoToAssignmentCardModel(
   return {
     id: String(dto.id),
     fieldTechId: dto.fieldTechId,
+    inquiryId: dto.inquiryId,
     title: dto.inquiryName || 'Oppdrag uten tittel',
     shortDescription: dto.inquiryDescription || 'Ingen beskrivelse tilgjengelig.',
     time: formatTimeFromIso(dto.showingStartDate),
