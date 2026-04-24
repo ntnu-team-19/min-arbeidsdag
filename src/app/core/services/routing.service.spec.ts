@@ -68,6 +68,7 @@ describe('RoutingService', () => {
         {
           legs: [
             {
+              duration: 896,
               steps: [
                 {
                   geometry: {
@@ -81,6 +82,7 @@ describe('RoutingService', () => {
               ],
             },
             {
+              duration: 741,
               steps: [
                 {
                   geometry: {
@@ -103,6 +105,7 @@ describe('RoutingService', () => {
         id: buildRouteSegmentId('start', 'assignment-1'),
         fromStopId: 'start',
         toStopId: 'assignment-1',
+        durationMinutes: 15,
         coordinates: [
           [10.3951, 63.4305],
           [10.421, 63.432],
@@ -113,6 +116,7 @@ describe('RoutingService', () => {
         id: buildRouteSegmentId('assignment-1', 'end'),
         fromStopId: 'assignment-1',
         toStopId: 'end',
+        durationMinutes: 12,
         coordinates: [
           [10.4512, 63.4365],
           [10.428, 63.433],
