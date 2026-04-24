@@ -16,6 +16,7 @@ export interface AssignmentLocationPoint {
 export interface Assignment {
   id: string;
   fieldTechId?: number;
+  inquiryId?: number;
   title: string;
   shortDescription: string;
   time: string;
