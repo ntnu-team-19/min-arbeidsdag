@@ -115,6 +115,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   private pendingCardScrollTimeoutId?: ReturnType<typeof setTimeout>;
   private pendingCardHighlightTimeoutId?: ReturnType<typeof setTimeout>;
   private loadVersion = 0;
+  private serviceDailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
+  private fallbackTravelTimesByAssignmentId = new Map<string, number>();
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
@@ -473,13 +475,15 @@ export class DashboardPage implements OnInit, OnDestroy {
         this.assignmentCards = this.mergeCardsWithAvailability(cards, availabilityCards);
         this.assignmentSequenceNumbers = this.buildAssignmentSequenceNumbers(this.assignmentCards);
         this.travelTimes = travelTimes;
-        this.travelTimesByAssignmentId = new Map([
+        this.fallbackTravelTimesByAssignmentId = new Map([
           ...this.buildTravelTimesByAssignmentId(cards, travelTimes),
           ...this.buildTravelTimesByAssignmentId(
             availabilityCards,
             availabilities.map((availability) => Math.round(availability.calculatedTraveltime)),
           ),
         ]);
+        this.travelTimesByAssignmentId = new Map(this.fallbackTravelTimesByAssignmentId);
+        this.serviceDailyProgress = progress;
         this.dailyProgress = progress;
         this.technicianLocations = technicianLocations;
         this.refreshMapData(loadVersion);
@@ -556,6 +560,18 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         this.routeSegments = visibleSegments;
         this.allRouteSegments = allSegments ?? visibleSegments;
+        this.travelTimesByAssignmentId = this.buildEffectiveTravelTimesByAssignmentId(
+          this.allDayMapStops,
+          this.allRouteSegments,
+          this.fallbackTravelTimesByAssignmentId,
+        );
+        this.dailyProgress = this.buildDailyProgressWithRouteTravel(
+          this.serviceDailyProgress,
+          this.allDayMapStops,
+          this.allRouteSegments,
+          this.assignmentCards,
+          this.fallbackTravelTimesByAssignmentId,
+        );
         this.syncFocusedRouteSelection();
       });
   }
@@ -600,6 +616,130 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
     });
     return lookup;
+  }
+
+  private buildEffectiveTravelTimesByAssignmentId(
+    orderedStops: MapStop[],
+    routeSegments: MapRouteSegment[],
+    fallbackLookup: Map<string, number>,
+  ): Map<string, number> {
+    const routeLookup = this.buildTravelTimesFromRouteSegments(orderedStops, routeSegments);
+    return new Map([...fallbackLookup, ...routeLookup]);
+  }
+
+  private buildTravelTimesFromRouteSegments(
+    orderedStops: MapStop[],
+    routeSegments: MapRouteSegment[],
+  ): Map<string, number> {
+    const segmentById = new Map(routeSegments.map((segment) => [segment.id, segment]));
+    const lookup = new Map<string, number>();
+
+    for (let index = 1; index < orderedStops.length; index += 1) {
+      const currentStop = orderedStops[index];
+      const previousStop = orderedStops[index - 1];
+
+      if (
+        !currentStop ||
+        !previousStop ||
+        currentStop.kind !== 'assignment' ||
+        !currentStop.assignmentId
+      ) {
+        continue;
+      }
+
+      const segmentId = buildRouteSegmentId(previousStop.id, currentStop.id);
+      const segmentDuration = segmentById.get(segmentId)?.durationMinutes;
+
+      if (typeof segmentDuration !== 'number' || !Number.isFinite(segmentDuration)) {
+        continue;
+      }
+
+      lookup.set(currentStop.assignmentId, segmentDuration);
+    }
+
+    return lookup;
+  }
+
+  private buildDailyProgressWithRouteTravel(
+    baseSummary: DailyProgressSummary,
+    orderedStops: MapStop[],
+    routeSegments: MapRouteSegment[],
+    assignmentCards: Assignment[],
+    fallbackLookup: Map<string, number>,
+  ): DailyProgressSummary {
+    if (orderedStops.length < 2 || routeSegments.length === 0) {
+      return baseSummary;
+    }
+
+    const segmentById = new Map(routeSegments.map((segment) => [segment.id, segment]));
+    const cardById = new Map(assignmentCards.map((card) => [card.id, card]));
+    let totalTravelMinutes = 0;
+    let completedTravelMinutes = 0;
+    let hasAnyResolvedTravelLeg = false;
+
+    for (let index = 1; index < orderedStops.length; index += 1) {
+      const currentStop = orderedStops[index];
+      const previousStop = orderedStops[index - 1];
+
+      if (
+        !currentStop ||
+        !previousStop ||
+        currentStop.kind !== 'assignment' ||
+        !currentStop.assignmentId
+      ) {
+        continue;
+      }
+
+      const segmentId = buildRouteSegmentId(previousStop.id, currentStop.id);
+      const legMinutes = this.resolveRouteLegTravelMinutes(
+        currentStop,
+        segmentById.get(segmentId),
+        fallbackLookup,
+      );
+
+      if (legMinutes === undefined) {
+        continue;
+      }
+
+      hasAnyResolvedTravelLeg = true;
+      totalTravelMinutes += legMinutes;
+
+      if (cardById.get(currentStop.assignmentId)?.status === 'completed') {
+        completedTravelMinutes += legMinutes;
+      }
+    }
+
+    if (!hasAnyResolvedTravelLeg) {
+      return baseSummary;
+    }
+
+    return {
+      ...baseSummary,
+      completedTravelMinutes,
+      totalTravelMinutes,
+    };
+  }
+
+  private resolveRouteLegTravelMinutes(
+    destinationStop: MapStop,
+    routeSegment: MapRouteSegment | undefined,
+    fallbackLookup: Map<string, number>,
+  ): number | undefined {
+    const routeDuration = routeSegment?.durationMinutes;
+    if (typeof routeDuration === 'number' && Number.isFinite(routeDuration)) {
+      return Math.max(0, Math.round(routeDuration));
+    }
+
+    if (destinationStop.kind !== 'assignment' || !destinationStop.assignmentId) {
+      return undefined;
+    }
+
+    const fallbackDuration = fallbackLookup.get(destinationStop.assignmentId);
+    if (typeof fallbackDuration !== 'number' || !Number.isFinite(fallbackDuration)) {
+      return undefined;
+    }
+
+    return Math.max(0, Math.round(fallbackDuration));
   }
 
   private scrollToAssignmentCard(assignmentId: string): void {
