@@ -101,7 +101,7 @@
             [ngClass]="[statusIcon, statusIconClass]"
           ></i>
           <div class="min-w-0 flex-1">
-            <h1 class="text-theme-primary text- font-semibold">
+            <h1 class="text-theme-primary text-xl font-semibold">
               {{ assignment.title }}
             </h1>
             @if (assignment.inquiryId) {
@@ -114,12 +114,14 @@
             }
 
             <p class="text-theme-secondary mt-2 text-lg">
-              {{ assignment.date }} <br />
-              {{ assignment.startTime }}
-              @if (assignment.endTime) {
-                - {{ assignment.endTime }}
-              }
-              • {{ assignment.estimatedDuration }}
+              <span class="block sm:inline">{{ assignment.date }}<span class="hidden sm:inline"> •</span></span>
+              <span class="block sm:inline">
+                {{ assignment.startTime }}
+                @if (assignment.endTime) {
+                  - {{ assignment.endTime }}
+                }
+                • {{ assignment.estimatedDuration }}
+              </span>
             </p>
           </div>
         </div>
