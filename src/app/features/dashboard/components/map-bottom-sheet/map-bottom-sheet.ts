@@ -162,8 +162,12 @@ export class MapBottomSheet implements OnInit, AfterViewInit, OnDestroy {
     content.addEventListener('touchstart', this.onContentTouchStart as EventListener, {
       passive: true,
     });
-    content.addEventListener('touchmove', this.onContentTouchMove as EventListener, { passive: false });
-    content.addEventListener('touchend', this.onContentTouchEnd as EventListener, { passive: true });
+    content.addEventListener('touchmove', this.onContentTouchMove as EventListener, {
+      passive: false,
+    });
+    content.addEventListener('touchend', this.onContentTouchEnd as EventListener, {
+      passive: true,
+    });
     content.addEventListener('touchcancel', this.onContentTouchEnd as EventListener, {
       passive: true,
     });
@@ -255,7 +259,7 @@ export class MapBottomSheet implements OnInit, AfterViewInit, OnDestroy {
     this.touchStartY = null;
     this.isTopPullDragging = false;
     this.touchDragStartTranslateY = this.currentTranslateY;
-  }
+  };
 
   private clearWheelSnapTimeout(): void {
     if (!this.wheelSnapTimeoutId) {

@@ -415,7 +415,6 @@ describe('MapBottomSheet', () => {
     onContentTouchEnd();
 
     expect(component.currentSnap).toBe('collapsed');
-
   });
 
   it('should scroll only the sheet content to a target element', () => {
