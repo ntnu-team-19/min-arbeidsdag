@@ -95,9 +95,17 @@
             [ngClass]="[statusIcon, statusIconClass]"
           ></i>
           <div class="min-w-0 flex-1">
-            <h1 class="text-theme-primary text-3xl font-semibold">
+            <h1 class="text-theme-primary text- font-semibold">
               {{ assignment.title }}
             </h1>
+            @if (assignment.inquiryId) {
+              <p
+                class="text-theme-muted mt-1 text-ml font-medium"
+                data-testid="assignment-details-order-number"
+              >
+                {{ 'assignment.orderNumber' | translate }}: {{ assignment.inquiryId }}
+              </p>
+            }
 
             <p class="text-theme-secondary mt-2 text-lg">
               {{ assignment.date }} <br />
