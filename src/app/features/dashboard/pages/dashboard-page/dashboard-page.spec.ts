@@ -94,6 +94,7 @@ const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
     id: buildRouteSegmentId('start', 'assignment-1'),
     fromStopId: 'start',
     toStopId: 'assignment-1',
+    durationMinutes: 7,
     coordinates: [
       [10.3951, 63.4305],
       [10.396, 63.431],
@@ -104,6 +105,7 @@ const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
     id: buildRouteSegmentId('assignment-1', 'assignment-2'),
     fromStopId: 'assignment-1',
     toStopId: 'assignment-2',
+    durationMinutes: 11,
     coordinates: [
       [10.3951, 63.4305],
       [10.421, 63.432],
@@ -122,6 +124,20 @@ const MOCK_DAILY_PROGRESS: DailyProgressSummary = {
     { label: 'El-nett', count: 1 },
   ],
 };
+
+function createRouteSegment(
+  fromStopId: string,
+  toStopId: string,
+  durationMinutes?: number,
+): MapRouteSegment {
+  return {
+    id: buildRouteSegmentId(fromStopId, toStopId),
+    fromStopId,
+    toStopId,
+    coordinates: [],
+    ...(durationMinutes === undefined ? {} : { durationMinutes }),
+  };
+}
 
 describe('DashboardPage', () => {
   let component: DashboardPage;
@@ -270,6 +286,23 @@ describe('DashboardPage', () => {
     fixture.detectChanges();
   });
 
+  async function createDashboard(): Promise<{
+    fixture: ComponentFixture<DashboardPage>;
+    component: DashboardPage;
+  }> {
+    const localFixture = TestBed.createComponent(DashboardPage);
+    const localComponent = localFixture.componentInstance;
+
+    localFixture.detectChanges();
+    await localFixture.whenStable();
+    localFixture.detectChanges();
+
+    return {
+      fixture: localFixture,
+      component: localComponent,
+    };
+  }
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
@@ -288,6 +321,140 @@ describe('DashboardPage', () => {
 
   it('should load travel times on init', () => {
     expect(component.travelTimes).toEqual([15, 12, 10, 8]);
+  });
+
+  it('should prefer OSRM route durations over fallback travel times when available', () => {
+    expect(component.getTravelTimeForCard(MOCK_CARDS[0])).toBe(15);
+    expect(component.getTravelTimeForCard(MOCK_CARDS[1])).toBe(11);
+    expect(component.getTravelTimeForCard(MOCK_CARDS[2])).toBe(10);
+  });
+
+  it('should update the infobox with summed all-day route travel after route data loads', () => {
+    expect(component.dailyProgress.completedAssignments).toBe(1);
+    expect(component.dailyProgress.totalAssignments).toBe(4);
+    expect(component.dailyProgress.completedTravelMinutes).toBe(8);
+    expect(component.dailyProgress.totalTravelMinutes).toBe(44);
+    expect(fixture.nativeElement.textContent).toContain('Kjøretid: 8 min av 44 min');
+  });
+
+  it('should exclude the terminal end leg from total travel even when OSRM provides it', async () => {
+    routingServiceMock.getRouteSegments.mockReset();
+    routingServiceMock.getRouteSegments
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-1', 7),
+          createRouteSegment('assignment-1', 'assignment-2', 11),
+          createRouteSegment('assignment-2', 'assignment-3', 13),
+          createRouteSegment('assignment-3', 'end', 5),
+        ]),
+      )
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-4', 3),
+          createRouteSegment('assignment-4', 'assignment-1', 7),
+          createRouteSegment('assignment-1', 'assignment-2', 11),
+          createRouteSegment('assignment-2', 'assignment-3', 13),
+          createRouteSegment('assignment-3', 'end', 5),
+        ]),
+      );
+
+    const { component: localComponent, fixture: localFixture } = await createDashboard();
+
+    expect(localComponent.dailyProgress.completedTravelMinutes).toBe(3);
+    expect(localComponent.dailyProgress.totalTravelMinutes).toBe(34);
+    expect(localFixture.nativeElement.textContent).toContain('Kjøretid: 3 min av 34 min');
+  });
+
+  it('should fall back to assignment-bound travel times but not the end leg when OSRM durations are missing', async () => {
+    routingServiceMock.getRouteSegments.mockReset();
+    routingServiceMock.getRouteSegments
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-1', 7),
+          createRouteSegment('assignment-1', 'assignment-2'),
+          createRouteSegment('assignment-2', 'assignment-3', 13),
+          createRouteSegment('assignment-3', 'end'),
+        ]),
+      )
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-4'),
+          createRouteSegment('assignment-4', 'assignment-1', 7),
+          createRouteSegment('assignment-1', 'assignment-2'),
+          createRouteSegment('assignment-2', 'assignment-3', 13),
+          createRouteSegment('assignment-3', 'end'),
+        ]),
+      );
+
+    const { component: localComponent, fixture: localFixture } = await createDashboard();
+
+    expect(localComponent.dailyProgress.completedTravelMinutes).toBe(8);
+    expect(localComponent.dailyProgress.totalTravelMinutes).toBe(40);
+    expect(localFixture.nativeElement.textContent).toContain('Kjøretid: 8 min av 40 min');
+  });
+
+  it('should count availability legs toward total travel without counting them as completed', async () => {
+    availabilityServiceMock.getAvailabilitiesByDate.mockReturnValueOnce(
+      of([
+        {
+          title: 'Fravær',
+          shortDescription: 'Fravær',
+          address: 'Fravær',
+          phoneNumber: '',
+          start: '2026-03-20T14:30:00.000Z',
+          stop: '2026-03-20T15:30:00.000Z',
+          calculatedTraveltime: 60,
+          available: false,
+          allDay: false,
+          absenceWithoutGoingHome: false,
+          locationPoint: { x: 10.4, y: 63.42 },
+        },
+      ]),
+    );
+    routingServiceMock.getRouteSegments.mockReset();
+    routingServiceMock.getRouteSegments
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-1', 5),
+          createRouteSegment('assignment-1', 'assignment-2', 7),
+          createRouteSegment('assignment-2', 'assignment-3', 11),
+          createRouteSegment(
+            'assignment-3',
+            `assignment-${buildAvailabilityCardId('2026-03-20T14:30:00.000Z')}`,
+            17,
+          ),
+          createRouteSegment(
+            `assignment-${buildAvailabilityCardId('2026-03-20T14:30:00.000Z')}`,
+            'end',
+            19,
+          ),
+        ]),
+      )
+      .mockReturnValueOnce(
+        of([
+          createRouteSegment('start', 'assignment-4', 3),
+          createRouteSegment('assignment-4', 'assignment-1', 5),
+          createRouteSegment('assignment-1', 'assignment-2', 7),
+          createRouteSegment('assignment-2', 'assignment-3', 11),
+          createRouteSegment(
+            'assignment-3',
+            `assignment-${buildAvailabilityCardId('2026-03-20T14:30:00.000Z')}`,
+            17,
+          ),
+          createRouteSegment(
+            `assignment-${buildAvailabilityCardId('2026-03-20T14:30:00.000Z')}`,
+            'end',
+            19,
+          ),
+        ]),
+      );
+
+    const { component: localComponent, fixture: localFixture } = await createDashboard();
+
+    expect(localComponent.assignmentCards.some((card) => card.isAvailability)).toBe(true);
+    expect(localComponent.dailyProgress.completedTravelMinutes).toBe(3);
+    expect(localComponent.dailyProgress.totalTravelMinutes).toBe(43);
+    expect(localFixture.nativeElement.textContent).toContain('Kjøretid: 3 min av 43 min');
   });
 
   it('should build ordered stops and route segments on init', () => {
@@ -1158,6 +1325,27 @@ describe('DashboardPage', () => {
 
     expect(routeComponent.mapAssignments.length).toBe(3);
     expect(routeComponent.routeSegments).toEqual([]);
+  });
+
+  it('should keep fallback travel times when route segments have no durations', async () => {
+    routingServiceMock.getRouteSegments.mockReturnValue(
+      of(
+        MOCK_ROUTE_SEGMENTS.map(({ ...segment }) => ({
+          ...segment,
+          durationMinutes: undefined,
+        })),
+      ),
+    );
+
+    const noDurationFixture = TestBed.createComponent(DashboardPage);
+    const noDurationComponent = noDurationFixture.componentInstance;
+
+    noDurationFixture.detectChanges();
+    await noDurationFixture.whenStable();
+    noDurationFixture.detectChanges();
+
+    expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[0])).toBe(15);
+    expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[1])).toBe(12);
   });
 
   it('should place availability card between two upcoming assignments', () => {
