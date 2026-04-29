@@ -9,5 +9,6 @@ import { TranslatePipe } from '@ngx-translate/core';
   styleUrl: './travel-time-indicator.css',
 })
 export class TravelTimeIndicator {
-  @Input({ required: true }) travelTimeMinutes!: number;
+  @Input() travelTimeMinutes?: number;
+  @Input() loading = false;
 }
