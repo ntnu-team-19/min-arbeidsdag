@@ -32,6 +32,10 @@ describe('DailyProgressInfobox', () => {
     translateService = TestBed.inject(TranslateService);
     translateService.setDefaultLang('no');
     translateService.setTranslation('no', {
+      travelTime: {
+        travelUnavailableTitle: 'Kjøretid er ikke tilgjengelig',
+        travelUnavailableMessage: 'Rute og kjøretid er ikke tilgjengelig akkurat nå.',
+      },
       dailyProgress: {
         todayTitle: 'Dagens fremdrift',
         tomorrowTitle: 'Morgendagens oversikt',
@@ -49,8 +53,11 @@ describe('DailyProgressInfobox', () => {
         noAssignmentsRegistered: 'Ingen oppdrag registrert',
         allAssignmentsCompleted: 'Alle oppdrag er fullført',
         assignmentsRemaining: '{{count}} {{assignmentLabel}} gjenstår',
-        plannedTravelTime: 'Planlagt kjøretid: {{minutes}} min',
-        travelTime: 'Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min',
+        durationMinutes: '{{minutes}} min',
+        durationHours: '{{hours}} t',
+        durationHoursMinutes: '{{hours}} t {{minutes}} min',
+        plannedTravelTime: 'Planlagt kjøretid: {{time}}',
+        travelTime: 'Kjøretid: {{completedTime}} av {{totalTime}}',
         tomorrowEstimate: 'Estimert for morgendagens oppdrag',
         travelTimeFootnote: '{{percentage}}% av dagens tid brukt på kjøring',
         noAssignmentTypesPlanned: 'Ingen oppdragstyper planlagt',
@@ -60,6 +67,10 @@ describe('DailyProgressInfobox', () => {
       },
     });
     translateService.setTranslation('en', {
+      travelTime: {
+        travelUnavailableTitle: 'Travel data is unavailable',
+        travelUnavailableMessage: 'Route and driving time are unavailable right now.',
+      },
       dailyProgress: {
         todayTitle: "Today's progress",
         tomorrowTitle: "Tomorrow's overview",
@@ -77,8 +88,11 @@ describe('DailyProgressInfobox', () => {
         noAssignmentsRegistered: 'No assignments registered',
         allAssignmentsCompleted: 'All assignments are completed',
         assignmentsRemaining: '{{count}} {{assignmentLabel}} remaining',
-        plannedTravelTime: 'Planned driving time: {{minutes}} min',
-        travelTime: 'Driving time: {{completedMinutes}} min of {{totalMinutes}} min',
+        durationMinutes: '{{minutes}} min',
+        durationHours: '{{hours}} h',
+        durationHoursMinutes: '{{hours}} h {{minutes}} min',
+        plannedTravelTime: 'Planned driving time: {{time}}',
+        travelTime: 'Driving time: {{completedTime}} of {{totalTime}}',
         tomorrowEstimate: "Estimated for tomorrow's assignments",
         travelTimeFootnote: "{{percentage}}% of today's time spent driving",
         noAssignmentTypesPlanned: 'No assignment types planned',
@@ -143,7 +157,7 @@ describe('DailyProgressInfobox', () => {
     expect(text).toContain('Fullførte oppdrag');
     expect(text).toContain('4 / 8');
     expect(text).toContain('4 oppdrag gjenstår');
-    expect(text).toContain('Kjøretid: 45 min av 75 min');
+    expect(text).toContain('Kjøretid: 45 min av 1 t 15 min');
     expect(text).toContain('60%');
     expect(text).toContain('60% av dagens tid brukt på kjøring');
     expect(pieChart).toBeTruthy();
@@ -173,7 +187,7 @@ describe('DailyProgressInfobox', () => {
     expect(text).toContain('Morgendagens oversikt');
     expect(text).toContain('Planlagte oppdrag');
     expect(text).toContain('0 / 8');
-    expect(text).toContain('Planlagt kjøretid: 75 min');
+    expect(text).toContain('Planlagt kjøretid: 1 t 15 min');
     expect(text).toContain('Estimert for morgendagens oppdrag');
     expect(component.assignmentProgressPercentage).toBe(0);
     expect(component.assignmentPieBackground).toContain('0deg 0deg');
@@ -194,22 +208,23 @@ describe('DailyProgressInfobox', () => {
     const travelValue = fixture.debugElement.query(By.css('.travel-progress__value'));
 
     expect(text).toContain('...');
-    expect(text).not.toContain('Planlagt kjøretid: 75 min');
+    expect(text).not.toContain('Planlagt kjøretid: 1 t 15 min');
     expect(travelFill.nativeElement.style.width).toBe('0%');
     expect(travelValue).toBeFalsy();
   });
 
-  it('should show placeholders for travel when OSRM data is unavailable', () => {
+  it('should show a friendly notice when OSRM data is unavailable', () => {
     render('today', mockSummary, 1024, 'unavailable');
 
     const text = fixture.nativeElement.textContent;
     const travelFill = fixture.debugElement.query(By.css('.progress-track__fill'));
     const travelValue = fixture.debugElement.query(By.css('.travel-progress__value'));
 
-    expect(text).toContain('...');
-    expect(text).not.toContain('Kjøretid: 45 min av 75 min');
+    expect(text).toContain('Kjøretid er ikke tilgjengelig');
+    expect(text).toContain('Rute og kjøretid er ikke tilgjengelig akkurat nå.');
+    expect(text).not.toContain('Kjøretid: 45 min av 1 t 15 min');
     expect(text).not.toContain('60% av dagens tid brukt på kjøring');
-    expect(travelFill.nativeElement.style.width).toBe('0%');
+    expect(travelFill).toBeFalsy();
     expect(travelValue).toBeFalsy();
   });
 
@@ -290,7 +305,7 @@ describe('DailyProgressInfobox', () => {
     const travelTrack = fixture.debugElement.query(By.css('.progress-track'));
 
     expect(text).toContain('Morgendagens oversikt');
-    expect(text).toContain('Planlagt kjøretid: 75 min');
+    expect(text).toContain('Planlagt kjøretid: 1 t 15 min');
     expect(component.assignmentPieBackground).toContain('var(--pie-track)');
     expect(pieChart.nativeElement.className).toContain('pie-chart--planned');
     expect(travelTrack.nativeElement.className).toContain('progress-track--planned');
@@ -323,7 +338,7 @@ describe('DailyProgressInfobox', () => {
     expect(text).toContain('8 assignments across 3 types');
     expect(text).toContain('Completed assignments');
     expect(text).toContain('4 assignments remaining');
-    expect(text).toContain('Driving time: 45 min of 75 min');
+    expect(text).toContain('Driving time: 45 min of 1 h 15 min');
     expect(text).toContain("60% of today's time spent driving");
     expect(typeSummary.nativeElement.getAttribute('aria-label')).toBe('Assignment types');
     expect(pieChart.nativeElement.getAttribute('aria-label')).toBe('Completed assignments');
@@ -356,5 +371,19 @@ describe('DailyProgressInfobox', () => {
     expect(text).toContain('3 / 3');
     expect(text).toContain('Alle oppdrag er fullført');
     expect(text).toContain('Kjøretid: 20 min av 20 min');
+  });
+
+  it('should format both completed and total driving time as hours and minutes when needed', () => {
+    render('today', {
+      completedAssignments: 1,
+      totalAssignments: 2,
+      completedTravelMinutes: 102,
+      totalTravelMinutes: 649,
+      typeBreakdown: [],
+    });
+
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).toContain('Kjøretid: 1 t 42 min av 10 t 49 min');
   });
 });
