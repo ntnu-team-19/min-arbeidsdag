@@ -259,6 +259,33 @@
   text-align: right;
 }
 
+.travel-unavailable-notice {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--panel-surface);
+  padding: 0.65rem 0.75rem;
+}
+
+.travel-unavailable-notice__title,
+.travel-unavailable-notice__message {
+  margin: 0;
+}
+
+.travel-unavailable-notice__title {
+  color: var(--ink);
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+.travel-unavailable-notice__message {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .progress-track {
   width: 100%;
   overflow: hidden;
@@ -429,6 +456,18 @@
   .travel-progress__value {
     min-width: 2.3rem;
     font-size: 0.75rem;
+  }
+
+  .travel-unavailable-notice {
+    padding: 0.56rem 0.62rem;
+  }
+
+  .travel-unavailable-notice__title {
+    font-size: 0.78rem;
+  }
+
+  .travel-unavailable-notice__message {
+    font-size: 0.71rem;
   }
 
   .progress-track--secondary {
