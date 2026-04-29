@@ -28,6 +28,13 @@ describe('TravelTimeIndicator', () => {
 
     translateService = TestBed.inject(TranslateService);
     translateService.setDefaultLang('no');
+    translateService.setTranslation('no', {
+      travelTime: {
+        minutesDriving: '{{minutes}} min kjøring',
+        hoursDriving: '{{hours}} t kjøring',
+        hoursMinutesDriving: '{{hours}} t {{minutes}} min kjøring',
+      },
+    });
     translateService.use('no');
 
     fixture = TestBed.createComponent(TestHostComponent);
@@ -37,7 +44,7 @@ describe('TravelTimeIndicator', () => {
   it('should display the travel time in minutes', () => {
     fixture.detectChanges();
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toContain('45');
+    expect(span.nativeElement.textContent.trim()).toBe('45 min kjøring');
   });
 
   it('should display 12 min kjøring', () => {
@@ -45,7 +52,7 @@ describe('TravelTimeIndicator', () => {
     fixture.detectChanges();
 
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toContain('12');
+    expect(span.nativeElement.textContent.trim()).toBe('12 min kjøring');
   });
 
   it('should display 0 min kjøring', () => {
@@ -53,7 +60,23 @@ describe('TravelTimeIndicator', () => {
     fixture.detectChanges();
 
     const span = fixture.debugElement.query(By.css('span'));
-    expect(span.nativeElement.textContent.trim()).toContain('0');
+    expect(span.nativeElement.textContent.trim()).toBe('0 min kjøring');
+  });
+
+  it('should display 1 t kjøring for exact whole hours', () => {
+    host.minutes = 60;
+    fixture.detectChanges();
+
+    const span = fixture.debugElement.query(By.css('span'));
+    expect(span.nativeElement.textContent.trim()).toBe('1 t kjøring');
+  });
+
+  it('should display 1 t 30 min kjøring for hours and minutes', () => {
+    host.minutes = 90;
+    fixture.detectChanges();
+
+    const span = fixture.debugElement.query(By.css('span'));
+    expect(span.nativeElement.textContent.trim()).toBe('1 t 30 min kjøring');
   });
 
   it('should display a placeholder while travel time is loading', () => {
