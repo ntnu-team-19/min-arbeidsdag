@@ -67,6 +67,13 @@
         </h2>
 
         <div sheet-body>
+          @if (shouldShowTravelUnavailableNotice) {
+            <div class="travel-unavailable-notice" role="status" aria-live="polite">
+              <p class="travel-unavailable-notice__title">{{ travelUnavailableTitle }}</p>
+              <p class="travel-unavailable-notice__message">{{ travelUnavailableMessage }}</p>
+            </div>
+          }
+
           @if (shouldShowStartLocationCard && startTechnicianLocation) {
             <app-home-location-card
               [withBottomMargin]="true"
