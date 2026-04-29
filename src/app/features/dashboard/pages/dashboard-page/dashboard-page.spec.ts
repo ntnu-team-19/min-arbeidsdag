@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, RouterModule, convertToParamMap, ParamMap } from '@angular/router';
-import { of, ReplaySubject } from 'rxjs';
+import { of, ReplaySubject, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from './dashboard-page';
 import { AssignmentService } from '../../../../core/services/assignment.service';
@@ -76,7 +76,6 @@ const MOCK_CARDS: Assignment[] = [
   },
 ];
 
-const MOCK_TRAVEL_TIMES = [15, 12, 10, 8];
 const MOCK_TECHNICIAN_LOCATIONS: TechnicianLocation[] = [
   {
     fieldTechId: 392841,
@@ -89,7 +88,7 @@ const MOCK_TECHNICIAN_LOCATIONS: TechnicianLocation[] = [
     isTemporary: false,
   },
 ];
-const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
+const VISIBLE_ROUTE_SEGMENTS: MapRouteSegment[] = [
   {
     id: buildRouteSegmentId('start', 'assignment-1'),
     fromStopId: 'start',
@@ -110,6 +109,62 @@ const MOCK_ROUTE_SEGMENTS: MapRouteSegment[] = [
       [10.3951, 63.4305],
       [10.421, 63.432],
       [10.4512, 63.4365],
+    ],
+  },
+  {
+    id: buildRouteSegmentId('assignment-2', 'assignment-3'),
+    fromStopId: 'assignment-2',
+    toStopId: 'assignment-3',
+    durationMinutes: 13,
+    coordinates: [
+      [10.4512, 63.4365],
+      [10.421, 63.425],
+      [10.3772, 63.4105],
+    ],
+  },
+];
+
+const ALL_DAY_ROUTE_SEGMENTS: MapRouteSegment[] = [
+  {
+    id: buildRouteSegmentId('start', 'assignment-4'),
+    fromStopId: 'start',
+    toStopId: 'assignment-4',
+    durationMinutes: 3,
+    coordinates: [
+      [10.35346, 63.35514],
+      [10.4399, 63.4102],
+    ],
+  },
+  {
+    id: buildRouteSegmentId('assignment-4', 'assignment-1'),
+    fromStopId: 'assignment-4',
+    toStopId: 'assignment-1',
+    durationMinutes: 7,
+    coordinates: [
+      [10.4399, 63.4102],
+      [10.3951, 63.4305],
+    ],
+  },
+  {
+    id: buildRouteSegmentId('assignment-1', 'assignment-2'),
+    fromStopId: 'assignment-1',
+    toStopId: 'assignment-2',
+    durationMinutes: 11,
+    coordinates: [
+      [10.3951, 63.4305],
+      [10.421, 63.432],
+      [10.4512, 63.4365],
+    ],
+  },
+  {
+    id: buildRouteSegmentId('assignment-2', 'assignment-3'),
+    fromStopId: 'assignment-2',
+    toStopId: 'assignment-3',
+    durationMinutes: 13,
+    coordinates: [
+      [10.4512, 63.4365],
+      [10.421, 63.425],
+      [10.3772, 63.4105],
     ],
   },
 ];
@@ -145,7 +200,6 @@ describe('DashboardPage', () => {
   let queryParamSubject: ReplaySubject<ParamMap>;
   let assignmentServiceMock: {
     getAssignmentCardsByDesiredDate: ReturnType<typeof vi.fn>;
-    getTravelTimesByDesiredDate: ReturnType<typeof vi.fn>;
     getDailyProgressByDesiredDate: ReturnType<typeof vi.fn>;
     getTechnicianLocationsByDesiredDate: ReturnType<typeof vi.fn>;
     updateTomorrowConfirmation: ReturnType<typeof vi.fn>;
@@ -167,13 +221,20 @@ describe('DashboardPage', () => {
 
     assignmentServiceMock = {
       getAssignmentCardsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_CARDS)),
-      getTravelTimesByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TRAVEL_TIMES)),
       getDailyProgressByDesiredDate: vi.fn().mockReturnValue(of(MOCK_DAILY_PROGRESS)),
       getTechnicianLocationsByDesiredDate: vi.fn().mockReturnValue(of(MOCK_TECHNICIAN_LOCATIONS)),
       updateTomorrowConfirmation: vi.fn().mockReturnValue(of(undefined)),
     };
     routingServiceMock = {
-      getRouteSegments: vi.fn().mockReturnValue(of(MOCK_ROUTE_SEGMENTS)),
+      getRouteSegments: vi
+        .fn()
+        .mockImplementation((stops: { id: string }[]) =>
+          of(
+            stops.some((stop) => stop.id === 'assignment-4')
+              ? ALL_DAY_ROUTE_SEGMENTS
+              : VISIBLE_ROUTE_SEGMENTS,
+          ),
+        ),
     };
     availabilityServiceMock = {
       getAvailabilitiesByDate: vi.fn().mockReturnValue(of([])),
@@ -241,6 +302,8 @@ describe('DashboardPage', () => {
       location: {
         allDay: 'Hele dagen',
         unknownTime: 'Ukjent tidspunkt',
+        leaveBy: 'Dra hjemmefra',
+        leaveUnknown: 'Ukjent avreisetid',
       },
       dailyProgress: {
         todayTitle: 'Dagens fremdrift',
@@ -319,22 +382,18 @@ describe('DashboardPage', () => {
     expect(component.assignmentCards.length).toBe(4);
   });
 
-  it('should load travel times on init', () => {
-    expect(component.travelTimes).toEqual([15, 12, 10, 8]);
-  });
-
-  it('should prefer OSRM route durations over fallback travel times when available', () => {
-    expect(component.getTravelTimeForCard(MOCK_CARDS[0])).toBe(15);
+  it('should use OSRM route durations for per-card travel times when available', () => {
+    expect(component.getTravelTimeForCard(MOCK_CARDS[0])).toBe(7);
     expect(component.getTravelTimeForCard(MOCK_CARDS[1])).toBe(11);
-    expect(component.getTravelTimeForCard(MOCK_CARDS[2])).toBe(10);
+    expect(component.getTravelTimeForCard(MOCK_CARDS[2])).toBe(13);
   });
 
   it('should update the infobox with summed all-day route travel after route data loads', () => {
     expect(component.dailyProgress.completedAssignments).toBe(1);
     expect(component.dailyProgress.totalAssignments).toBe(4);
-    expect(component.dailyProgress.completedTravelMinutes).toBe(8);
-    expect(component.dailyProgress.totalTravelMinutes).toBe(44);
-    expect(fixture.nativeElement.textContent).toContain('Kjøretid: 8 min av 44 min');
+    expect(component.dailyProgress.completedTravelMinutes).toBe(3);
+    expect(component.dailyProgress.totalTravelMinutes).toBe(34);
+    expect(fixture.nativeElement.textContent).toContain('Kjøretid: 3 min av 34 min');
   });
 
   it('should exclude the terminal end leg from total travel even when OSRM provides it', async () => {
@@ -365,32 +424,73 @@ describe('DashboardPage', () => {
     expect(localFixture.nativeElement.textContent).toContain('Kjøretid: 3 min av 34 min');
   });
 
-  it('should fall back to assignment-bound travel times but not the end leg when OSRM durations are missing', async () => {
+  it('should show loading placeholders instead of fallback travel values while OSRM is loading', () => {
+    const routeSegmentsSubject = new Subject<MapRouteSegment[]>();
+    routingServiceMock.getRouteSegments.mockReturnValue(routeSegmentsSubject.asObservable());
+    assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
+      of([
+        {
+          ...MOCK_CARDS[1],
+          status: 'next',
+        },
+        {
+          ...MOCK_CARDS[2],
+        },
+      ]),
+    );
+
+    const loadingFixture = TestBed.createComponent(DashboardPage);
+    const loadingComponent = loadingFixture.componentInstance;
+
+    loadingFixture.detectChanges();
+    loadingFixture.detectChanges();
+
+    expect(loadingComponent.travelState).toBe('loading');
+    expect(loadingComponent.getTravelTimeForCard(MOCK_CARDS[1])).toBeUndefined();
+    expect(loadingComponent.getStartLocationDepartureLabel()).toBe('...');
+    expect(loadingFixture.nativeElement.textContent).toContain('...');
+    expect(loadingFixture.debugElement.queryAll(By.css('app-travel-time-indicator'))).toHaveLength(
+      2,
+    );
+  });
+
+  it('should trigger change detection as soon as OSRM responses arrive', async () => {
+    const visibleSegmentsSubject = new Subject<MapRouteSegment[]>();
+    const allSegmentsSubject = new Subject<MapRouteSegment[]>();
+
     routingServiceMock.getRouteSegments.mockReset();
     routingServiceMock.getRouteSegments
-      .mockReturnValueOnce(
-        of([
-          createRouteSegment('start', 'assignment-1', 7),
-          createRouteSegment('assignment-1', 'assignment-2'),
-          createRouteSegment('assignment-2', 'assignment-3', 13),
-          createRouteSegment('assignment-3', 'end'),
-        ]),
-      )
-      .mockReturnValueOnce(
-        of([
-          createRouteSegment('start', 'assignment-4'),
-          createRouteSegment('assignment-4', 'assignment-1', 7),
-          createRouteSegment('assignment-1', 'assignment-2'),
-          createRouteSegment('assignment-2', 'assignment-3', 13),
-          createRouteSegment('assignment-3', 'end'),
-        ]),
+      .mockReturnValueOnce(visibleSegmentsSubject.asObservable())
+      .mockReturnValueOnce(allSegmentsSubject.asObservable())
+      .mockImplementation((stops: { id: string }[]) =>
+        of(
+          stops.some((stop) => stop.id === 'assignment-4')
+            ? ALL_DAY_ROUTE_SEGMENTS
+            : VISIBLE_ROUTE_SEGMENTS,
+        ),
       );
 
-    const { component: localComponent, fixture: localFixture } = await createDashboard();
+    const reactiveFixture = TestBed.createComponent(DashboardPage);
+    const reactiveComponent = reactiveFixture.componentInstance;
+    const detectChangesSpy = vi.spyOn(
+      (reactiveComponent as unknown as { cdr: { detectChanges: () => void } }).cdr,
+      'detectChanges',
+    );
 
-    expect(localComponent.dailyProgress.completedTravelMinutes).toBe(8);
-    expect(localComponent.dailyProgress.totalTravelMinutes).toBe(40);
-    expect(localFixture.nativeElement.textContent).toContain('Kjøretid: 8 min av 40 min');
+    reactiveFixture.detectChanges();
+    await reactiveFixture.whenStable();
+
+    expect(reactiveComponent.travelState).toBe('loading');
+
+    visibleSegmentsSubject.next(VISIBLE_ROUTE_SEGMENTS);
+    visibleSegmentsSubject.complete();
+    allSegmentsSubject.next(ALL_DAY_ROUTE_SEGMENTS);
+    allSegmentsSubject.complete();
+    await reactiveFixture.whenStable();
+
+    expect(reactiveComponent.travelState).toBe('ready');
+    expect(reactiveComponent.getTravelTimeForCard(MOCK_CARDS[0])).toBe(7);
+    expect(detectChangesSpy).toHaveBeenCalled();
   });
 
   it('should count availability legs toward total travel without counting them as completed', async () => {
@@ -471,7 +571,7 @@ describe('DashboardPage', () => {
         .map((stop) => stop.sequenceNumber),
     ).toEqual([2, 3, 4]);
     expect(routingServiceMock.getRouteSegments).toHaveBeenCalledWith(component.mapStops);
-    expect(component.routeSegments).toEqual(MOCK_ROUTE_SEGMENTS);
+    expect(component.routeSegments).toEqual(VISIBLE_ROUTE_SEGMENTS);
   });
 
   it('should include assignment status in map assignments and expose the fallback user location', () => {
@@ -790,7 +890,7 @@ describe('DashboardPage', () => {
       expect.objectContaining({
         fromStop: expect.objectContaining({ id: 'assignment-1' }),
         toStop: expect.objectContaining({ id: 'assignment-2' }),
-        routeSegment: MOCK_ROUTE_SEGMENTS[1],
+        routeSegment: VISIBLE_ROUTE_SEGMENTS[1],
         targetYRatio: MAP_BOTTOM_SHEET_PEEK_RATIO / 2,
       }),
     );
@@ -1314,7 +1414,7 @@ describe('DashboardPage', () => {
   });
 
   it('should keep map markers functional when route data is unavailable', async () => {
-    routingServiceMock.getRouteSegments.mockReturnValueOnce(of([]));
+    routingServiceMock.getRouteSegments.mockReturnValue(of([]));
 
     const routeFixture = TestBed.createComponent(DashboardPage);
     const routeComponent = routeFixture.componentInstance;
@@ -1325,12 +1425,35 @@ describe('DashboardPage', () => {
 
     expect(routeComponent.mapAssignments.length).toBe(3);
     expect(routeComponent.routeSegments).toEqual([]);
+    expect(routeComponent.travelState).toBe('unavailable');
+    expect(routeFixture.nativeElement.textContent).toContain('...');
   });
 
-  it('should keep fallback travel times when route segments have no durations', async () => {
+  it('should show unknown departure when OSRM travel data is unavailable', async () => {
+    routingServiceMock.getRouteSegments.mockReturnValue(of([]));
+    assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
+      of([
+        {
+          ...MOCK_CARDS[1],
+          status: 'next',
+        },
+        {
+          ...MOCK_CARDS[2],
+        },
+      ]),
+    );
+
+    const { component: localComponent, fixture: localFixture } = await createDashboard();
+
+    expect(localComponent.travelState).toBe('unavailable');
+    expect(localComponent.getStartLocationDepartureLabel()).toBe('Ukjent avreisetid');
+    expect(localFixture.nativeElement.textContent).toContain('Ukjent avreisetid');
+  });
+
+  it('should hide travel values when OSRM route segments have no durations', async () => {
     routingServiceMock.getRouteSegments.mockReturnValue(
       of(
-        MOCK_ROUTE_SEGMENTS.map(({ ...segment }) => ({
+        VISIBLE_ROUTE_SEGMENTS.map(({ ...segment }) => ({
           ...segment,
           durationMinutes: undefined,
         })),
@@ -1344,8 +1467,11 @@ describe('DashboardPage', () => {
     await noDurationFixture.whenStable();
     noDurationFixture.detectChanges();
 
-    expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[0])).toBe(15);
-    expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[1])).toBe(12);
+    expect(noDurationComponent.travelState).toBe('unavailable');
+    expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[0])).toBeUndefined();
+    expect(
+      noDurationFixture.debugElement.queryAll(By.css('app-travel-time-indicator')),
+    ).toHaveLength(0);
   });
 
   it('should place availability card between two upcoming assignments', () => {
@@ -1369,7 +1495,6 @@ describe('DashboardPage', () => {
     assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
       of(cardsWithTwoUpcoming),
     );
-    assignmentServiceMock.getTravelTimesByDesiredDate.mockReturnValueOnce(of([15, 12, 10, 9, 8]));
     availabilityServiceMock.getAvailabilitiesByDate.mockReturnValueOnce(
       of([
         {
@@ -1404,6 +1529,6 @@ describe('DashboardPage', () => {
       (card) => card.title === 'Tannlegetime',
     );
     expect(availabilityCard).toBeTruthy();
-    expect(component.getTravelTimeForCard(availabilityCard!)).toBe(12);
+    expect(component.getTravelTimeForCard(availabilityCard!)).toBeUndefined();
   });
 });
