@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   ElementRef,
@@ -54,6 +55,7 @@ import {
   mapAvailabilityDtoToAssignmentCardModel,
 } from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
+import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
 
 const MAP_MARKER_FOCUS_TARGET_Y_RATIO = MAP_BOTTOM_SHEET_PEEK_RATIO / 2;
 const MAP_BOTTOM_SHEET_SCROLL_DELAY_MS = 280;
@@ -86,8 +88,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   selectedDay: DayOption = 'today';
   isListView = true;
   assignmentCards: Assignment[] = [];
-  travelTimes: number[] = [];
   travelTimesByAssignmentId = new Map<string, number>();
+  travelState: DashboardTravelState = 'unavailable';
   dailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
   technicianLocations: TechnicianLocation[] = [];
   mapAssignments: MapAssignment[] = [];
@@ -107,6 +109,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private routingService = inject(RoutingService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
   private destroyRef = inject(DestroyRef);
@@ -116,7 +119,6 @@ export class DashboardPage implements OnInit, OnDestroy {
   private pendingCardHighlightTimeoutId?: ReturnType<typeof setTimeout>;
   private loadVersion = 0;
   private serviceDailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
-  private fallbackTravelTimesByAssignmentId = new Map<string, number>();
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
@@ -192,6 +194,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   getStartLocationDepartureLabel(): string {
     const firstAssignment = this.assignmentCards[0];
+
+    if (this.travelState === 'loading' && firstAssignment) {
+      return '...';
+    }
+
     const travelMinutes = firstAssignment ? this.getTravelTimeForCard(firstAssignment) : undefined;
 
     if (!firstAssignment || typeof travelMinutes !== 'number' || !Number.isFinite(travelMinutes)) {
@@ -217,13 +224,25 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   shouldShowTravelTimeIndicator(assignment: Assignment): boolean {
+    if (assignment.status === 'completed') {
+      return false;
+    }
+
+    if (this.travelState === 'loading') {
+      return true;
+    }
+
+    if (this.travelState === 'unavailable') {
+      return false;
+    }
+
     const travelMinutes = this.getTravelTimeForCard(assignment);
 
-    return (
-      typeof travelMinutes === 'number' &&
-      Number.isFinite(travelMinutes) &&
-      assignment.status !== 'completed'
-    );
+    return typeof travelMinutes === 'number' && Number.isFinite(travelMinutes);
+  }
+
+  isTravelTimeLoading(assignment: Assignment): boolean {
+    return this.travelState === 'loading' && assignment.status !== 'completed';
   }
 
   private parseAssignmentStartTime(timeValue: string | undefined): Date | undefined {
@@ -452,17 +471,18 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.allDayMapStops = [];
     this.routeSegments = [];
     this.allRouteSegments = [];
+    this.travelTimesByAssignmentId = new Map();
+    this.travelState = 'unavailable';
     const date = this.getDateForDay(this.selectedDay);
 
     forkJoin({
       cards: this.assignmentService.getAssignmentCardsByDesiredDate(date),
       availabilities: this.availabilityService.getAvailabilitiesByDate(date),
-      travelTimes: this.assignmentService.getTravelTimesByDesiredDate(date),
       progress: this.assignmentService.getDailyProgressByDesiredDate(date),
       technicianLocations: this.assignmentService.getTechnicianLocationsByDesiredDate(date),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ cards, availabilities, travelTimes, progress, technicianLocations }) => {
+      .subscribe(({ cards, availabilities, progress, technicianLocations }) => {
         if (loadVersion !== this.loadVersion) {
           return;
         }
@@ -474,19 +494,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         this.assignmentCards = this.mergeCardsWithAvailability(cards, availabilityCards);
         this.assignmentSequenceNumbers = this.buildAssignmentSequenceNumbers(this.assignmentCards);
-        this.travelTimes = travelTimes;
-        this.fallbackTravelTimesByAssignmentId = new Map([
-          ...this.buildTravelTimesByAssignmentId(cards, travelTimes),
-          ...this.buildTravelTimesByAssignmentId(
-            availabilityCards,
-            availabilities.map((availability) => Math.round(availability.calculatedTraveltime)),
-          ),
-        ]);
-        this.travelTimesByAssignmentId = new Map(this.fallbackTravelTimesByAssignmentId);
         this.serviceDailyProgress = progress;
-        this.dailyProgress = progress;
+        this.dailyProgress = this.clearTravelMetrics(progress);
+        this.travelState = this.assignmentCards.length > 0 ? 'loading' : 'unavailable';
         this.technicianLocations = technicianLocations;
         this.refreshMapData(loadVersion);
+        this.cdr.detectChanges();
       });
   }
 
@@ -560,19 +573,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         this.routeSegments = visibleSegments;
         this.allRouteSegments = allSegments ?? visibleSegments;
-        this.travelTimesByAssignmentId = this.buildEffectiveTravelTimesByAssignmentId(
+        this.travelTimesByAssignmentId = this.buildTravelTimesFromRouteSegments(
           this.allDayMapStops,
           this.allRouteSegments,
-          this.fallbackTravelTimesByAssignmentId,
         );
         this.dailyProgress = this.buildDailyProgressWithRouteTravel(
           this.serviceDailyProgress,
           this.allDayMapStops,
           this.allRouteSegments,
           this.assignmentCards,
-          this.fallbackTravelTimesByAssignmentId,
         );
+        this.travelState = this.travelTimesByAssignmentId.size > 0 ? 'ready' : 'unavailable';
         this.syncFocusedRouteSelection();
+        this.cdr.detectChanges();
       });
   }
 
@@ -602,29 +615,6 @@ export class DashboardPage implements OnInit, OnDestroy {
       ...availabilityCards,
       ...assignmentCards.slice(secondUpcomingIndex),
     ];
-  }
-
-  private buildTravelTimesByAssignmentId(
-    assignmentCards: Assignment[],
-    travelTimes: number[],
-  ): Map<string, number> {
-    const lookup = new Map<string, number>();
-    assignmentCards.forEach((card, index) => {
-      const travelTime = travelTimes[index];
-      if (travelTime !== undefined) {
-        lookup.set(card.id, travelTime);
-      }
-    });
-    return lookup;
-  }
-
-  private buildEffectiveTravelTimesByAssignmentId(
-    orderedStops: MapStop[],
-    routeSegments: MapRouteSegment[],
-    fallbackLookup: Map<string, number>,
-  ): Map<string, number> {
-    const routeLookup = this.buildTravelTimesFromRouteSegments(orderedStops, routeSegments);
-    return new Map([...fallbackLookup, ...routeLookup]);
   }
 
   private buildTravelTimesFromRouteSegments(
@@ -665,10 +655,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     orderedStops: MapStop[],
     routeSegments: MapRouteSegment[],
     assignmentCards: Assignment[],
-    fallbackLookup: Map<string, number>,
   ): DailyProgressSummary {
     if (orderedStops.length < 2 || routeSegments.length === 0) {
-      return baseSummary;
+      return this.clearTravelMetrics(baseSummary);
     }
 
     const segmentById = new Map(routeSegments.map((segment) => [segment.id, segment]));
@@ -691,26 +680,22 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
 
       const segmentId = buildRouteSegmentId(previousStop.id, currentStop.id);
-      const legMinutes = this.resolveRouteLegTravelMinutes(
-        currentStop,
-        segmentById.get(segmentId),
-        fallbackLookup,
-      );
+      const legMinutes = segmentById.get(segmentId)?.durationMinutes;
 
-      if (legMinutes === undefined) {
+      if (typeof legMinutes !== 'number' || !Number.isFinite(legMinutes)) {
         continue;
       }
 
       hasAnyResolvedTravelLeg = true;
-      totalTravelMinutes += legMinutes;
+      totalTravelMinutes += Math.max(0, Math.round(legMinutes));
 
       if (cardById.get(currentStop.assignmentId)?.status === 'completed') {
-        completedTravelMinutes += legMinutes;
+        completedTravelMinutes += Math.max(0, Math.round(legMinutes));
       }
     }
 
     if (!hasAnyResolvedTravelLeg) {
-      return baseSummary;
+      return this.clearTravelMetrics(baseSummary);
     }
 
     return {
@@ -720,26 +705,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     };
   }
 
-  private resolveRouteLegTravelMinutes(
-    destinationStop: MapStop,
-    routeSegment: MapRouteSegment | undefined,
-    fallbackLookup: Map<string, number>,
-  ): number | undefined {
-    const routeDuration = routeSegment?.durationMinutes;
-    if (typeof routeDuration === 'number' && Number.isFinite(routeDuration)) {
-      return Math.max(0, Math.round(routeDuration));
-    }
-
-    if (destinationStop.kind !== 'assignment' || !destinationStop.assignmentId) {
-      return undefined;
-    }
-
-    const fallbackDuration = fallbackLookup.get(destinationStop.assignmentId);
-    if (typeof fallbackDuration !== 'number' || !Number.isFinite(fallbackDuration)) {
-      return undefined;
-    }
-
-    return Math.max(0, Math.round(fallbackDuration));
+  private clearTravelMetrics(summary: DailyProgressSummary): DailyProgressSummary {
+    return {
+      ...summary,
+      completedTravelMinutes: 0,
+      totalTravelMinutes: 0,
+    };
   }
 
   private scrollToAssignmentCard(assignmentId: string): void {
