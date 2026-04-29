@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   ElementRef,
@@ -54,6 +55,7 @@ import {
   mapAvailabilityDtoToAssignmentCardModel,
 } from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
+import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
 
 const MAP_MARKER_FOCUS_TARGET_Y_RATIO = MAP_BOTTOM_SHEET_PEEK_RATIO / 2;
 const MAP_BOTTOM_SHEET_SCROLL_DELAY_MS = 280;
@@ -86,8 +88,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   selectedDay: DayOption = 'today';
   isListView = true;
   assignmentCards: Assignment[] = [];
-  travelTimes: number[] = [];
   travelTimesByAssignmentId = new Map<string, number>();
+  travelState: DashboardTravelState = 'unavailable';
   dailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
   technicianLocations: TechnicianLocation[] = [];
   mapAssignments: MapAssignment[] = [];
@@ -107,6 +109,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private routingService = inject(RoutingService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
   private renderer = inject(Renderer2);
   private document = inject(DOCUMENT);
   private destroyRef = inject(DestroyRef);
@@ -115,6 +118,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private pendingCardScrollTimeoutId?: ReturnType<typeof setTimeout>;
   private pendingCardHighlightTimeoutId?: ReturnType<typeof setTimeout>;
   private loadVersion = 0;
+  private serviceDailyProgress: DailyProgressSummary = EMPTY_DAILY_PROGRESS_SUMMARY;
 
   get sheetTitle(): string {
     const count = this.assignmentCards.length;
@@ -190,6 +194,15 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   getStartLocationDepartureLabel(): string {
     const firstAssignment = this.assignmentCards[0];
+
+    if (this.travelState === 'loading' && firstAssignment) {
+      return '...';
+    }
+
+    if (this.travelState === 'unavailable' && firstAssignment) {
+      return this.translate.instant('travelTime.departureUnavailable');
+    }
+
     const travelMinutes = firstAssignment ? this.getTravelTimeForCard(firstAssignment) : undefined;
 
     if (!firstAssignment || typeof travelMinutes !== 'number' || !Number.isFinite(travelMinutes)) {
@@ -214,14 +227,38 @@ export class DashboardPage implements OnInit, OnDestroy {
     return this.assignmentSequenceNumbers[assignmentId] ?? null;
   }
 
+  get shouldShowTravelUnavailableNotice(): boolean {
+    return this.travelState === 'unavailable' && this.assignmentCards.length > 0;
+  }
+
+  get travelUnavailableTitle(): string {
+    return this.translate.instant('travelTime.travelUnavailableTitle');
+  }
+
+  get travelUnavailableMessage(): string {
+    return this.translate.instant('travelTime.travelUnavailableMessage');
+  }
+
   shouldShowTravelTimeIndicator(assignment: Assignment): boolean {
+    if (assignment.status === 'completed') {
+      return false;
+    }
+
+    if (this.travelState === 'loading') {
+      return true;
+    }
+
+    if (this.travelState === 'unavailable') {
+      return false;
+    }
+
     const travelMinutes = this.getTravelTimeForCard(assignment);
 
-    return (
-      typeof travelMinutes === 'number' &&
-      Number.isFinite(travelMinutes) &&
-      assignment.status !== 'completed'
-    );
+    return typeof travelMinutes === 'number' && Number.isFinite(travelMinutes);
+  }
+
+  isTravelTimeLoading(assignment: Assignment): boolean {
+    return this.travelState === 'loading' && assignment.status !== 'completed';
   }
 
   private parseAssignmentStartTime(timeValue: string | undefined): Date | undefined {
@@ -451,17 +488,18 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.allDayMapStops = [];
     this.routeSegments = [];
     this.allRouteSegments = [];
+    this.travelTimesByAssignmentId = new Map();
+    this.travelState = 'unavailable';
     const date = this.getDateForDay(this.selectedDay);
 
     forkJoin({
       cards: this.assignmentService.getAssignmentCardsByDesiredDate(date),
       availabilities: this.availabilityService.getAvailabilitiesByDate(date),
-      travelTimes: this.assignmentService.getTravelTimesByDesiredDate(date),
       progress: this.assignmentService.getDailyProgressByDesiredDate(date),
       technicianLocations: this.assignmentService.getTechnicianLocationsByDesiredDate(date),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ cards, availabilities, travelTimes, progress, technicianLocations }) => {
+      .subscribe(({ cards, availabilities, progress, technicianLocations }) => {
         if (loadVersion !== this.loadVersion) {
           return;
         }
@@ -473,17 +511,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         this.assignmentCards = this.mergeCardsWithAvailability(cards, availabilityCards);
         this.assignmentSequenceNumbers = this.buildAssignmentSequenceNumbers(this.assignmentCards);
-        this.travelTimes = travelTimes;
-        this.travelTimesByAssignmentId = new Map([
-          ...this.buildTravelTimesByAssignmentId(cards, travelTimes),
-          ...this.buildTravelTimesByAssignmentId(
-            availabilityCards,
-            availabilities.map((availability) => Math.round(availability.calculatedTraveltime)),
-          ),
-        ]);
-        this.dailyProgress = progress;
+        this.serviceDailyProgress = progress;
+        this.dailyProgress = this.clearTravelMetrics(progress);
+        this.travelState = this.assignmentCards.length > 0 ? 'loading' : 'unavailable';
         this.technicianLocations = technicianLocations;
         this.refreshMapData(loadVersion);
+        this.cdr.detectChanges();
       });
   }
 
@@ -557,7 +590,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 
         this.routeSegments = visibleSegments;
         this.allRouteSegments = allSegments ?? visibleSegments;
+        this.travelTimesByAssignmentId = this.buildTravelTimesFromRouteSegments(
+          this.allDayMapStops,
+          this.allRouteSegments,
+        );
+        this.dailyProgress = this.buildDailyProgressWithRouteTravel(
+          this.serviceDailyProgress,
+          this.allDayMapStops,
+          this.allRouteSegments,
+          this.assignmentCards,
+        );
+        this.travelState = this.travelTimesByAssignmentId.size > 0 ? 'ready' : 'unavailable';
         this.syncFocusedRouteSelection();
+        this.cdr.detectChanges();
       });
   }
 
@@ -589,18 +634,100 @@ export class DashboardPage implements OnInit, OnDestroy {
     ];
   }
 
-  private buildTravelTimesByAssignmentId(
-    assignmentCards: Assignment[],
-    travelTimes: number[],
+  private buildTravelTimesFromRouteSegments(
+    orderedStops: MapStop[],
+    routeSegments: MapRouteSegment[],
   ): Map<string, number> {
+    const segmentById = new Map(routeSegments.map((segment) => [segment.id, segment]));
     const lookup = new Map<string, number>();
-    assignmentCards.forEach((card, index) => {
-      const travelTime = travelTimes[index];
-      if (travelTime !== undefined) {
-        lookup.set(card.id, travelTime);
+
+    for (let index = 1; index < orderedStops.length; index += 1) {
+      const currentStop = orderedStops[index];
+      const previousStop = orderedStops[index - 1];
+
+      if (
+        !currentStop ||
+        !previousStop ||
+        currentStop.kind !== 'assignment' ||
+        !currentStop.assignmentId
+      ) {
+        continue;
       }
-    });
+
+      const segmentId = buildRouteSegmentId(previousStop.id, currentStop.id);
+      const segmentDuration = segmentById.get(segmentId)?.durationMinutes;
+
+      if (typeof segmentDuration !== 'number' || !Number.isFinite(segmentDuration)) {
+        continue;
+      }
+
+      lookup.set(currentStop.assignmentId, segmentDuration);
+    }
+
     return lookup;
+  }
+
+  private buildDailyProgressWithRouteTravel(
+    baseSummary: DailyProgressSummary,
+    orderedStops: MapStop[],
+    routeSegments: MapRouteSegment[],
+    assignmentCards: Assignment[],
+  ): DailyProgressSummary {
+    if (orderedStops.length < 2 || routeSegments.length === 0) {
+      return this.clearTravelMetrics(baseSummary);
+    }
+
+    const segmentById = new Map(routeSegments.map((segment) => [segment.id, segment]));
+    const cardById = new Map(assignmentCards.map((card) => [card.id, card]));
+    let totalTravelMinutes = 0;
+    let completedTravelMinutes = 0;
+    let hasAnyResolvedTravelLeg = false;
+
+    for (let index = 1; index < orderedStops.length; index += 1) {
+      const currentStop = orderedStops[index];
+      const previousStop = orderedStops[index - 1];
+
+      if (
+        !currentStop ||
+        !previousStop ||
+        currentStop.kind !== 'assignment' ||
+        !currentStop.assignmentId
+      ) {
+        continue;
+      }
+
+      const segmentId = buildRouteSegmentId(previousStop.id, currentStop.id);
+      const legMinutes = segmentById.get(segmentId)?.durationMinutes;
+
+      if (typeof legMinutes !== 'number' || !Number.isFinite(legMinutes)) {
+        continue;
+      }
+
+      hasAnyResolvedTravelLeg = true;
+      totalTravelMinutes += Math.max(0, Math.round(legMinutes));
+
+      if (cardById.get(currentStop.assignmentId)?.status === 'completed') {
+        completedTravelMinutes += Math.max(0, Math.round(legMinutes));
+      }
+    }
+
+    if (!hasAnyResolvedTravelLeg) {
+      return this.clearTravelMetrics(baseSummary);
+    }
+
+    return {
+      ...baseSummary,
+      completedTravelMinutes,
+      totalTravelMinutes,
+    };
+  }
+
+  private clearTravelMetrics(summary: DailyProgressSummary): DailyProgressSummary {
+    return {
+      ...summary,
+      completedTravelMinutes: 0,
+      totalTravelMinutes: 0,
+    };
   }
 
   private scrollToAssignmentCard(assignmentId: string): void {

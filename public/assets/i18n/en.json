@@ -83,7 +83,12 @@
     "leaveUnknown": "Unknown departure time"
   },
   "travelTime": {
-    "minDriving": "min driving"
+    "minutesDriving": "{{minutes}} min driving",
+    "hoursDriving": "{{hours}} h driving",
+    "hoursMinutesDriving": "{{hours}} h {{minutes}} min driving",
+    "travelUnavailableTitle": "Travel data is unavailable",
+    "travelUnavailableMessage": "Route and driving time are unavailable right now.",
+    "departureUnavailable": "Departure time is unavailable right now"
   },
   "dailyProgress": {
     "todayTitle": "Today's progress",
@@ -101,8 +106,11 @@
     "noAssignmentsRegistered": "No assignments registered",
     "allAssignmentsCompleted": "All assignments are completed",
     "assignmentsRemaining": "{{count}} {{assignmentLabel}} remaining",
-    "plannedTravelTime": "Planned driving time: {{minutes}} min",
-    "travelTime": "Driving time: {{completedMinutes}} min of {{totalMinutes}} min",
+    "durationMinutes": "{{minutes}} min",
+    "durationHours": "{{hours}} h",
+    "durationHoursMinutes": "{{hours}} h {{minutes}} min",
+    "plannedTravelTime": "Planned driving time: {{time}}",
+    "travelTime": "Driving time: {{completedTime}} of {{totalTime}}",
     "tomorrowEstimate": "Estimated for tomorrow's assignments",
     "travelTimeFootnote": "{{percentage}}% of today's time spent driving",
     "noAssignmentTypesPlanned": "No assignment types planned",

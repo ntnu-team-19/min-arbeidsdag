@@ -6,6 +6,7 @@ import {
   DailyProgressSummary,
   EMPTY_DAILY_PROGRESS_SUMMARY,
 } from '../../../../core/models/daily-progress.model';
+import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
 
 @Component({
   selector: 'app-daily-progress-infobox',
@@ -15,10 +16,12 @@ import {
 })
 export class DailyProgressInfobox implements OnChanges {
   private static nextTypeSummaryId = 0;
+  private static readonly travelPlaceholder = '...';
   private readonly translate = inject(TranslateService);
 
   @Input() summary: Partial<DailyProgressSummary> | null = null;
   @Input({ required: true }) day!: DayOption;
+  @Input() travelState: DashboardTravelState = 'ready';
 
   readonly typeSummaryId = `daily-progress-types-${DailyProgressInfobox.nextTypeSummaryId++}`;
 
@@ -149,19 +152,31 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelHeadline(): string {
+    if (this.travelState === 'loading') {
+      return DailyProgressInfobox.travelPlaceholder;
+    }
+
     if (this.viewDay === 'tomorrow') {
       return this.translate.instant('dailyProgress.plannedTravelTime', {
-        minutes: this.totalTravelMinutes,
+        time: this.formatTravelDuration(this.totalTravelMinutes),
       });
     }
 
     return this.translate.instant('dailyProgress.travelTime', {
-      completedMinutes: this.completedTravelMinutes,
-      totalMinutes: this.totalTravelMinutes,
+      completedTime: this.formatTravelDuration(this.completedTravelMinutes),
+      totalTime: this.formatTravelDuration(this.totalTravelMinutes),
     });
   }
 
   get travelFootnote(): string {
+    if (this.travelState === 'loading') {
+      return DailyProgressInfobox.travelPlaceholder;
+    }
+
+    if (this.travelState === 'unavailable') {
+      return '';
+    }
+
     if (this.viewDay === 'tomorrow') {
       return this.translate.instant('dailyProgress.tomorrowEstimate');
     }
@@ -172,10 +187,18 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelProgressLabel(): string {
+    if (this.travelState !== 'ready') {
+      return '';
+    }
+
     return this.viewDay === 'tomorrow' ? '' : `${this.travelBarPercentage}%`;
   }
 
   get travelBarPercentage(): number {
+    if (this.travelState !== 'ready') {
+      return 0;
+    }
+
     if (this.viewDay === 'tomorrow') {
       return 0;
     }
@@ -215,6 +238,18 @@ export class DailyProgressInfobox implements OnChanges {
     );
   }
 
+  get showTravelUnavailableNotice(): boolean {
+    return this.travelState === 'unavailable';
+  }
+
+  get travelUnavailableTitle(): string {
+    return this.translate.instant('travelTime.travelUnavailableTitle');
+  }
+
+  get travelUnavailableMessage(): string {
+    return this.translate.instant('travelTime.travelUnavailableMessage');
+  }
+
   get viewDay(): DayOption {
     return this.day === 'tomorrow' ? 'tomorrow' : 'today';
   }
@@ -237,6 +272,30 @@ export class DailyProgressInfobox implements OnChanges {
     }
 
     this.areMobileTypesExpanded = !this.areMobileTypesExpanded;
+  }
+
+  private formatTravelDuration(minutes: number): string {
+    const roundedMinutes = Math.max(0, Math.round(minutes));
+
+    if (roundedMinutes < 60) {
+      return this.translate.instant('dailyProgress.durationMinutes', {
+        minutes: roundedMinutes,
+      });
+    }
+
+    const hours = Math.floor(roundedMinutes / 60);
+    const remainingMinutes = roundedMinutes % 60;
+
+    if (remainingMinutes === 0) {
+      return this.translate.instant('dailyProgress.durationHours', {
+        hours,
+      });
+    }
+
+    return this.translate.instant('dailyProgress.durationHoursMinutes', {
+      hours,
+      minutes: remainingMinutes,
+    });
   }
 
   private get safeSummary(): DailyProgressSummary {

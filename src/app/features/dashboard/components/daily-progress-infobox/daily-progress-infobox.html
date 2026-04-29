@@ -74,27 +74,34 @@
     </div>
 
     <div class="daily-progress-infobox__section daily-progress-infobox__section--travel">
-      <p class="travel-copy__headline">{{ travelHeadline }}</p>
-
-      <div class="travel-progress">
-        <i class="pi pi-car travel-progress__icon" aria-hidden="true"></i>
-        <div
-          class="progress-track progress-track--secondary"
-          [class.progress-track--planned]="isPlannedDay"
-          role="progressbar"
-          [attr.aria-label]="travelProgressAriaLabel"
-          [attr.aria-valuemin]="0"
-          [attr.aria-valuemax]="100"
-          [attr.aria-valuenow]="travelBarPercentage"
-        >
-          <span class="progress-track__fill" [style.width.%]="travelBarPercentage"></span>
+      @if (showTravelUnavailableNotice) {
+        <div class="travel-unavailable-notice" role="status" aria-live="polite">
+          <p class="travel-unavailable-notice__title">{{ travelUnavailableTitle }}</p>
+          <p class="travel-unavailable-notice__message">{{ travelUnavailableMessage }}</p>
         </div>
-        @if (travelProgressLabel) {
-          <span class="travel-progress__value">{{ travelProgressLabel }}</span>
-        }
-      </div>
+      } @else {
+        <p class="travel-copy__headline">{{ travelHeadline }}</p>
 
-      <p class="travel-copy__footnote">{{ travelFootnote }}</p>
+        <div class="travel-progress">
+          <i class="pi pi-car travel-progress__icon" aria-hidden="true"></i>
+          <div
+            class="progress-track progress-track--secondary"
+            [class.progress-track--planned]="isPlannedDay"
+            role="progressbar"
+            [attr.aria-label]="travelProgressAriaLabel"
+            [attr.aria-valuemin]="0"
+            [attr.aria-valuemax]="100"
+            [attr.aria-valuenow]="travelBarPercentage"
+          >
+            <span class="progress-track__fill" [style.width.%]="travelBarPercentage"></span>
+          </div>
+          @if (travelProgressLabel) {
+            <span class="travel-progress__value">{{ travelProgressLabel }}</span>
+          }
+        </div>
+
+        <p class="travel-copy__footnote">{{ travelFootnote }}</p>
+      }
     </div>
   </div>
 </section>
