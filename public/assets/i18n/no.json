@@ -83,7 +83,12 @@
     "leaveUnknown": "Ukjent avreisetid"
   },
   "travelTime": {
-    "minDriving": "min kjøring"
+    "minutesDriving": "{{minutes}} min kjøring",
+    "hoursDriving": "{{hours}} t kjøring",
+    "hoursMinutesDriving": "{{hours}} t {{minutes}} min kjøring",
+    "travelUnavailableTitle": "Kjøretid er ikke tilgjengelig",
+    "travelUnavailableMessage": "Rute og kjøretid er ikke tilgjengelig akkurat nå.",
+    "departureUnavailable": "Avreisetid er ikke tilgjengelig akkurat nå"
   },
   "dailyProgress": {
     "todayTitle": "Dagens fremdrift",
@@ -101,8 +106,11 @@
     "noAssignmentsRegistered": "Ingen oppdrag registrert",
     "allAssignmentsCompleted": "Alle oppdrag er fullført",
     "assignmentsRemaining": "{{count}} {{assignmentLabel}} gjenstår",
-    "plannedTravelTime": "Planlagt kjøretid: {{minutes}} min",
-    "travelTime": "Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min",
+    "durationMinutes": "{{minutes}} min",
+    "durationHours": "{{hours}} t",
+    "durationHoursMinutes": "{{hours}} t {{minutes}} min",
+    "plannedTravelTime": "Planlagt kjøretid: {{time}}",
+    "travelTime": "Kjøretid: {{completedTime}} av {{totalTime}}",
     "tomorrowEstimate": "Estimert for morgendagens oppdrag",
     "travelTimeFootnote": "{{percentage}}% av dagens tid brukt på kjøring",
     "noAssignmentTypesPlanned": "Ingen oppdragstyper planlagt",
