@@ -106,6 +106,7 @@ describe('DailyProgressInfobox', () => {
     day: DayOption = 'today',
     summary: Partial<DailyProgressSummary> | null = mockSummary,
     width = 1024,
+    travelState: 'loading' | 'ready' | 'unavailable' = 'ready',
   ): void {
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,
@@ -115,6 +116,7 @@ describe('DailyProgressInfobox', () => {
     component.onWindowResize();
     fixture.componentRef.setInput('day', day);
     fixture.componentRef.setInput('summary', summary);
+    fixture.componentRef.setInput('travelState', travelState);
     fixture.detectChanges();
   }
 
@@ -182,6 +184,33 @@ describe('DailyProgressInfobox', () => {
     expect(travelFill.nativeElement.style.width).toBe('0%');
     expect(travelValue).toBeFalsy();
     expect(tracks[0].nativeElement.className).toContain('progress-track--planned');
+  });
+
+  it('should show placeholders for travel while loading OSRM data', () => {
+    render('tomorrow', mockSummary, 1024, 'loading');
+
+    const text = fixture.nativeElement.textContent;
+    const travelFill = fixture.debugElement.query(By.css('.progress-track__fill'));
+    const travelValue = fixture.debugElement.query(By.css('.travel-progress__value'));
+
+    expect(text).toContain('...');
+    expect(text).not.toContain('Planlagt kjøretid: 75 min');
+    expect(travelFill.nativeElement.style.width).toBe('0%');
+    expect(travelValue).toBeFalsy();
+  });
+
+  it('should show placeholders for travel when OSRM data is unavailable', () => {
+    render('today', mockSummary, 1024, 'unavailable');
+
+    const text = fixture.nativeElement.textContent;
+    const travelFill = fixture.debugElement.query(By.css('.progress-track__fill'));
+    const travelValue = fixture.debugElement.query(By.css('.travel-progress__value'));
+
+    expect(text).toContain('...');
+    expect(text).not.toContain('Kjøretid: 45 min av 75 min');
+    expect(text).not.toContain('60% av dagens tid brukt på kjøring');
+    expect(travelFill.nativeElement.style.width).toBe('0%');
+    expect(travelValue).toBeFalsy();
   });
 
   it('should collapse task types by default on mobile and toggle them open', () => {
