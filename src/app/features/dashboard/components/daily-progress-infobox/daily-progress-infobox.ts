@@ -6,6 +6,7 @@ import {
   DailyProgressSummary,
   EMPTY_DAILY_PROGRESS_SUMMARY,
 } from '../../../../core/models/daily-progress.model';
+import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
 
 @Component({
   selector: 'app-daily-progress-infobox',
@@ -15,10 +16,12 @@ import {
 })
 export class DailyProgressInfobox implements OnChanges {
   private static nextTypeSummaryId = 0;
+  private static readonly travelPlaceholder = '...';
   private readonly translate = inject(TranslateService);
 
   @Input() summary: Partial<DailyProgressSummary> | null = null;
   @Input({ required: true }) day!: DayOption;
+  @Input() travelState: DashboardTravelState = 'ready';
 
   readonly typeSummaryId = `daily-progress-types-${DailyProgressInfobox.nextTypeSummaryId++}`;
 
@@ -149,6 +152,10 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelHeadline(): string {
+    if (this.travelState !== 'ready') {
+      return DailyProgressInfobox.travelPlaceholder;
+    }
+
     if (this.viewDay === 'tomorrow') {
       return this.translate.instant('dailyProgress.plannedTravelTime', {
         minutes: this.totalTravelMinutes,
@@ -162,6 +169,10 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelFootnote(): string {
+    if (this.travelState !== 'ready') {
+      return DailyProgressInfobox.travelPlaceholder;
+    }
+
     if (this.viewDay === 'tomorrow') {
       return this.translate.instant('dailyProgress.tomorrowEstimate');
     }
@@ -172,10 +183,18 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelProgressLabel(): string {
+    if (this.travelState !== 'ready') {
+      return '';
+    }
+
     return this.viewDay === 'tomorrow' ? '' : `${this.travelBarPercentage}%`;
   }
 
   get travelBarPercentage(): number {
+    if (this.travelState !== 'ready') {
+      return 0;
+    }
+
     if (this.viewDay === 'tomorrow') {
       return 0;
     }
