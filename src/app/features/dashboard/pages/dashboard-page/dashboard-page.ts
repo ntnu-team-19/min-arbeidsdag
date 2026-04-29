@@ -199,6 +199,10 @@ export class DashboardPage implements OnInit, OnDestroy {
       return '...';
     }
 
+    if (this.travelState === 'unavailable' && firstAssignment) {
+      return this.translate.instant('travelTime.departureUnavailable');
+    }
+
     const travelMinutes = firstAssignment ? this.getTravelTimeForCard(firstAssignment) : undefined;
 
     if (!firstAssignment || typeof travelMinutes !== 'number' || !Number.isFinite(travelMinutes)) {
@@ -221,6 +225,18 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   getAssignmentSequenceNumber(assignmentId: string): number | null {
     return this.assignmentSequenceNumbers[assignmentId] ?? null;
+  }
+
+  get shouldShowTravelUnavailableNotice(): boolean {
+    return this.travelState === 'unavailable' && this.assignmentCards.length > 0;
+  }
+
+  get travelUnavailableTitle(): string {
+    return this.translate.instant('travelTime.travelUnavailableTitle');
+  }
+
+  get travelUnavailableMessage(): string {
+    return this.translate.instant('travelTime.travelUnavailableMessage');
   }
 
   shouldShowTravelTimeIndicator(assignment: Assignment): boolean {
