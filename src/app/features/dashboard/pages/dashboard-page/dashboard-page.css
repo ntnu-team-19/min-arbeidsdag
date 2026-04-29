@@ -48,6 +48,33 @@
   scroll-margin-bottom: 12rem;
 }
 
+.travel-unavailable-notice {
+  margin: 0 0.25rem 0.75rem;
+  border: 1px solid var(--border-2);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-2) 78%, white 22%);
+  padding: 0.75rem 0.9rem;
+}
+
+.travel-unavailable-notice__title,
+.travel-unavailable-notice__message {
+  margin: 0;
+}
+
+.travel-unavailable-notice__title {
+  color: var(--text-1);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.travel-unavailable-notice__message {
+  margin-top: 0.2rem;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .mini-assignment-card-row.marker-focused {
   box-shadow:
     0 0 0 3px rgba(84, 127, 169, 0.34),
