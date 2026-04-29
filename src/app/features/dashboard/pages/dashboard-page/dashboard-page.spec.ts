@@ -285,7 +285,12 @@ describe('DashboardPage', () => {
         assignmentCountTextPlural: 'Oppdrag',
       },
       travelTime: {
-        minDriving: 'min kjøring',
+        minutesDriving: '{{minutes}} min kjøring',
+        hoursDriving: '{{hours}} t kjøring',
+        hoursMinutesDriving: '{{hours}} t {{minutes}} min kjøring',
+        travelUnavailableTitle: 'Kjøretid er ikke tilgjengelig',
+        travelUnavailableMessage: 'Rute og kjøretid er ikke tilgjengelig akkurat nå.',
+        departureUnavailable: 'Avreisetid er ikke tilgjengelig akkurat nå',
       },
       status: {
         ongoing: 'Pågående oppdrag',
@@ -322,8 +327,11 @@ describe('DashboardPage', () => {
         noAssignmentsRegistered: 'Ingen oppdrag registrert',
         allAssignmentsCompleted: 'Alle oppdrag er fullført',
         assignmentsRemaining: '{{count}} {{assignmentLabel}} gjenstår',
-        plannedTravelTime: 'Planlagt kjøretid: {{minutes}} min',
-        travelTime: 'Kjøretid: {{completedMinutes}} min av {{totalMinutes}} min',
+        durationMinutes: '{{minutes}} min',
+        durationHours: '{{hours}} t',
+        durationHoursMinutes: '{{hours}} t {{minutes}} min',
+        plannedTravelTime: 'Planlagt kjøretid: {{time}}',
+        travelTime: 'Kjøretid: {{completedTime}} av {{totalTime}}',
         tomorrowEstimate: 'Estimert for morgendagens oppdrag',
         travelTimeFootnote: '{{percentage}}% av dagens tid brukt på kjøring',
         noAssignmentTypesPlanned: 'Ingen oppdragstyper planlagt',
@@ -765,6 +773,24 @@ describe('DashboardPage', () => {
 
     const infobox = mapFixture.debugElement.query(By.css('app-daily-progress-infobox'));
     expect(infobox).toBeFalsy();
+  });
+
+  it('should show the unavailable travel notice in the map bottom sheet', async () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    routingServiceMock.getRouteSegments.mockReturnValue(of([]));
+
+    const mapFixture = TestBed.createComponent(DashboardPage);
+    const mapComponent = mapFixture.componentInstance;
+    mapComponent.isListView = false;
+    mapFixture.detectChanges();
+    await mapFixture.whenStable();
+    mapFixture.detectChanges();
+
+    const text = mapFixture.nativeElement.textContent;
+
+    expect(mapComponent.travelState).toBe('unavailable');
+    expect(text).toContain('Kjøretid er ikke tilgjengelig');
+    expect(text).toContain('Rute og kjøretid er ikke tilgjengelig akkurat nå.');
   });
 
   it('should hide travel time indicators before completed assignments in the map bottom sheet', async () => {
@@ -1426,10 +1452,13 @@ describe('DashboardPage', () => {
     expect(routeComponent.mapAssignments.length).toBe(3);
     expect(routeComponent.routeSegments).toEqual([]);
     expect(routeComponent.travelState).toBe('unavailable');
-    expect(routeFixture.nativeElement.textContent).toContain('...');
+    expect(routeFixture.nativeElement.textContent).toContain('Kjøretid er ikke tilgjengelig');
+    expect(routeFixture.nativeElement.textContent).toContain(
+      'Rute og kjøretid er ikke tilgjengelig akkurat nå.',
+    );
   });
 
-  it('should show unknown departure when OSRM travel data is unavailable', async () => {
+  it('should show dependency-aware departure copy when OSRM travel data is unavailable', async () => {
     routingServiceMock.getRouteSegments.mockReturnValue(of([]));
     assignmentServiceMock.getAssignmentCardsByDesiredDate.mockReturnValueOnce(
       of([
@@ -1446,8 +1475,12 @@ describe('DashboardPage', () => {
     const { component: localComponent, fixture: localFixture } = await createDashboard();
 
     expect(localComponent.travelState).toBe('unavailable');
-    expect(localComponent.getStartLocationDepartureLabel()).toBe('Ukjent avreisetid');
-    expect(localFixture.nativeElement.textContent).toContain('Ukjent avreisetid');
+    expect(localComponent.getStartLocationDepartureLabel()).toBe(
+      'Avreisetid er ikke tilgjengelig akkurat nå',
+    );
+    expect(localFixture.nativeElement.textContent).toContain(
+      'Avreisetid er ikke tilgjengelig akkurat nå',
+    );
   });
 
   it('should hide travel values when OSRM route segments have no durations', async () => {
@@ -1469,6 +1502,7 @@ describe('DashboardPage', () => {
 
     expect(noDurationComponent.travelState).toBe('unavailable');
     expect(noDurationComponent.getTravelTimeForCard(MOCK_CARDS[0])).toBeUndefined();
+    expect(noDurationFixture.nativeElement.textContent).toContain('Kjøretid er ikke tilgjengelig');
     expect(
       noDurationFixture.debugElement.queryAll(By.css('app-travel-time-indicator')),
     ).toHaveLength(0);
