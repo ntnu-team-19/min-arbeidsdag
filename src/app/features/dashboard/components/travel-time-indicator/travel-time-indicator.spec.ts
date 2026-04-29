@@ -8,10 +8,11 @@ import { TravelTimeIndicator } from './travel-time-indicator';
 @Component({
   standalone: true,
   imports: [TravelTimeIndicator],
-  template: `<app-travel-time-indicator [travelTimeMinutes]="minutes" />`,
+  template: `<app-travel-time-indicator [travelTimeMinutes]="minutes" [loading]="loading" />`,
 })
 class TestHostComponent {
   minutes = 45;
+  loading = false;
 }
 
 describe('TravelTimeIndicator', () => {
@@ -53,6 +54,14 @@ describe('TravelTimeIndicator', () => {
 
     const span = fixture.debugElement.query(By.css('span'));
     expect(span.nativeElement.textContent.trim()).toContain('0');
+  });
+
+  it('should display a placeholder while travel time is loading', () => {
+    host.loading = true;
+    fixture.detectChanges();
+
+    const span = fixture.debugElement.query(By.css('span'));
+    expect(span.nativeElement.textContent.trim()).toBe('...');
   });
 
   it('should render a car icon', () => {
