@@ -152,25 +152,29 @@ export class DailyProgressInfobox implements OnChanges {
   }
 
   get travelHeadline(): string {
-    if (this.travelState !== 'ready') {
+    if (this.travelState === 'loading') {
       return DailyProgressInfobox.travelPlaceholder;
     }
 
     if (this.viewDay === 'tomorrow') {
       return this.translate.instant('dailyProgress.plannedTravelTime', {
-        minutes: this.totalTravelMinutes,
+        time: this.formatTravelDuration(this.totalTravelMinutes),
       });
     }
 
     return this.translate.instant('dailyProgress.travelTime', {
-      completedMinutes: this.completedTravelMinutes,
-      totalMinutes: this.totalTravelMinutes,
+      completedTime: this.formatTravelDuration(this.completedTravelMinutes),
+      totalTime: this.formatTravelDuration(this.totalTravelMinutes),
     });
   }
 
   get travelFootnote(): string {
-    if (this.travelState !== 'ready') {
+    if (this.travelState === 'loading') {
       return DailyProgressInfobox.travelPlaceholder;
+    }
+
+    if (this.travelState === 'unavailable') {
+      return '';
     }
 
     if (this.viewDay === 'tomorrow') {
@@ -234,6 +238,18 @@ export class DailyProgressInfobox implements OnChanges {
     );
   }
 
+  get showTravelUnavailableNotice(): boolean {
+    return this.travelState === 'unavailable';
+  }
+
+  get travelUnavailableTitle(): string {
+    return this.translate.instant('travelTime.travelUnavailableTitle');
+  }
+
+  get travelUnavailableMessage(): string {
+    return this.translate.instant('travelTime.travelUnavailableMessage');
+  }
+
   get viewDay(): DayOption {
     return this.day === 'tomorrow' ? 'tomorrow' : 'today';
   }
@@ -256,6 +272,30 @@ export class DailyProgressInfobox implements OnChanges {
     }
 
     this.areMobileTypesExpanded = !this.areMobileTypesExpanded;
+  }
+
+  private formatTravelDuration(minutes: number): string {
+    const roundedMinutes = Math.max(0, Math.round(minutes));
+
+    if (roundedMinutes < 60) {
+      return this.translate.instant('dailyProgress.durationMinutes', {
+        minutes: roundedMinutes,
+      });
+    }
+
+    const hours = Math.floor(roundedMinutes / 60);
+    const remainingMinutes = roundedMinutes % 60;
+
+    if (remainingMinutes === 0) {
+      return this.translate.instant('dailyProgress.durationHours', {
+        hours,
+      });
+    }
+
+    return this.translate.instant('dailyProgress.durationHoursMinutes', {
+      hours,
+      minutes: remainingMinutes,
+    });
   }
 
   private get safeSummary(): DailyProgressSummary {
