@@ -3,7 +3,10 @@
   class="surface-1 border-theme-2 block w-full rounded-2xl border p-0 text-left shadow-sm transition active:scale-[0.99]"
   (click)="onCardClick()"
 >
-  <div class="flex items-center justify-between gap-3 rounded-t-2xl px-4 py-1.5" [ngClass]="currentStatus.badgeClass">
+  <div
+    class="flex items-center justify-between gap-3 rounded-t-2xl px-4 py-1.5"
+    [ngClass]="currentStatus.badgeClass"
+  >
     <span class="text-xs font-semibold">{{ currentStatus.label | translate }}</span>
     @if (canToggleConfirmation) {
       <button

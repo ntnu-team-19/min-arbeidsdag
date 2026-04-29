@@ -214,7 +214,10 @@ export class AssignmentService {
     return this.getSortedAssignments(this.getAssignmentsByDesiredDate(date), date);
   }
 
-  private getSortedAssignments(assignments: AssignmentDetailsDto[], desiredDate?: string): AssignmentDetailsDto[] {
+  private getSortedAssignments(
+    assignments: AssignmentDetailsDto[],
+    desiredDate?: string,
+  ): AssignmentDetailsDto[] {
     const isTodayView = desiredDate ? this.isToday(desiredDate) : false;
 
     return [...assignments].sort((a, b) => {
