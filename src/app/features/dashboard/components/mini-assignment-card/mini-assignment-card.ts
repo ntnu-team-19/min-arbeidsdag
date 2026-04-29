@@ -15,6 +15,7 @@ export class MiniAssignmentCard {
 
   @Output() cardClick = new EventEmitter<string>();
   @Output() directionsClick = new EventEmitter<Assignment>();
+  @Output() confirmationToggle = new EventEmitter<boolean>();
 
   private readonly statusConfig: Record<
     Assignment['status'],
@@ -74,6 +75,16 @@ export class MiniAssignmentCard {
     return !!this.assignment.locationPoint;
   }
 
+  get canToggleConfirmation(): boolean {
+    return this.assignment.status === 'confirmed' || this.assignment.status === 'unconfirmed';
+  }
+
+  get confirmationActionLabel(): string {
+    return this.assignment.status === 'confirmed'
+      ? 'assignment.markUnconfirmed'
+      : 'assignment.markConfirmed';
+  }
+
   onCardClick(): void {
     this.cardClick.emit(this.assignment.id);
   }
@@ -84,5 +95,11 @@ export class MiniAssignmentCard {
     if (!this.assignment) return;
 
     this.directionsClick.emit(this.assignment);
+  }
+
+  onConfirmationToggle(event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.canToggleConfirmation) return;
+    this.confirmationToggle.emit(this.assignment.status !== 'confirmed');
   }
 }
