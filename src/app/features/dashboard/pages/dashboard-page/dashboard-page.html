@@ -102,6 +102,7 @@
                 [sequenceNumber]="getAssignmentSequenceNumber(assignment.id)"
                 (cardClick)="goToAssignmentDetails($event)"
                 (directionsClick)="onMiniAssignmentDirectionsClick($event)"
+                (confirmationToggle)="onTomorrowConfirmationChange(assignment.id, $event)"
               />
             </div>
           }

@@ -3,8 +3,20 @@
   class="surface-1 border-theme-2 block w-full rounded-2xl border p-0 text-left shadow-sm transition active:scale-[0.99]"
   (click)="onCardClick()"
 >
-  <div class="rounded-t-2xl px-4 py-1.5 text-xs font-semibold" [ngClass]="currentStatus.badgeClass">
-    {{ currentStatus.label | translate }}
+  <div
+    class="flex items-center justify-between gap-3 rounded-t-2xl px-4 py-1.5"
+    [ngClass]="currentStatus.badgeClass"
+  >
+    <span class="text-xs font-semibold">{{ currentStatus.label | translate }}</span>
+    @if (canToggleConfirmation) {
+      <button
+        type="button"
+        class="surface-overlay border-theme-2 text-theme-primary ml-auto shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
+        (click)="onConfirmationToggle($event)"
+      >
+        {{ confirmationActionLabel | translate }}
+      </button>
+    }
   </div>
 
   <div class="flex items-center justify-between gap-3 p-4">

@@ -422,9 +422,18 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   onTomorrowConfirmationChange(id: string, confirmed: boolean): void {
-    this.assignmentService.updateTomorrowConfirmation(id, confirmed).subscribe(() => {
-      this.loadAssignmentsForSelectedDay();
-    });
+    if (this.selectedDay === 'tomorrow') {
+      const assignment = this.assignmentCards.find((card) => card.id === id);
+      if (assignment) {
+        assignment.status = confirmed ? 'confirmed' : 'unconfirmed';
+        this.cdr.detectChanges();
+      }
+      this.assignmentService.updateTomorrowConfirmation(id, confirmed).subscribe();
+    } else {
+      this.assignmentService.updateTomorrowConfirmation(id, confirmed).subscribe(() => {
+        this.loadAssignmentsForSelectedDay();
+      });
+    }
   }
 
   private updateQueryParams(): void {

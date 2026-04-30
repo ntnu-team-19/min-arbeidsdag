@@ -211,14 +211,21 @@ export class AssignmentService {
   };
 
   private getSortedAssignmentsByDesiredDate(date: string): AssignmentDetailsDto[] {
-    return this.getSortedAssignments(this.getAssignmentsByDesiredDate(date));
+    return this.getSortedAssignments(this.getAssignmentsByDesiredDate(date), date);
   }
 
-  private getSortedAssignments(assignments: AssignmentDetailsDto[]): AssignmentDetailsDto[] {
+  private getSortedAssignments(
+    assignments: AssignmentDetailsDto[],
+    desiredDate?: string,
+  ): AssignmentDetailsDto[] {
+    const isTodayView = desiredDate ? this.isToday(desiredDate) : false;
+
     return [...assignments].sort((a, b) => {
-      const statusDiff = this.compareStatus(a, b);
-      if (statusDiff !== 0) {
-        return statusDiff;
+      if (isTodayView) {
+        const statusDiff = this.compareStatus(a, b);
+        if (statusDiff !== 0) {
+          return statusDiff;
+        }
       }
 
       const startTimeDiff = this.compareStartTime(a.showingStartDate, b.showingStartDate);
@@ -251,6 +258,14 @@ export class AssignmentService {
 
     const timestamp = new Date(dateString).getTime();
     return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
+  }
+
+  private isToday(dateString: string): boolean {
+    const target = new Date(dateString);
+    if (Number.isNaN(target.getTime())) return false;
+
+    const today = new Date();
+    return target.toDateString() === today.toDateString();
   }
 
   private getAssignmentsByDesiredDate(date: string): AssignmentDetailsDto[] {

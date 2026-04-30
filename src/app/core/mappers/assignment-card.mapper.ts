@@ -14,6 +14,17 @@ function isTomorrow(dateString: string | null): boolean {
   return target.toDateString() === tomorrow.toDateString();
 }
 
+export function isToday(dateString: string | null): boolean {
+  if (!dateString) return false;
+
+  const target = new Date(dateString);
+  if (Number.isNaN(target.getTime())) return false;
+
+  const today = new Date();
+
+  return target.toDateString() === today.toDateString();
+}
+
 function hasVisibleText(value: string | null | undefined): boolean {
   return !!value?.trim();
 }
