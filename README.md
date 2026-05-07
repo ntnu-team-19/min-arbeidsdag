@@ -1,59 +1,59 @@
 # MinArbeidsdag
 
-MinArbeidsdag er en frontend-app utviklet som del av en bacheloroppgave. Løsningen er laget for å gi feltteknikere oversikt over oppdrag, reisetid, kartposisjoner og detaljer for dagens og morgendagens arbeid.
+MinArbeidsdag is a frontend application developed as part of a bachelor's thesis. The solution is designed to give field technicians an overview of assignments, travel time, map locations, and task details for the current and upcoming workday.
 
-## 1. Introduksjon
+## 1. Introduction
 
-Dette dokumentet er skrevet som teknisk dokumentasjon for bacheloroppgaven. Hensikten er å gi en kort og presis oversikt over hvordan løsningen er bygget opp, hvilke hovedkomponenter den består av, og hvordan den kan kjøres lokalt.
+This document serves as technical documentation for the bachelor's thesis. Its purpose is to provide a short and precise overview of how the solution is structured, which main components it consists of, and how it can be run locally.
 
-Dokumentet inneholder:
+This document includes:
 
-- overordnet arkitektur for løsningen
-- prosjektstruktur og organisering av kildekoden
-- et overordnet klassediagram for frontend-subsystemet
-- kort omtale av lagring, eksterne tjenester og sikkerhet
-- instruksjoner for installasjon, bygging og kjøring
+- the overall architecture of the solution
+- the project structure and organization of the source code
+- a high-level class diagram for the frontend subsystem
+- a brief description of storage, external services, and security
+- instructions for installation, building, and running the application
 
-Løsningen i dette repoet er et frontend-system. Den har ikke en egen produksjonsbackend eller database, men bruker mockdata, `localStorage`, nettleser-API-er og en ekstern rutetjeneste. Frontendet er samtidig utformet slik at det senere kan kobles til Geomatikk sitt API.
+The solution in this repository is a frontend system. It does not include a production backend or database, but instead uses mock data, `localStorage`, browser APIs, and an external routing service. At the same time, the frontend has been designed so that it can later be integrated with Geomatikk's API.
 
-## 2. Arkitektur
+## 2. Architecture
 
-### Figur 1: Overordnet systemarkitektur
+### Figure 1: Overall System Architecture
 
 ```mermaid
 flowchart LR
-    U["Bruker"] --> B["Nettleser"]
-    B --> C["Angular-klient"]
-    C --> S["Klienttjenester"]
-    S --> M["Mockdata og localStorage"]
+    U["User"] --> B["Browser"]
+    B --> C["Angular client"]
+    C --> S["Client services"]
+    S --> M["Mock data and localStorage"]
     S --> O["OSRM API"]
-    S --> G["Browser-API-er"]
-    X["Geomatikk API (planlagt)"] -.->|fremtidig integrasjon| S
+    S --> G["Browser APIs"]
+    X["Geomatikk API (planned)"] -.->|future integration| S
 ```
 
-Figuren viser løsningen slik den fungerer i dag. Brukeren benytter en Angular-klient i nettleseren, og klienten henter data gjennom interne tjenester. Disse tjenestene bruker mockdata og `localStorage` for oppdrag og tilgjengelighet, OSRM for ruteberegning og nettleser-API-er for blant annet geolokasjon og temaval.
+The figure shows how the solution works today. The user interacts with an Angular client in the browser, and the client retrieves data through internal services. These services use mock data and `localStorage` for assignments and availability, OSRM for route calculation, and browser APIs for features such as geolocation and theme selection.
 
-### Figur 2: Lagdelt frontend-arkitektur
+### Figure 2: Layered Frontend Architecture
 
 ```mermaid
 flowchart TB
-    subgraph P["Presentasjonslag"]
-        A["App og navigasjon"]
-        P1["Sider"]
-        P2["Komponenter"]
+    subgraph P["Presentation layer"]
+        A["App and navigation"]
+        P1["Pages"]
+        P2["Components"]
     end
 
-    subgraph AP["Applikasjonslag"]
+    subgraph AP["Application layer"]
         S["Services"]
-        MP["Mappere"]
-        MD["Modeller"]
+        MP["Mappers"]
+        MD["Models"]
     end
 
-    subgraph I["Infrastruktur- og datalag"]
-        D1["Mockdata"]
+    subgraph I["Infrastructure and data layer"]
+        D1["Mock data"]
         D2["localStorage"]
-        D3["HttpClient mot OSRM"]
-        D4["Geolocation og tema"]
+        D3["HttpClient to OSRM"]
+        D4["Geolocation and theme"]
         D5["OpenLayers, PrimeNG, ngx-translate"]
     end
 
@@ -68,22 +68,22 @@ flowchart TB
     P2 --> D5
 ```
 
-Frontendet er delt inn i lag for å gjøre løsningen enklere å forstå og videreutvikle. Presentasjonslaget består av sider og komponenter, applikasjonslaget håndterer logikk og mapping av data, og infrastrukturnivået håndterer lagring, eksterne kall og tredjepartsbiblioteker.
+The frontend is divided into layers to make the solution easier to understand and maintain. The presentation layer consists of pages and components, the application layer handles logic and data mapping, and the infrastructure layer handles storage, external calls, and third-party libraries.
 
-### Figur 3: Intern lagdeling i kartmodulen
+### Figure 3: Internal Layering of the Map Module
 
 ```mermaid
 flowchart TB
-    I["Input fra sider og tjenester"] --> F["Map facade: map.ts"]
-    F --> L["Kartlogikk"]
-    F --> R["Rendering og OpenLayers-integrasjon"]
-    L --> V["Kartvisning"]
+    I["Input from pages and services"] --> F["Map facade: map.ts"]
+    F --> L["Map logic"]
+    F --> R["Rendering and OpenLayers integration"]
+    L --> V["Map view"]
     R --> V
 ```
 
-Kartmodulen er den mest omfattende delkomponenten i løsningen. `map.ts` fungerer som en fasade som mottar input fra resten av systemet og fordeler ansvar til hjelpefiler for fokuslogikk, sporing, feature-bygging og rendering.
+The map module is the most extensive subcomponent in the solution. `map.ts` acts as a facade that receives input from the rest of the system and delegates responsibility to helper files for focus logic, tracking, feature building, and rendering.
 
-## 3. Prosjektstruktur
+## 3. Project Structure
 
 ```text
 .
@@ -115,16 +115,17 @@ Kartmodulen er den mest omfattende delkomponenten i løsningen. `map.ts` fungere
 └── tsconfig*.json
 ```
 
-Prosjektet er organisert som et vanlig Angular-prosjekt med standalone-komponenter. `src/app/core` inneholder felles modeller, tjenester, mockdata og mappere, `features` inneholder brukerfunksjonalitet per side, og `shared` inneholder gjenbrukbare komponenter. `public/assets/i18n` inneholder språkfiler, mens `main.ts` er inngangspunktet for applikasjonen.
+The project is organized as a standard Angular application using standalone components. `src/app/core` contains shared models, services, mock data, and mappers, `features` contains user-facing functionality grouped by page, and `shared` contains reusable components. `public/assets/i18n` contains translation files, while `main.ts` is the application's entry point.
 
-## 4. Klassediagram
+## 4. Class Diagram
 
-Løsningen i dette repoet består bare av frontend-subsystemet, så det er dette subsystemet som er vist under.
+The solution in this repository only consists of a frontend subsystem, so the diagram below focuses on that subsystem.
 
 ```mermaid
 classDiagram
     class App
     class Navbar
+    class Router
     class DashboardPage
     class AssignmentDetailsPage
     class AssignmentMap
@@ -133,13 +134,12 @@ classDiagram
     class RoutingService
     class GeolocationService
     class ThemeService
-    class AssignmentCardMapper
-    class AssignmentDetailsMapper
-    class MockData
 
     App --> Navbar
-    App --> DashboardPage
-    App --> AssignmentDetailsPage
+    App ..> ThemeService
+    App ..> Router
+    Router --> DashboardPage
+    Router --> AssignmentDetailsPage
     DashboardPage --> AssignmentMap
     AssignmentDetailsPage --> AssignmentMap
 
@@ -149,94 +149,89 @@ classDiagram
     AssignmentDetailsPage ..> AssignmentService
     AssignmentMap ..> ThemeService
     AssignmentMap ..> GeolocationService
-
-    AssignmentService ..> AssignmentCardMapper
-    AssignmentService ..> AssignmentDetailsMapper
-    AssignmentService ..> MockData
-    AvailabilityService ..> MockData
 ```
 
-Klassediagrammet viser hovedklassene i frontendet og de viktigste avhengighetene mellom dem. Sidene bruker tjenester for å hente og bearbeide data, kartkomponenten bruker egne tjenester for tema og posisjon, og tjenestene benytter mappere og mockdata for å levere modeller som passer til UI-et.
+The class diagram shows the main classes in the frontend and the most important dependencies between them. `App` initializes shared application concerns and routing, the pages use services to retrieve and process data, and the map component uses dedicated services for theme and position handling. Mapper functions and mock data modules are part of the implementation, but they are not shown here because they are not classes in the strict sense.
 
-## 5. Databasemodell
+## 5. Database Model
 
-Løsningen har ikke en egen database, og det finnes derfor ikke en tradisjonell databasemodell for prosjektet. Vedvarende data i prototypen lagres i stedet i nettleserens `localStorage`.
+The solution does not have its own database, and therefore there is no traditional database model for the project. Persistent data in the prototype is instead stored in the browser's `localStorage`.
 
-Viktig lokal lagring i løsningen:
+Important local storage entries used in the solution:
 
-- `assignment-details`: mockede oppdragsdata
-- `availability-details`: mockede data for tilgjengelighet og fravær
-- `assignment-personal-notes`: personlige notater per oppdrag
-- `preferred-theme`: valgt lyst eller mørkt tema
+- `assignment-details`: mocked assignment data
+- `availability-details`: mocked availability and absence data
+- `assignment-personal-notes`: personal notes per assignment
+- `preferred-theme`: selected light or dark theme
 
-Dette er kun ment for prototypebruk og bør ikke betraktes som en produksjonsklar datalagringsløsning.
+This is intended for prototype use only and should not be considered a production-ready storage solution.
 
-## 6. Server-tjenester
+## 6. Server Services
 
-Prosjektet inneholder ikke en egen REST-server eller WebSocket-server. Frontendet konsumerer likevel én ekstern HTTP-tjeneste:
+The project does not include its own REST server or WebSocket server. However, the frontend does consume one external HTTP service:
 
-| Tjeneste | Type | Bruk |
+| Service | Type | Purpose |
 | --- | --- | --- |
-| `https://router.project-osrm.org/route/v1/driving/{coordinates}` | GET | Henter rutesegmenter og beregnet reisetid mellom stopp i kartet |
+| `https://router.project-osrm.org/route/v1/driving/{coordinates}` | GET | Retrieves route segments and estimated travel time between stops in the map view |
 
-I tillegg er løsningen ment for fremtidig integrasjon mot Geomatikk sitt API, men denne integrasjonen er ikke implementert i repoet per nå.
+In addition, the solution is intended for future integration with Geomatikk's API, but that integration has not yet been implemented in this repository.
 
-### Forventede datatyper fra Geomatikk API
+### Expected Data Types from the Geomatikk API
 
-Mockdataene og modellene i frontendet er basert på hvordan data forventes å komme fra Geomatikk API. I dagens prototype blir disse dataene forenklet og mappet videre til UI-modeller i `src/app/core/mappers`.
+The mock data and frontend models are based on how data is expected to be delivered from the Geomatikk API. In the current prototype, this data is simplified and mapped into UI models in `src/app/core/mappers`.
 
-- `TechLocationDTO`: beskriver hvor feltteknikeren starter eller avslutter dagen. Objektet inneholder lokasjon, gyldighetsperiode og informasjon om adressen er fast eller midlertidig, for eksempel hotell eller hytte.
-- `AvailabilityDTO`: beskriver fravær eller utilgjengelighet, for eksempel heldagsfravær, møte eller tannlegetime. DTO-en kan inneholde lokasjon, informasjon om fraværet gjelder hele dagen, og om fraværet krever at teknikeren drar hjem.
-- `AssignmentDetailsDTO`: beskriver et oppdrag med status, tidspunkt, adresse, kontaktinformasjon, estimert oppdragstid, beregnet reisetid og hvilke entreprenører eller netteiere oppdraget gjelder for.
+- `TechLocationDTO`: describes where the field technician starts or ends the day. The object includes location, validity period, and whether the address is permanent or temporary, such as a hotel or cabin.
+- `AvailabilityDTO`: describes absence or unavailability, such as full-day absence, a meeting, or a dentist appointment. The DTO may include location, whether the absence applies to the entire day, and whether the technician is expected to travel home for it.
+- `AssignmentDetailsDTO`: describes an assignment with status, time, address, contact information, estimated time on site, calculated travel time, and which contractors or infrastructure owners the assignment concerns.
 
-Det viktigste poenget for denne løsningen er at frontend-laget er bygget slik at mockdata senere kan erstattes med reelle data fra Geomatikk uten at presentasjonslaget må bygges om fra bunnen av.
+The most important point for this solution is that the frontend layer is structured so that mock data can later be replaced with real data from Geomatikk without rebuilding the presentation layer from scratch.
 
-## 7. Sikkerhet
+## 7. Security
 
-Sikkerhet i denne prototypen er begrenset av at løsningen ikke har egen backend eller autentisering. Det viktigste for denne versjonen er derfor:
+Security in this prototype is limited by the fact that the solution does not include its own backend or authentication. The most relevant points for the current version are therefore:
 
-- løsningen har ikke innlogging, passordhåndtering eller access tokens
-- kommunikasjon mot OSRM skjer over HTTPS
-- det brukes ikke database, så klassiske SQL-injection-angrep er ikke relevante i dagens løsning
-- Angulars vanlige databinding brukes i UI-et, og løsningen benytter ikke `innerHTML` for brukerinnhold
-- personlige notater og mockdata lagres i `localStorage`, noe som ikke er egnet for sensitiv informasjon i produksjon
-- geolokasjon håndteres gjennom nettleserens innebygde tillatelsesmodell
+- the solution does not include login, password handling, or access tokens
+- communication with OSRM uses HTTPS
+- there is no database, so classic SQL injection attacks are not relevant in the current solution
+- Angular's standard data binding is used in the UI, and the solution does not use `innerHTML` for user content
+- personal notes and mock data are stored in `localStorage`, which is not suitable for sensitive production data
+- geolocation is handled through the browser's built-in permission model
 
-For en produksjonsversjon med ekte brukerdata bør autentisering, autorisasjon, sikker backend-lagring og tydelig tilgangskontroll legges til.
+For a production version using real user data, authentication, authorization, secure backend storage, and explicit access control would need to be added.
 
-## 8. Installasjon og kjøring
+## 8. Installation and Running
 
-### Viktige avhengigheter
+### Main Dependencies
 
-| Avhengighet | Beskrivelse |
+| Dependency | Description |
 | --- | --- |
-| Angular | Rammeverk for applikasjonen |
-| RxJS | Håndtering av asynkrone datastrømmer |
-| OpenLayers | Kartvisning og kartinteraksjon |
-| PrimeNG | UI-komponenter |
-| `@ngx-translate/core` | Språkstøtte |
-| Vitest | Enhetstesting |
+| Angular | Framework used to build the application |
+| RxJS | Handles asynchronous data streams |
+| OpenLayers | Provides map rendering and map interaction |
+| PrimeNG | UI component library |
+| `@ngx-translate/core` | Translation and language support |
+| Vitest | Unit testing framework |
 
-### Forutsetninger
+### Prerequisites
 
 - Node.js
 - npm
 
-### Installasjon
+### Installation
 
 ```bash
 npm install
 ```
 
-### Kjøring lokalt
+### Run Locally
 
 ```bash
 npm start
 ```
 
-Applikasjonen blir da tilgjengelig på `http://localhost:4200/`.
+The application will then be available at `http://localhost:4200/`.
 
-### Bygging
+### Build
 
 ```bash
 npm run build
@@ -248,4 +243,4 @@ npm run build
 npm test
 ```
 
-Det kreves ingen separat backend eller database for å kjøre denne prototypen lokalt.
+No separate backend or database is required to run this prototype locally.
