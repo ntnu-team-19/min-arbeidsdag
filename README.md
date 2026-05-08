@@ -188,16 +188,20 @@ The most important point for this solution is that the frontend layer is structu
 
 ## 7. Security
 
-Security in this prototype is limited by the fact that the solution does not include its own backend or authentication. The most relevant points for the current version are therefore:
+MinArbeidsdag is a frontend prototype without its own backend, database, authentication, or production data storage. The current attack surface is therefore limited compared to a full web application.
 
-- the solution does not include login, password handling, or access tokens
+The most important security characteristic of the prototype is that it does not perform write operations against a server-side system. The application only uses mock data, browser storage, browser APIs, and an external routing service. This reduces the relevance of several common vulnerabilities, such as unauthorized server-side data changes, privilege escalation, insecure direct object references, and SQL injection.
+
+Relevant security considerations in the current version are:
+- there is no login, password handling, session management, or access token handling
+- there are no backend endpoints for creating, updating, or deleting production data
+- there is no database, so classic SQL injection attacks are not relevant
 - communication with OSRM uses HTTPS
-- there is no database, so classic SQL injection attacks are not relevant in the current solution
-- Angular's standard data binding is used in the UI, and the solution does not use `innerHTML` for user content
-- personal notes and mock data are stored in `localStorage`, which is not suitable for sensitive production data
+- Angular's standard template binding is used, and the solution does not use `innerHTML` for user-controlled content
 - geolocation is handled through the browser's built-in permission model
+- mock data, personal notes, and user preferences are stored in `localStorage`, which is not suitable for sensitive production data
 
-For a production version using real user data, authentication, authorization, secure backend storage, and explicit access control would need to be added.
+The prototype should therefore not be considered production-secure. If the solution is extended with real user data and backend integration, it would require authentication, authorization, server-side validation, secure storage, access control, logging, dependency management, and secure HTTP configuration.
 
 ## 8. Installation and Running
 
