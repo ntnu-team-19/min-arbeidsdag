@@ -6,7 +6,7 @@ import {
   DailyProgressSummary,
   EMPTY_DAILY_PROGRESS_SUMMARY,
 } from '../../../../core/models/daily-progress.model';
-import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
+import { DashboardTravelState } from '../../../../core/models/dashboard-travel-state.model';
 
 @Component({
   selector: 'app-daily-progress-infobox',

@@ -88,16 +88,11 @@ The map module is the most extensive subcomponent in the solution. `map.ts` acts
 ```text
 .
 ├── public/
-│   ├── assets/
-│   │   ├── Geomatikk-logo.png
-│   │   └── i18n/
+│   └── assets/
+│       └── i18n/
 ├── src/
 │   ├── main.ts
-│   ├── styles.css
 │   └── app/
-│       ├── app.ts
-│       ├── app.config.ts
-│       ├── app.routes.ts
 │       ├── core/
 │       │   ├── data/
 │       │   ├── layout/
@@ -107,15 +102,18 @@ The map module is the most extensive subcomponent in the solution. `map.ts` acts
 │       ├── features/
 │       │   ├── assignment-details/
 │       │   └── dashboard/
+│       │       ├── components/
+│       │       └── pages/
+│       ├── app.config.ts
+│       ├── app.routes.ts
 │       └── shared/
 │           └── components/
 │               └── map/
 ├── angular.json
-├── package.json
-└── tsconfig*.json
+└── package.json
 ```
 
-The project is organized as a standard Angular application using standalone components. `src/app/core` contains shared models, services, mock data, and mappers, `features` contains user-facing functionality grouped by page, and `shared` contains reusable components. `public/assets/i18n` contains translation files, while `main.ts` is the application's entry point.
+The project is organized as a standard Angular application using standalone components. `src/app/core` contains shared models, services, mock data, and mappers, while `features` contains user-facing functionality grouped by page. The dashboard feature also includes several reusable components within its own feature scope, such as cards, selectors, and bottom-sheet elements that are primarily used by the dashboard itself. `shared` contains reusable components intended to be used across features, such as the map module. `public/assets/i18n` contains translation files, while `main.ts` is the application's entry point.
 
 ## 4. Class Diagram
 
