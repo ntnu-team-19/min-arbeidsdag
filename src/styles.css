@@ -78,6 +78,7 @@
   --map-user-position-inner-fill: #3684ff;
   --map-user-position-estimated-inner-fill: #7cb0ff;
   --map-user-position-inner-stroke: #ffffff;
+  --mini-card-cta-fg: #ffffff;
 }
 
 .dark {
@@ -153,6 +154,7 @@
   --map-user-position-inner-fill: #60a5fa;
   --map-user-position-estimated-inner-fill: #93c5fd;
   --map-user-position-inner-stroke: #0f172a;
+  --mini-card-cta-fg: #0b1220;
 }
 
 html,

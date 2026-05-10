@@ -55,7 +55,7 @@ import {
   mapAvailabilityDtoToAssignmentCardModel,
 } from '../../../../core/mappers/availability-card.mapper';
 import { TechnicianLocation } from '../../../../core/models/tech-location.model';
-import { DashboardTravelState } from '../../models/dashboard-travel-state.model';
+import { DashboardTravelState } from '../../../../core/models/dashboard-travel-state.model';
 
 const MAP_MARKER_FOCUS_TARGET_Y_RATIO = MAP_BOTTOM_SHEET_PEEK_RATIO / 2;
 const MAP_BOTTOM_SHEET_SCROLL_DELAY_MS = 280;

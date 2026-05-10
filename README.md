@@ -1,59 +1,248 @@
 # MinArbeidsdag
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.
+MinArbeidsdag is a frontend application developed as part of a bachelor's thesis. The solution is designed to give field technicians an overview of assignments, travel time, map locations, and task details for the current and upcoming workday.
 
-## Development server
+## 1. Introduction
 
-To start a local development server, run:
+This document serves as technical documentation for the bachelor's thesis. Its purpose is to provide a short and precise overview of how the solution is structured, which main components it consists of, and how it can be run locally.
 
-```bash
-ng serve
+This document includes:
+
+- the overall architecture of the solution
+- the project structure and organization of the source code
+- a high-level class diagram for the frontend subsystem
+- a brief description of storage, external services, and security
+- instructions for installation, building, and running the application
+
+The solution in this repository is a frontend system. It does not include a production backend or database, but instead uses mock data, `localStorage`, browser APIs, and an external routing service. At the same time, the frontend has been designed so that it can later be integrated with Geomatikk's API.
+
+## 2. Architecture
+
+### Figure 1: Overall System Architecture
+
+```mermaid
+flowchart LR
+    U["User"] --> B["Browser"]
+    B --> C["Angular client"]
+    C --> S["Client services"]
+    S --> M["Mock data and localStorage"]
+    S --> O["OSRM API"]
+    S --> G["Browser APIs"]
+    X["Geomatikk API (planned)"] -.->|future integration| S
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+The figure shows how the solution works today. The user interacts with an Angular client in the browser, and the client retrieves data through internal services. These services use mock data and `localStorage` for assignments and availability, OSRM for route calculation, and browser APIs for features such as geolocation and theme selection.
 
-## Code scaffolding
+### Figure 2: Layered Frontend Architecture
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+```mermaid
+flowchart TB
+    subgraph P["Presentation layer"]
+        A["App and navigation"]
+        P1["Pages"]
+        P2["Components"]
+    end
 
-```bash
-ng generate component component-name
+    subgraph AP["Application layer"]
+        S["Services"]
+        MP["Mappers"]
+        MD["Models"]
+    end
+
+    subgraph I["Infrastructure and data layer"]
+        D1["Mock data"]
+        D2["localStorage"]
+        D3["HttpClient to OSRM"]
+        D4["Geolocation and theme"]
+        D5["OpenLayers, PrimeNG, ngx-translate"]
+    end
+
+    A --> P1 --> P2
+    P1 --> S
+    S --> MP
+    S --> MD
+    S --> D1
+    S --> D2
+    S --> D3
+    S --> D4
+    P2 --> D5
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The frontend is divided into layers to make the solution easier to understand and maintain. The presentation layer consists of pages and components, the application layer handles logic and data mapping, and the infrastructure layer handles storage, external calls, and third-party libraries.
 
-```bash
-ng generate --help
+### Figure 3: Internal Layering of the Map Module
+
+```mermaid
+flowchart TB
+    I["Input from pages and services"] --> F["Map facade: map.ts"]
+    F --> L["Map logic"]
+    F --> R["Rendering and OpenLayers integration"]
+    L --> V["Map view"]
+    R --> V
 ```
 
-## Building
+The map module is the most extensive subcomponent in the solution. `map.ts` acts as a facade that receives input from the rest of the system and delegates responsibility to helper files for focus logic, tracking, feature building, and rendering.
 
-To build the project run:
+## 3. Project Structure
 
-```bash
-ng build
+```text
+.
+├── public/
+│   └── assets/
+│       └── i18n/
+├── src/
+│   ├── main.ts
+│   └── app/
+│       ├── core/
+│       │   ├── data/
+│       │   ├── layout/
+│       │   ├── mappers/
+│       │   ├── models/
+│       │   └── services/
+│       ├── features/
+│       │   ├── assignment-details/
+│       │   └── dashboard/
+│       │       ├── components/
+│       │       └── pages/
+│       ├── app.config.ts
+│       ├── app.routes.ts
+│       └── shared/
+│           └── components/
+│               └── map/
+├── angular.json
+└── package.json
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The project is organized as a standard Angular application using standalone components. `src/app/core` contains shared models, services, mock data, and mappers, while `features` contains user-facing functionality grouped by page. The dashboard feature also includes several reusable components within its own feature scope, such as cards, selectors, and bottom-sheet elements that are primarily used by the dashboard itself. `shared` contains reusable components intended to be used across features, such as the map module. `public/assets/i18n` contains translation files, while `main.ts` is the application's entry point.
 
-## Running unit tests
+## 4. Class Diagram
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+The solution in this repository only consists of a frontend subsystem, so the diagram below focuses on that subsystem.
 
-```bash
-ng test
+```mermaid
+classDiagram
+    class App
+    class Navbar
+    class Router
+    class DashboardPage
+    class AssignmentDetailsPage
+    class AssignmentMap
+    class AssignmentService
+    class AvailabilityService
+    class RoutingService
+    class GeolocationService
+    class ThemeService
+
+    App --> Navbar
+    App ..> ThemeService
+    App ..> Router
+    Router --> DashboardPage
+    Router --> AssignmentDetailsPage
+    DashboardPage --> AssignmentMap
+    AssignmentDetailsPage --> AssignmentMap
+
+    DashboardPage ..> AssignmentService
+    DashboardPage ..> AvailabilityService
+    DashboardPage ..> RoutingService
+    AssignmentDetailsPage ..> AssignmentService
+    AssignmentMap ..> ThemeService
+    AssignmentMap ..> GeolocationService
 ```
 
-## Running end-to-end tests
+The class diagram shows the main classes in the frontend and the most important dependencies between them. `App` initializes shared application concerns and routing, the pages use services to retrieve and process data, and the map component uses dedicated services for theme and position handling. Mapper functions and mock data modules are part of the implementation, but they are not shown here because they are not classes in the strict sense.
 
-For end-to-end (e2e) testing, run:
+## 5. Database Model
+
+The solution does not have its own database, and therefore there is no traditional database model for the project. Persistent data in the prototype is instead stored in the browser's `localStorage`.
+
+Important local storage entries used in the solution:
+
+- `assignment-details`: mocked assignment data
+- `availability-details`: mocked availability and absence data
+- `assignment-personal-notes`: personal notes per assignment
+- `preferred-theme`: selected light or dark theme
+
+This is intended for prototype use only and should not be considered a production-ready storage solution.
+
+## 6. Server Services
+
+The project does not include its own REST server or WebSocket server. However, the frontend does consume one external HTTP service:
+
+| Service | Type | Purpose |
+| --- | --- | --- |
+| `https://router.project-osrm.org/route/v1/driving/{coordinates}` | GET | Retrieves route segments and estimated travel time between stops in the map view |
+
+In addition, the solution is intended for future integration with Geomatikk's API, but that integration has not yet been implemented in this repository.
+
+### Expected Data Types from the Geomatikk API
+
+The mock data and frontend models are based on how data is expected to be delivered from the Geomatikk API. In the current prototype, this data is simplified and mapped into UI models in `src/app/core/mappers`.
+
+- `TechLocationDTO`: describes where the field technician starts or ends the day. The object includes location, validity period, and whether the address is permanent or temporary, such as a hotel or cabin.
+- `AvailabilityDTO`: describes absence or unavailability, such as full-day absence, a meeting, or a dentist appointment. The DTO may include location, whether the absence applies to the entire day, and whether the technician is expected to travel home for it.
+- `AssignmentDetailsDTO`: describes an assignment with status, time, address, contact information, estimated time on site, calculated travel time, and which contractors or infrastructure owners the assignment concerns.
+
+The most important point for this solution is that the frontend layer is structured so that mock data can later be replaced with real data from Geomatikk without rebuilding the presentation layer from scratch.
+
+## 7. Security
+
+MinArbeidsdag is a frontend prototype without its own backend, database, authentication, or production data storage. The current attack surface is therefore limited compared to a full web application.
+
+The most important security characteristic of the prototype is that it does not perform write operations against a server-side system. The application only uses mock data, browser storage, browser APIs, and an external routing service. This reduces the relevance of several common vulnerabilities, such as unauthorized server-side data changes, privilege escalation, insecure direct object references, and SQL injection.
+
+Relevant security considerations in the current version are:
+- there is no login, password handling, session management, or access token handling
+- there are no backend endpoints for creating, updating, or deleting production data
+- there is no database, so classic SQL injection attacks are not relevant
+- communication with OSRM uses HTTPS
+- Angular's standard template binding is used, and the solution does not use `innerHTML` for user-controlled content
+- geolocation is handled through the browser's built-in permission model
+- mock data, personal notes, and user preferences are stored in `localStorage`, which is not suitable for sensitive production data
+
+The prototype should therefore not be considered production-secure. If the solution is extended with real user data and backend integration, it would require authentication, authorization, server-side validation, secure storage, access control, logging, dependency management, and secure HTTP configuration.
+
+## 8. Installation and Running
+
+### Main Dependencies
+
+| Dependency | Description |
+| --- | --- |
+| Angular | Framework used to build the application |
+| RxJS | Handles asynchronous data streams |
+| OpenLayers | Provides map rendering and map interaction |
+| PrimeNG | UI component library |
+| `@ngx-translate/core` | Translation and language support |
+| Vitest | Unit testing framework |
+
+### Prerequisites
+
+- Node.js
+- npm
+
+### Installation
 
 ```bash
-ng e2e
+npm install
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Run Locally
 
-## Additional Resources
+```bash
+npm start
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The application will then be available at `http://localhost:4200/`.
+
+### Build
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm test
+```
+
+No separate backend or database is required to run this prototype locally.
