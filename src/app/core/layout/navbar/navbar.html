@@ -14,21 +14,44 @@
   </button>
 
   <!-- Desktop:Hamburgermenu and User -->
-  <div class="hidden sm:flex items-center ml-auto -space-x-1">
-    <p-button [text]="true" severity="secondary" (click)="menuOpen = true">
+  <div class="hidden sm:flex items-center ml-auto gap-2">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      class="p-0 inline-flex items-center justify-center min-w-[2.5rem] min-h-[2.5rem] rounded-full border border-[color:var(--border-2)] shadow-none hover:brightness-105 dark:hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--focus-ring)] cursor-pointer"
+      style="background-color: var(--surface-2); color: var(--text-1);"
+      (click)="menuOpen = true"
+    >
       <i class="navbar-action-icon pi pi-bars" style="font-size: 1.4rem"></i>
-    </p-button>
+      <span class="sr-only">{{ 'navbar.openMenu' | translate }}</span>
+    </button>
 
-    <p-button [text]="true" severity="secondary">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      class="p-0 inline-flex items-center justify-center min-w-[2.5rem] min-h-[2.5rem] rounded-full border border-[color:var(--border-2)] shadow-none hover:brightness-105 dark:hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--focus-ring)] cursor-pointer"
+      style="background-color: var(--surface-2); color: var(--text-1);"
+    >
       <i class="navbar-action-icon pi pi-user" style="font-size: 1.4rem"></i>
-    </p-button>
+      <span class="sr-only">{{ 'navbar.profile' | translate }}</span>
+    </button>
   </div>
 
   <!-- Mobile: Hamburgermenu -->
   <div class="sm:hidden flex items-center gap-2 ml-auto">
-    <p-button [text]="true" [rounded]="true" severity="secondary" (click)="menuOpen = true">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      class="p-0 inline-flex items-center justify-center min-w-[2.5rem] min-h-[2.5rem] rounded-full border border-[color:var(--border-2)] shadow-none hover:brightness-105 dark:hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--focus-ring)] cursor-pointer"
+      style="background-color: var(--surface-2); color: var(--text-1);"
+      (click)="menuOpen = true"
+    >
       <i class="navbar-action-icon pi pi-bars" style="font-size: 1.4rem"></i>
-    </p-button>
+      <span class="sr-only">{{ 'navbar.openMenu' | translate }}</span>
+    </button>
   </div>
 
   <!-- Sidebar  -->
