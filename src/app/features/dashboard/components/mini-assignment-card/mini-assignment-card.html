@@ -77,7 +77,8 @@
       @if (canShowDirections) {
         <button
           type="button"
-          class="shrink-0 rounded-xl bg-[#547FA9] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 active:scale-[0.98]"
+          class="shrink-0 rounded-xl border border-black/10 bg-[color:var(--accent-muted)] px-4 py-2 text-sm font-semibold shadow-sm transition hover:brightness-95 active:scale-[0.98] dark:border-white/10 dark:bg-[color:var(--accent-muted)]"
+          style="color: var(--mini-card-cta-fg)"
           (click)="onDirectionsClick($event)"
         >
           {{ 'miniCard.showDirections' | translate }}
