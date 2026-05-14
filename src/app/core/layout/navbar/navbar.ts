@@ -40,11 +40,11 @@ export class Navbar {
         icon: 'pi pi-user',
         action: 'user',
       },
-      {
-        label: 'navbar.statistics',
-        icon: 'pi pi-chart-bar',
-        action: 'statistics',
-      },
+      // {
+      //   label: 'navbar.statistics',
+      //   icon: 'pi pi-chart-bar',
+      //   action: 'statistics',
+      // },
       {
         label: 'navbar.language',
         icon: 'pi pi-language',
