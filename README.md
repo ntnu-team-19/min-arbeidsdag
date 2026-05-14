@@ -168,9 +168,9 @@ This is intended for prototype use only and should not be considered a productio
 
 The project does not include its own REST server or WebSocket server. However, the frontend does consume one external HTTP service:
 
-| Service | Type | Purpose |
-| --- | --- | --- |
-| `https://router.project-osrm.org/route/v1/driving/{coordinates}` | GET | Retrieves route segments and estimated travel time between stops in the map view |
+| Service                                                          | Type | Purpose                                                                          |
+| ---------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------- |
+| `https://router.project-osrm.org/route/v1/driving/{coordinates}` | GET  | Retrieves route segments and estimated travel time between stops in the map view |
 
 In addition, the solution is intended for future integration with Geomatikk's API, but that integration has not yet been implemented in this repository.
 
@@ -191,6 +191,7 @@ MinArbeidsdag is a frontend prototype without its own backend, database, authent
 The most important security characteristic of the prototype is that it does not perform write operations against a server-side system. The application only uses mock data, browser storage, browser APIs, and an external routing service. This reduces the relevance of several common vulnerabilities, such as unauthorized server-side data changes, privilege escalation, insecure direct object references, and SQL injection.
 
 Relevant security considerations in the current version are:
+
 - there is no login, password handling, session management, or access token handling
 - there are no backend endpoints for creating, updating, or deleting production data
 - there is no database, so classic SQL injection attacks are not relevant
@@ -205,14 +206,14 @@ The prototype should therefore not be considered production-secure. If the solut
 
 ### Main Dependencies
 
-| Dependency | Description |
-| --- | --- |
-| Angular | Framework used to build the application |
-| RxJS | Handles asynchronous data streams |
-| OpenLayers | Provides map rendering and map interaction |
-| PrimeNG | UI component library |
-| `@ngx-translate/core` | Translation and language support |
-| Vitest | Unit testing framework |
+| Dependency            | Description                                |
+| --------------------- | ------------------------------------------ |
+| Angular               | Framework used to build the application    |
+| RxJS                  | Handles asynchronous data streams          |
+| OpenLayers            | Provides map rendering and map interaction |
+| PrimeNG               | UI component library                       |
+| `@ngx-translate/core` | Translation and language support           |
+| Vitest                | Unit testing framework                     |
 
 ### Prerequisites
 
