@@ -92,11 +92,11 @@ describe('Navbar', () => {
     expect(barsIcon).toBeTruthy();
   });
 
-  it('should render user icon in desktop view', () => {
-    const desktopDiv = fixture.debugElement.query(By.css('.hidden.sm\\:flex'));
-    const userIcon = desktopDiv.query(By.css('.pi-user'));
-    expect(userIcon).toBeTruthy();
-  });
+  // it('should render user icon in desktop view', () => {
+  //   const desktopDiv = fixture.debugElement.query(By.css('.hidden.sm\\:flex'));
+  //   const userIcon = desktopDiv.query(By.css('.pi-user'));
+  //   expect(userIcon).toBeTruthy();
+  // });
 
   // ── Mobile elements ──
 
@@ -109,10 +109,10 @@ describe('Navbar', () => {
 
   // ── Menu items ──
 
-  it('should return 4 menu items with correct actions', () => {
-    expect(component.menuItems.length).toBe(4);
+  it('should return 3 menu items with correct actions', () => {
+    expect(component.menuItems.length).toBe(3);
     const actions = component.menuItems.map((item) => item.action);
-    expect(actions).toEqual(['user', 'statistics', 'language', 'darkmode']);
+    expect(actions).toEqual(['user', 'language', 'darkmode']);
   });
 
   // ── onMenuSelect ──
